@@ -1,0 +1,3 @@
+Monday 15/6/2020
+- Setup and configured dev environment: VSCode on Windows with remote Debian WSL, configured C++ Intellisense to use g++ and boost libraries
+- Figured out how to include boost and compile with g++
