@@ -1,4 +1,4 @@
-#include "Watch.h"
+#include <./Watch.h>
 
 Watch::Watch(string path){ // constructor
     this->path = path;

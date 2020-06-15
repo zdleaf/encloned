@@ -1,4 +1,4 @@
-#include "Watch.h"
+#include <./Watch.h>
 
 // g++ *.cpp -I. -o main -std=c++17 -lstdc++fs
 
