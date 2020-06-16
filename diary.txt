@@ -1,3 +1,8 @@
 Monday 15/6/2020
 - Setup and configured dev environment: VSCode on Windows with remote Debian WSL, configured C++ Intellisense to use g++ and boost libraries
 - Figured out how to include boost and compile with g++
+- Installed CMake and Native Debug VSCode plugins
+- ToDo - test CMake compilation, test boost filesystem code, read C++ structure webpages (see saved Firefox session 15/6)
+
+Tues 16/6/2020
+- Made decision to use std::filesystem from C++17 preferably over boost::filesystem - standard lib vs 3rd party include
