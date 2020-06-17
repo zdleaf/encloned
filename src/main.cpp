@@ -1,6 +1,6 @@
-#include <./Watch.h>
+#include <enclone/Watch.h>
 
-// g++ *.cpp -I. -o main -std=c++17 -lstdc++fs
+// g++ ./src/*.cpp -I./include -o main -std=c++17 -lstdc++fs
 
 // boost 
 // /usr/lib/x86_64-linux-gnu/
