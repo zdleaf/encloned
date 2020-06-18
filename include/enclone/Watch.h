@@ -21,6 +21,7 @@ class Watch {
     public:
         Watch(string path);
         void listDir();
+        void fileAttributes(const fs::path& path);
 
 };
 
