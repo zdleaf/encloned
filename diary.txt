@@ -2,7 +2,18 @@ Monday 15/6/2020
 - Setup and configured dev environment: VSCode on Windows with remote Debian WSL, configured C++ Intellisense to use g++ and boost libraries
 - Figured out how to include boost and compile with g++
 - Installed CMake and Native Debug VSCode plugins
-- ToDo - test CMake compilation, test boost filesystem code, read C++ structure webpages (see saved Firefox session 15/6)
+- todo: test CMake compilation, test boost filesystem code, read C++ structure webpages (see saved Firefox session 15/6)
 
 Tues 16/6/2020
 - Made decision to use std::filesystem from C++17 preferably over boost::filesystem - standard lib vs 3rd party include
+
+Wed 17/6/2020
+- Alterted directory structure to follow std form (/include, /src, /build directories)
+- Configured CMakeLists.txt and correct building of project with cmake, including correct linking of std::filesystem
+- Built and tested inotify-cpp library to watch a directory
+
+Thur 18/6/2020
+- Read through code of fswatch library, providing multiplatform filesystem watches - uses inotify and stat() on Linux
+- Determined inotify alone is insufficient - cannot determine file changes if service is not running e.g. machine off, program crash
+- Still need a local database/log of local files, possibly though stat() or more likely std::filesystem
+- Todo - determine database system - sqlite? hashmaps in memory, but then need to serialise to save when service not running

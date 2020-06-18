@@ -4,9 +4,12 @@
 #include <iostream>
 #include <filesystem>
 #include <string>
+#include <sys/inotify.h>
 
+using std::string;
+using std::cout;
+using std::endl;
 namespace fs = std::filesystem;
-using namespace std;
 
 // c++17 std::filesystem
 // linux filesystem changes - inotify

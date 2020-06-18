@@ -9,7 +9,7 @@
 
 int main(){
 
-    Watch *p1 = new Watch("/mnt/g/Dropbox/QMUL/FinalProject/enclone");
+    Watch *p1 = new Watch("/home/zach/enclone/tmp");
     p1->listDir();
 
 }
