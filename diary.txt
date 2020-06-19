@@ -16,4 +16,16 @@ Thur 18/6/2020
 - Read through code of fswatch library, providing multiplatform filesystem watches - uses inotify and stat() on Linux
 - Determined inotify alone is insufficient - cannot determine file changes if service is not running e.g. machine off, program crash
 - Still need a local database/log of local files, possibly though stat() or more likely std::filesystem
-- Todo - determine database system - sqlite? hashmaps in memory, but then need to serialise to save when service not running
+- Basic getting of file attributes with std::filesystem
+    - Determine which file attributes are required
+- Determine database system - sqlite? slow lookups when reading from file? hashmaps in memory, but then need to serialise to save when service not running
+    - SQLite    - unencrypted db file on host, encrypt as a regular backed up file and send to host for backup
+                - can be faster than I/O, small size, ACID transactions, well tested
+                - SQL query language
+    - file      - requires serialisation, constant I/O or bucketing of transactions
+                - fast for a relatively small number of items
+
+Fri 19/6/2020
+- SQLite index database connection made and libraries linked from code
+- todo: File integrity checks with hashes
+- todo: Save file id, file hash and file attribs to db

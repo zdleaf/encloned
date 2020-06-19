@@ -6,6 +6,7 @@
 #include <string>
 //#include <sys/inotify.h>
 #include <chrono>
+#include <sqlite3.h>
 
 using std::string;
 using std::cout;
@@ -18,9 +19,14 @@ namespace fs = std::filesystem;
 class Watch {
     private:
         string path;
+        sqlite3 *db; // index handle
 
     public:
         Watch(string path);
+        
+        void openIndex();
+        void closeIndex();
+
         void listDir();
         void fileAttributes(const fs::path& path);
 

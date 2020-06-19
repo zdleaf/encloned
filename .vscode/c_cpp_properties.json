@@ -11,7 +11,8 @@
             "compilerPath": "/usr/bin/g++",
             "compilerArgs": [
                 "-std=c++17",
-                "-lstdc++fs"
+                "-lstdc++fs",
+                "-lsqlite3"
             ],
             "cStandard": "c18",
             "cppStandard": "c++17",

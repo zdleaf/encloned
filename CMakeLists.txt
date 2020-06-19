@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD, 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -lstdc++fs")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -lstdc++fs -lsqlite3")
 
 # include files
 include_directories( include src )
@@ -19,7 +19,7 @@ include_directories( include src )
 add_executable(${PROJECT_NAME} ./src/main.cpp ./src/Watch.cpp)
 
 # link std filesystem library
-target_link_libraries(enclone stdc++fs)
+target_link_libraries(enclone stdc++fs sqlite3)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

@@ -2,6 +2,20 @@
 
 Watch::Watch(string path){ // constructor
     this->path = path;
+    openIndex();
+}
+
+void Watch::openIndex(){
+    int exitcode = sqlite3_open("index.db", &db);
+    if(exitcode) {
+      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+    } else {
+      fprintf(stderr, "Opened database successfully\n");
+    }
+}
+
+void Watch::closeIndex(){
+    sqlite3_close(db);
 }
 
 void Watch::listDir(){
