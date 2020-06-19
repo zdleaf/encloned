@@ -16,7 +16,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -lstdc++fs -lsqlite3")
 include_directories( include src )
 
 # target
-add_executable(${PROJECT_NAME} ./src/main.cpp ./src/Watch.cpp)
+add_executable(${PROJECT_NAME} ./src/main.cpp ./src/Watch.cpp ./src/FileIndex.cpp)
 
 # link std filesystem library
 target_link_libraries(enclone stdc++fs sqlite3)

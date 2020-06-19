@@ -26,6 +26,8 @@ Thur 18/6/2020
                 - fast for a relatively small number of items
 
 Fri 19/6/2020
-- SQLite index database connection made and libraries linked from code
+- SQLite file index database connection made and libraries linked from code
+- Separate FileIndex class prototype for index functions/capability
 - todo: File integrity checks with hashes
-- todo: Save file id, file hash and file attribs to db
+- todo: Design db structure - save file id, file hash and file attribs to db
+- todo: Store multiple directory Watch* (shared_ptr) in vector to save watched directories - OR - put in SQLite db
