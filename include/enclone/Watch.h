@@ -7,8 +7,6 @@
 //#include <sys/inotify.h>
 #include <chrono>
 
-#include <enclone/FileIndex.h>
-
 using std::string;
 using std::cout;
 using std::endl;
@@ -20,13 +18,9 @@ namespace fs = std::filesystem;
 class Watch {
     private:
         string path;
-        FileIndex *index;
 
     public:
         Watch(string path);
-
-        void openIndex();
-        void closeIndex();
 
         void listDir();
         void fileAttributes(const fs::path& path);

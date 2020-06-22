@@ -4,15 +4,15 @@
 #include <iostream>
 #include <sqlite3.h>
 
+#include <enclone/DB.h>
+
 class FileIndex {
     private:
-        sqlite3 *db; // index handle
+        // db handle required
 
     public:
         FileIndex();
         
-        void openIndex();
-        void closeIndex();
 };
 
 #endif

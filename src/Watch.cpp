@@ -2,7 +2,8 @@
 
 Watch::Watch(string path){ // constructor
     this->path = path;
-    index = new FileIndex();
+    cout << "Added watch to directory: " << path << endl;
+    //listDir();
 }
 
 void Watch::listDir(){
