@@ -1,11 +1,10 @@
 #include <enclone/enclone.h>
 
-enclone::enclone(){
+enclone::enclone(){ // constructor
     db = new DB();
 }
 
-enclone::~enclone(){
-    // destructor
+enclone::~enclone(){ // destructor
     delete db; // delete db object
 }
 

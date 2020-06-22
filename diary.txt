@@ -2,10 +2,11 @@ Monday 15/6/2020
 - Setup and configured dev environment: VSCode on Windows with remote Debian WSL, configured C++ Intellisense to use g++ and boost libraries
 - Figured out how to include boost and compile with g++
 - Installed CMake and Native Debug VSCode plugins
-- todo: test CMake compilation, test boost filesystem code, read C++ structure webpages (see saved Firefox session 15/6)
+- todo: test CMake compilation, test boost filesystem code, read C++ project structure webpages (see saved Firefox session 15/6)
 
 Tues 16/6/2020
 - Made decision to use std::filesystem from C++17 preferably over boost::filesystem - standard lib vs 3rd party include
+- Read C++ project structure (directory layout conventions) webpages (see saved Firefox session 15/6)
 
 Wed 17/6/2020
 - Alterted directory structure to follow std form (/include, /src, /build directories)
@@ -15,7 +16,8 @@ Wed 17/6/2020
 Thur 18/6/2020
 - Read through code of fswatch library, providing multiplatform filesystem watches - uses inotify and stat() on Linux
 - Determined inotify alone is insufficient - cannot determine file changes if service is not running e.g. machine off, program crash
-- Still need a local database/log of local files, possibly though stat() or more likely std::filesystem
+    - Still need a local database/log of local files, possibly though stat() or more likely std::filesystem.
+    - Polling of large directories and many files will be slow. Ideal solution is inotify when service is running, with semi-regular file index polling/updates for best efficiency.
 - Basic getting of file attributes with std::filesystem
     - Determine which file attributes are required
 - Determine database system - sqlite? slow lookups when reading from file? hashmaps in memory, but then need to serialise to save when service not running
@@ -24,10 +26,20 @@ Thur 18/6/2020
                 - SQL query language
     - file      - requires serialisation, constant I/O or bucketing of transactions
                 - fast for a relatively small number of items
+                - possible to do this with Boost MultiIndex MRU object cache or Boost lib serialisation
 
 Fri 19/6/2020
 - SQLite file index database connection made and libraries linked from code
 - Separate FileIndex class prototype for index functions/capability
-- todo: File integrity checks with hashes
-- todo: Design db structure - save file id, file hash and file attribs to db
-- todo: Store multiple directory Watch* (shared_ptr) in vector to save watched directories - OR - put in SQLite db
+- todo: File integrity checks with hashes - as a separate background process, not when polling as will be slow otherwise
+- desired feature/improvement: inotify running in addition to regular file system polling and indexdb updates
+
+Mon 22/6/2020
+- Created abstracted DB class to handle DB functions (e.g. open/close db, execute SQL code with error handling), new main class "enclone" to tie together all other classes
+- enclone class includes vector of shared_pts to Watch* objects, allowing multiple watch directories to be added
+    - todo: regularly save this in SQLite db for persistance on crash/restart, and restore from db on start
+- DB structure - 2 tables
+    - WatchDirs - IDX and dir path (check is path before adding)
+    - FileIndex - IDX/filename/path/mod time/size/file hash
+- todo: add flag to Watch() to determine if recursive watch or not, in which case recursively add all subdirs
+- todo: populate DB with files in directory

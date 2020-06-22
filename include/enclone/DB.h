@@ -10,9 +10,12 @@ class DB {
 
     public:
         DB();
-        
+        ~DB();
+
         void openDB();
         void closeDB();
+        void execSQL(const char sql[]);
+        void initialiseTables(); // initialise tables on first run
 };
 
 #endif
