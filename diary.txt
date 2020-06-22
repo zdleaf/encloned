@@ -38,8 +38,9 @@ Mon 22/6/2020
 - Created abstracted DB class to handle DB functions (e.g. open/close db, execute SQL code with error handling), new main class "enclone" to tie together all other classes
 - enclone class includes vector of shared_pts to Watch* objects, allowing multiple watch directories to be added
     - todo: regularly save this in SQLite db for persistance on crash/restart, and restore from db on start
-- DB structure - 2 tables
-    - WatchDirs - IDX and dir path (check is path before adding)
+- DB structure - 2 tables created and initialised from code
+    - WatchDirs - path
     - FileIndex - IDX/filename/path/mod time/size/file hash
 - todo: add flag to Watch() to determine if recursive watch or not, in which case recursively add all subdirs
 - todo: populate DB with files in directory
+- todo: check path is valid path before adding and error handling

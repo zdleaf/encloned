@@ -31,7 +31,7 @@ void DB::execSQL(const char sql[]){
             sqlite3_free(error);
         }
     } else {
-      fprintf(stderr, "Successfully executed SQL statement\n");
+      fprintf(stderr, "Successfully executed SQL statement: %.36s...\n", sql);
     }
 }
 

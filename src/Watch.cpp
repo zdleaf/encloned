@@ -1,6 +1,7 @@
 #include <enclone/Watch.h>
 
 Watch::Watch(string path){ // constructor
+    // check is path before adding - or fail
     this->path = path;
     cout << "Added watch to directory: " << path << endl;
     //listDir();
