@@ -36,6 +36,14 @@ void DB::execSQL(const char sql[]){
 }
 
 void DB::initialiseTables(){
-    const char sql[] = "CREATE TABLE IF NOT EXISTS WatchDirs (PATH TEXT NOT NULL);";
-    execSQL(sql);
+    const char watchdirs[] = "CREATE TABLE IF NOT EXISTS WatchDirs ("
+        "PATH       TEXT    NOT NULL);";
+    const char fileidx[] = "CREATE TABLE IF NOT EXISTS FileIndex ("
+        "FILENAME   TEXT    NOT NULL," 
+        "PATH       TEXT    NOT NULL," 
+        "MODTIME    INTEGER NOT NULL,"
+        "SIZE       INTEGER,"
+        "HASH       TEXT);";
+    execSQL(watchdirs);
+    execSQL(fileidx);
 }
