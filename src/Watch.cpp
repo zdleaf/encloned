@@ -6,13 +6,19 @@ Watch::Watch(){ // constructor
 
 void Watch::addWatch(string path, bool recursive){
     fs::file_status s = fs::status(path);
-    if(fs::is_directory(s)){
+    if(fs::is_directory(s)){ // adding a directory to watch
         watchDirs.push_back(path);
         cout << "Added watch to directory: " << path << endl;
-        if(recursive){
-            // recursively add subdirs
+        if(recursive){ // recursively add subdirs
+            for (const auto & entry : fs::directory_iterator(path)){ // iterate through all directory entries
+                fs::file_status s = fs::status(entry);
+                if(fs::is_directory(s)) { 
+                        cout << "Recursively adding: " << entry.path() << endl;
+                        addWatch(entry.path().string(), true); 
+                    }
+            }
         }
-    } else if(fs::is_regular_file(s)){
+    } else if(fs::is_regular_file(s)){ // adding a regular file to watch
         watchFiles.push_back(path);
         cout << "Added watch to file: " << path << endl;
     } else {
@@ -21,7 +27,6 @@ void Watch::addWatch(string path, bool recursive){
 }
 
 void Watch::listDir(string path){
-    //std::string path = "/path/to/directory";
     for (const auto & entry : fs::directory_iterator(path)){
         cout << entry.path();
         fileAttributes(entry);
