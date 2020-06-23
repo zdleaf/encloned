@@ -12,7 +12,10 @@
             "compilerArgs": [
                 "-std=c++17",
                 "-lstdc++fs",
-                "-lsqlite3"
+                "-lsqlite3",
+                "-lboost_system",
+                "-lboost_thread",
+                "-pthread"
             ],
             "cStandard": "c18",
             "cppStandard": "c++17",

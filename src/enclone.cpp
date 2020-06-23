@@ -3,13 +3,23 @@
 enclone::enclone(){ // constructor
     db = new DB();
     watch = new Watch();
+    socket = new Socket();
 }
 
 enclone::~enclone(){ // destructor
-    delete db; // delete db object
+    // delete objects
+    delete db; 
+    delete watch;
+    delete socket;
+}
+
+int enclone::execLoop(){
+    while(1){
+
+    }
+    return 0;
 }
 
 void enclone::addWatch(string path, bool recursive){
     watch->addWatch(path, recursive);
 }
-
