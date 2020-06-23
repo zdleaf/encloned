@@ -11,12 +11,13 @@
 class enclone {
     private:
         DB *db; // database handle
-        std::vector<std::shared_ptr<Watch>> watchDirs; // vector of shared_ptrs to directories to watch
+        Watch *watch; // watch file/directory class
         
     public:
         enclone();
         ~enclone();
-        void addWatch(string path);
+
+        void addWatch(string path, bool recursive);
 };
 
 #endif

@@ -1,13 +1,26 @@
 #include <enclone/Watch.h>
 
-Watch::Watch(string path){ // constructor
-    // check is path before adding - or fail
-    this->path = path;
-    cout << "Added watch to directory: " << path << endl;
-    //listDir();
+Watch::Watch(){ // constructor
+
 }
 
-void Watch::listDir(){
+void Watch::addWatch(string path, bool recursive){
+    fs::file_status s = fs::status(path);
+    if(fs::is_directory(s)){
+        watchDirs.push_back(path);
+        cout << "Added watch to directory: " << path << endl;
+        if(recursive){
+            // recursively add subdirs
+        }
+    } else if(fs::is_regular_file(s)){
+        watchFiles.push_back(path);
+        cout << "Added watch to file: " << path << endl;
+    } else {
+        std::cout << path << " is not a valid directory/file" << endl;
+    }
+}
+
+void Watch::listDir(string path){
     //std::string path = "/path/to/directory";
     for (const auto & entry : fs::directory_iterator(path)){
         cout << entry.path();
@@ -30,7 +43,7 @@ void Watch::fileAttributes(const fs::path& path){
 
     // size
     try {
-        std::cout << "size: " << fs::file_size(path) << endl; // attempt to get size of a directory
+        std::cout << "size: " << fs::file_size(path) << endl; // attempt to get size of a file
     } catch(fs::filesystem_error& e) { // e.g. is a directory, no size
         std::cout << e.what() << '\n';
     }

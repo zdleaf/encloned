@@ -9,5 +9,6 @@
 
 int main(){
     enclone *e = new enclone();
-    e->addWatch("/home/zach/enclone/tmp");
+    e->addWatch("/home/zach/enclone/tmp", true);
+    e->addWatch("/home/zach/enclone/tmp/file1", false);
 }

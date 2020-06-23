@@ -44,3 +44,7 @@ Mon 22/6/2020
 - todo: add flag to Watch() to determine if recursive watch or not, in which case recursively add all subdirs
 - todo: populate DB with files in directory
 - todo: check path is valid path before adding and error handling
+
+Tue 23/6/2020
+- Changed Watch class to have single instance with vector of watched directories/files
+- todo: Develop into a linux daemon/service, ability to add watch files/directories from cmd line

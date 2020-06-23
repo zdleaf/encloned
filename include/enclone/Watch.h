@@ -6,6 +6,7 @@
 #include <string>
 //#include <sys/inotify.h>
 #include <chrono>
+#include <vector>
 
 using std::string;
 using std::cout;
@@ -15,14 +16,23 @@ namespace fs = std::filesystem;
 // c++17 std::filesystem
 // linux filesystem changes - inotify
 
+struct File {
+  string path;
+  fs::file_time_type modtime;
+  int size;
+  string hash;
+};
+
 class Watch {
     private:
-        string path;
+        std::vector<string> watchDirs;
+        std::vector<string> watchFiles;
 
     public:
-        Watch(string path);
+        Watch();
 
-        void listDir();
+        void addWatch(string path, bool recursive);
+        void listDir(string path);
         void fileAttributes(const fs::path& path);
 
 };
