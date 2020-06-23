@@ -11,6 +11,13 @@ void Watch::addWatch(string path, bool recursive){
         cout << "Added watch to directory: " << path << endl;
         if(recursive){
             // recursively add subdirs
+            for (const auto & entry : fs::directory_iterator(path)){
+                fs::file_status s = fs::status(entry);
+                if(fs::is_directory(s)) { 
+                        cout << "Recursively adding: " << entry.path() << endl;
+                        addWatch(entry.path().string(), true); 
+                    }
+            }
         }
     } else if(fs::is_regular_file(s)){
         watchFiles.push_back(path);

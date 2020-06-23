@@ -46,5 +46,9 @@ Mon 22/6/2020
 - todo: check path is valid path before adding and error handling
 
 Tue 23/6/2020
-- Changed Watch class to have single instance with vector of watched directories/files
-- todo: Develop into a linux daemon/service, ability to add watch files/directories from cmd line
+- Changed Watch class to have single instance with a vector of watched directories/files inside
+- Researching how to develop into a linux daemon/service (encloned), ability to add watch files/directories from cmd line
+    - for development/testing/debugging, run daemon in foreground?
+    - see project bookmarks, also see systemd
+    - likely option is run binary via systemd and have it load a config file or from db for file watches etc, wrapper program can write to config/db 
+    - issue with file locks with SQLite - need to ensure locks are respected/retry transactions - daemon can only read db if it notices mod time has changed
