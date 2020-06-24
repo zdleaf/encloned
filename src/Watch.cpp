@@ -33,6 +33,11 @@ void Watch::scanFileChange(){
     }
     // check watched directories for new files and directories
     for(auto elem: watchDirs){
+        if(!fs::exists(elem.first)){ // if directory has been deleted
+            cout << "Directory no longer exists: " << elem.first << endl;
+            watchDirs.erase(elem.first); // remove watch to directory
+            break;
+        }
         for (const auto &entry : fs::directory_iterator(elem.first)){ // iterate through all directory entries
             fs::file_status s = fs::status(entry);
             if(fs::is_directory(s) && elem.second) {// check recursive flag (elem.second) is true before checking if watch to dir already exists
