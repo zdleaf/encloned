@@ -69,5 +69,5 @@ Wed 24/6/2020
 - Populated watchFiles with files to watch and their attributes and abstracted and tidied up elements of the Watch::addWatch() method
 - Changed vectors for watchFiles and watchDir into unordered_map and unordered_set respectively, to avoid duplicate paths being added
     - added check/error message for duplicate file/directory when attempting to add a watch
-- Added main execLoop to scan for changes in file (change in file mode time) or file deletion (does not exist)
-    - todo: if file added to directory
+- Added main execLoop to scan for changes in file (change in file mode time), file deletion (file does not exist) or a new file/directory (if watched directory flag is recursive, new directory is added)
+    - todo: check if directory no longer exists?

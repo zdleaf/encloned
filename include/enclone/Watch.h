@@ -20,7 +20,7 @@ class Watch {
         std::unordered_map<string, bool> watchDirs;
         std::unordered_map<string, fs::file_time_type> watchFiles;
 
-        void addDirWatch(string &path, bool recursive);
+        void addDirWatch(string path, bool recursive);
         void addFileWatch(string path);
 
         void listDir(string path);

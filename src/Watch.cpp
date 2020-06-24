@@ -31,19 +31,26 @@ void Watch::scanFileChange(){
             watchFiles[elem.first] = recentModTime;
         }
     }
-/*     for(auto dir: watchDirs){
-        for (const auto &entry : fs::directory_iterator(dir)){ // iterate through all directory entries
+    // check watched directories for new files and directories
+    for(auto elem: watchDirs){
+        for (const auto &entry : fs::directory_iterator(elem.first)){ // iterate through all directory entries
             fs::file_status s = fs::status(entry);
-            if(fs::is_directory(s) && recursive) { 
-                // new directory and recursive flag on folder?
+            if(fs::is_directory(s) && elem.second) {// check recursive flag (elem.second) is true before checking if watch to dir already exists
+                if(!watchDirs.count(entry.path())){   // check if directory already exists in watched map
+                    cout << "New directory found: " << elem.first << endl;
+                    addDirWatch(entry.path().string(), true);  // add new directory and any files contained within
+                }
             } else if(fs::is_regular_file(s)){
-                // new file?
+                if(!watchFiles.count(entry.path())){  // check if each file already exists
+                    cout << "New file found: " << elem.first << endl;
+                    addFileWatch(entry.path().string());
+                }
             }
         }
-    } */
+    }
 }
 
-void Watch::addDirWatch(string &path, bool recursive){
+void Watch::addDirWatch(string path, bool recursive){
     auto result = watchDirs.insert({path, recursive});
     if(result.second){ // check if insertion was successful i.e. result.second = true
         cout << "Added watch to directory: " << path << endl;
