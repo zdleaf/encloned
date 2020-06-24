@@ -16,6 +16,7 @@ void Watch::addWatch(string path, bool recursive){
 }
 
 void Watch::scanFileChange(){
+    // existing files that are being watched
     for(auto elem: watchFiles){
         if(!fs::exists(elem.first)){ // if file has been deleted
             // code to update remotes as appropriate
@@ -30,10 +31,20 @@ void Watch::scanFileChange(){
             watchFiles[elem.first] = recentModTime;
         }
     }
+/*     for(auto dir: watchDirs){
+        for (const auto &entry : fs::directory_iterator(dir)){ // iterate through all directory entries
+            fs::file_status s = fs::status(entry);
+            if(fs::is_directory(s) && recursive) { 
+                // new directory and recursive flag on folder?
+            } else if(fs::is_regular_file(s)){
+                // new file?
+            }
+        }
+    } */
 }
 
 void Watch::addDirWatch(string &path, bool recursive){
-    auto result = watchDirs.insert(path);
+    auto result = watchDirs.insert({path, recursive});
     if(result.second){ // check if insertion was successful i.e. result.second = true
         cout << "Added watch to directory: " << path << endl;
 
@@ -71,8 +82,8 @@ void Watch::addFileWatch(string path){
 
 void Watch::displayWatchDirs(){
     cout << "\nWatched directories: " << endl;
-    for(string path: watchDirs){
-        cout << path << endl;
+    for(auto elem: watchDirs){
+        cout << elem.first << " recursive: " << elem.second << endl;
     }
 }
 
