@@ -31,7 +31,8 @@ Thur 18/6/2020
 Fri 19/6/2020
 - SQLite file index database connection made and libraries linked from code
 - Separate FileIndex class prototype for index functions/capability
-- todo: File integrity checks with hashes - as a separate background process, not when polling as will be slow otherwise
+- todo: File integrity checks with hashes - compute before upload, and after, benchmark various hashing algos e.g. md5, sha-1, sha-256
+    - http://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=A91D1D99A03C47E5E4E73AB012A65D3B?doi=10.1.1.657.9552&rep=rep1&type=pdf
 - desired feature/improvement: inotify running in addition to regular file system polling and indexdb updates
 
 Mon 22/6/2020
@@ -67,5 +68,5 @@ Tue 23/6/2020
 Wed 24/6/2020
 - Populated watchFiles with files to watch and their attributes and abstracted and tidied up elements of the Watch::addWatch() method
 - Changed vectors for watchFiles and watchDir into unordered_map and unordered_set respectively, to avoid duplicate paths being added
-    - todo: error handling if already exists?
+    - added check/error message for duplicate file/directory when attempting to add a watch
 - todo: create main loop - scanning for fs changes and updating vector/db

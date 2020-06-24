@@ -16,27 +16,40 @@ void Watch::addWatch(string path, bool recursive){
 }
 
 void Watch::addDirWatch(string &path, bool recursive){
-    watchDirs.insert(path);
-    cout << "Added watch to directory: " << path << endl;
-    for (const auto & entry : fs::directory_iterator(path)){ // iterate through all directory entries
-        fs::file_status s = fs::status(entry);
-        if(fs::is_directory(s) && recursive) { 
-            //cout << "Recursively adding: " << entry.path() << endl;
-            addWatch(entry.path().string(), true); 
-        } else if(fs::is_regular_file(s)){
-            addFileWatch(entry.path().string());
-        } else { cout << "Unknown file encountered: " << entry.path().string() << endl; }
+    auto result = watchDirs.insert(path);
+    if(result.second){ // check if insertion was successful i.e. result.second = true
+        cout << "Added watch to directory: " << path << endl;
+
+        for (const auto & entry : fs::directory_iterator(path)){ // iterate through all directory entries
+            fs::file_status s = fs::status(entry);
+            if(fs::is_directory(s) && recursive) { 
+                //cout << "Recursively adding: " << entry.path() << endl;
+                addWatch(entry.path().string(), true); 
+            } else if(fs::is_regular_file(s)){
+                addFileWatch(entry.path().string());
+            } else if(!fs::is_directory(s)){ 
+                cout << "Unknown file encountered: " << entry.path().string() << endl; 
+            }
+        }
+
+    } else { // duplicate - directory was not added
+        cout << "Watch to directory already exists: " << path << endl;
     }
+
 }
 
 void Watch::addFileWatch(string path){
-    watchFiles[path] = fs::last_write_time(path);
+    auto result = watchFiles.insert({path, fs::last_write_time(path)});
+    if(result.second){ // check if insertion was successful i.e. result.second = true
+        cout << "Added watch to file: " << path << endl;
+    } else { // duplicate
+        cout << "Watch to file already exists: " << path << endl;
+    }
 /*     File f;
     f.path = path;
     f.modtime = fs::last_write_time(path);
     f.size = fs::file_size(path);
-    watchFiles.insert(f); */
-    cout << "Added watch to file: " << path << endl;
+    watchFiles.insert(f); */  
 }
 
 void Watch::displayWatchDirs(){
