@@ -65,6 +65,7 @@ Tue 23/6/2020
 - todo: finish watch directory and files db, produce MVP - can implement sockets to control later
 
 Wed 24/6/2020
-- Populated watchFiles with files to watch and their attributes
-- Abstracted and tidied up elements of the Watch::addWatch() method
+- Populated watchFiles with files to watch and their attributes and abstracted and tidied up elements of the Watch::addWatch() method
+- Changed vectors for watchFiles and watchDir into unordered_map and unordered_set respectively, to avoid duplicate paths being added
+    - todo: error handling if already exists?
 - todo: create main loop - scanning for fs changes and updating vector/db

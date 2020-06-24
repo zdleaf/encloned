@@ -16,7 +16,7 @@ void Watch::addWatch(string path, bool recursive){
 }
 
 void Watch::addDirWatch(string &path, bool recursive){
-    watchDirs.push_back(path);
+    watchDirs.insert(path);
     cout << "Added watch to directory: " << path << endl;
     for (const auto & entry : fs::directory_iterator(path)){ // iterate through all directory entries
         fs::file_status s = fs::status(entry);
@@ -30,11 +30,12 @@ void Watch::addDirWatch(string &path, bool recursive){
 }
 
 void Watch::addFileWatch(string path){
-    File f;
+    watchFiles[path] = fs::last_write_time(path);
+/*     File f;
     f.path = path;
     f.modtime = fs::last_write_time(path);
     f.size = fs::file_size(path);
-    watchFiles.push_back(f);
+    watchFiles.insert(f); */
     cout << "Added watch to file: " << path << endl;
 }
 
@@ -47,8 +48,8 @@ void Watch::displayWatchDirs(){
 
 void Watch::displayWatchFiles(){
     cout << "\nWatched files: " << endl;
-    for(File file: watchFiles){
-        cout << "path:" << file.path << " size:" << file.size << " modtime:" << displayTime(file.modtime);
+    for(auto elem: watchFiles){
+        cout << "path:" << elem.first << " modtime:" << displayTime(elem.second);
     }
 }
 
