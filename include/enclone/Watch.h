@@ -36,7 +36,6 @@ class Watch {
 
         void displayWatchDirs();
         void displayWatchFiles();
-
 };
 
 #endif

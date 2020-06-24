@@ -71,11 +71,9 @@ void Watch::addDirWatch(string path, bool recursive){
                 cout << "Unknown file encountered: " << entry.path().string() << endl; 
             }
         }
-
     } else { // duplicate - directory was not added
         cout << "Watch to directory already exists: " << path << endl;
     }
-
 }
 
 void Watch::addFileWatch(string path){
@@ -85,11 +83,6 @@ void Watch::addFileWatch(string path){
     } else { // duplicate
         cout << "Watch to file already exists: " << path << endl;
     }
-/*     File f;
-    f.path = path;
-    f.modtime = fs::last_write_time(path);
-    f.size = fs::file_size(path);
-    watchFiles.insert(f); */  
 }
 
 void Watch::displayWatchDirs(){

@@ -67,6 +67,12 @@ Tue 23/6/2020
 
 Wed 24/6/2020
 - Populated watchFiles with files to watch and their attributes and abstracted and tidied up elements of the Watch::addWatch() method
-- Changed vectors for watchFiles and watchDir into unordered_map and unordered_set respectively, to avoid duplicate paths being added
+- Changed vectors for watchFiles and watchDir into unordered_map, to avoid duplicate paths being added
+    - watchDirs key is path, value contains flag for if watched directory is recursively watched
+    - watchFiles key is path, value contains the last mod time of the file
     - added check/error message for duplicate file/directory when attempting to add a watch
-- Added main execLoop to scan for changes in file (change in file mode time), file or directory deletion (file/directory does not exist) or a new file/directory is added (if the watched directory recursive flag is true, new directory and contained files added)
+- Added main execLoop to scan for:
+    1. changes in files (change in file mod time)
+    2. file or directory deletion (file/directory does not exist)
+    3. new file/directory is added (if the watched directory recursive flag is true, new directory and contained files added)
+- todo: research async - ideally need to run execLoop is separate thread, and Socket in a separate thread to avoid blocking
