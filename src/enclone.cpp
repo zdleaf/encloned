@@ -3,7 +3,7 @@
 enclone::enclone(){ // constructor
     db = new DB();
     watch = new Watch();
-    socket = new Socket();
+    //socket = new Socket();
 }
 
 enclone::~enclone(){ // destructor
@@ -22,4 +22,9 @@ int enclone::execLoop(){
 
 void enclone::addWatch(string path, bool recursive){
     watch->addWatch(path, recursive);
+}
+
+void enclone::displayWatches(){
+    watch->displayWatchDirs();
+    watch->displayWatchFiles();
 }

@@ -24,6 +24,7 @@ class enclone {
         int execLoop();
 
         void addWatch(string path, bool recursive);
+        void displayWatches();
 };
 
 #endif

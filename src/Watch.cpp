@@ -7,22 +7,48 @@ Watch::Watch(){ // constructor
 void Watch::addWatch(string path, bool recursive){
     fs::file_status s = fs::status(path);
     if(fs::is_directory(s)){ // adding a directory to watch
-        watchDirs.push_back(path);
-        cout << "Added watch to directory: " << path << endl;
-        if(recursive){ // recursively add subdirs
-            for (const auto & entry : fs::directory_iterator(path)){ // iterate through all directory entries
-                fs::file_status s = fs::status(entry);
-                if(fs::is_directory(s)) { 
-                        cout << "Recursively adding: " << entry.path() << endl;
-                        addWatch(entry.path().string(), true); 
-                    }
-            }
-        }
+        addDirWatch(path, recursive);
     } else if(fs::is_regular_file(s)){ // adding a regular file to watch
-        watchFiles.push_back(path);
-        cout << "Added watch to file: " << path << endl;
+        addFileWatch(path);
     } else {
         std::cout << path << " is not a valid directory/file" << endl;
+    }
+}
+
+void Watch::addDirWatch(string &path, bool recursive){
+    watchDirs.push_back(path);
+    cout << "Added watch to directory: " << path << endl;
+    for (const auto & entry : fs::directory_iterator(path)){ // iterate through all directory entries
+        fs::file_status s = fs::status(entry);
+        if(fs::is_directory(s) && recursive) { 
+            //cout << "Recursively adding: " << entry.path() << endl;
+            addWatch(entry.path().string(), true); 
+        } else if(fs::is_regular_file(s)){
+            addFileWatch(entry.path().string());
+        } else { cout << "Unknown file encountered: " << entry.path().string() << endl; }
+    }
+}
+
+void Watch::addFileWatch(string path){
+    File f;
+    f.path = path;
+    f.modtime = fs::last_write_time(path);
+    f.size = fs::file_size(path);
+    watchFiles.push_back(f);
+    cout << "Added watch to file: " << path << endl;
+}
+
+void Watch::displayWatchDirs(){
+    cout << "\nWatched directories: " << endl;
+    for(string path: watchDirs){
+        cout << "path:" << path << endl;
+    }
+}
+
+void Watch::displayWatchFiles(){
+    cout << "\nWatched files: " << endl;
+    for(File file: watchFiles){
+        cout << "path:" << file.path << " size:" << file.size << " modtime:" << displayTime(file.modtime);
     }
 }
 
@@ -54,9 +80,10 @@ void Watch::fileAttributes(const fs::path& path){
     }
 
     // last modification time
-    auto ftime = fs::last_write_time(path);
-    std::time_t cftime = decltype(ftime)::clock::to_time_t(ftime);
-    std::cout << "File write time is " << std::asctime(std::localtime(&cftime)) << '\n';
-    
-    cout << "\n";
+    std::cout << "File write time is " << displayTime(fs::last_write_time(path)) << endl;
+}
+
+string Watch::displayTime(fs::file_time_type modtime) const{
+    std::time_t cftime = decltype(modtime)::clock::to_time_t(modtime);
+    return std::asctime(std::localtime(&cftime));
 }

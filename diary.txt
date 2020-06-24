@@ -62,3 +62,9 @@ Tue 23/6/2020
         - 4. Boost.Interprocess - allows shared memory/messages between processes, but unecessary, do not require shared objects etc, only simple messages
     - for development/testing/debugging, seems easier to run daemon in foreground, then amend code later to run in systemd e.g. have systemd create and activate sockets as recommended, rather than manually creating them
 - Include Boost.Asio and created new Socket.h classes - code compiles and runs but is not async so blocks further code from running
+- todo: finish watch directory and files db, produce MVP - can implement sockets to control later
+
+Wed 24/6/2020
+- Populated watchFiles with files to watch and their attributes
+- Abstracted and tidied up elements of the Watch::addWatch() method
+- todo: create main loop - scanning for fs changes and updating vector/db

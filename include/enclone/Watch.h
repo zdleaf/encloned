@@ -26,14 +26,23 @@ struct File {
 class Watch {
     private:
         std::vector<string> watchDirs;
-        std::vector<string> watchFiles;
+        std::vector<File> watchFiles;
+
+        void addDirWatch(string &path, bool recursive);
+        void addFileWatch(string path);
 
     public:
         Watch();
 
         void addWatch(string path, bool recursive);
+
         void listDir(string path);
         void fileAttributes(const fs::path& path);
+
+        void displayWatchDirs();
+        void displayWatchFiles();
+
+        string displayTime(fs::file_time_type modtime) const;
 
 };
 
