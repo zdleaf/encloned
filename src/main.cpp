@@ -13,4 +13,5 @@ int main(){
     e->addWatch("/home/zach/enclone/tmp/subdir", false);
     e->addWatch("/home/zach/enclone/tmp/file1", false);
     e->displayWatches();
+    e->execLoop();
 }

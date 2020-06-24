@@ -15,7 +15,9 @@ enclone::~enclone(){ // destructor
 
 int enclone::execLoop(){
     while(1){
-
+        cout << "Scanning for file changes..." << endl; cout.flush();
+        watch->scanFileChange();
+        sleep(5);
     }
     return 0;
 }

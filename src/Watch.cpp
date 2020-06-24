@@ -15,6 +15,23 @@ void Watch::addWatch(string path, bool recursive){
     }
 }
 
+void Watch::scanFileChange(){
+    for(auto elem: watchFiles){
+        if(!fs::exists(elem.first)){ // if file has been deleted
+            // code to update remotes as appropriate
+            cout << "File no longer exists: " << elem.first << endl;
+            watchFiles.erase(elem.first); // remove file from watch list
+            break;
+        }
+        auto recentModTime = fs::last_write_time(elem.first);
+        if(recentModTime != elem.second){ // if current last_write_time of file != saved value, file has changed
+            cout << "File change detected: " << elem.first << endl;
+            // code to handle new updated file
+            watchFiles[elem.first] = recentModTime;
+        }
+    }
+}
+
 void Watch::addDirWatch(string &path, bool recursive){
     auto result = watchDirs.insert(path);
     if(result.second){ // check if insertion was successful i.e. result.second = true
@@ -55,14 +72,14 @@ void Watch::addFileWatch(string path){
 void Watch::displayWatchDirs(){
     cout << "\nWatched directories: " << endl;
     for(string path: watchDirs){
-        cout << "path:" << path << endl;
+        cout << path << endl;
     }
 }
 
 void Watch::displayWatchFiles(){
     cout << "\nWatched files: " << endl;
     for(auto elem: watchFiles){
-        cout << "path:" << elem.first << " modtime:" << displayTime(elem.second);
+        cout << elem.first << " modtime: " << displayTime(elem.second);
     }
 }
 
