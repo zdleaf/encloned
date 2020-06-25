@@ -6,11 +6,13 @@ Watch::Watch(){ // constructor
 
 void Watch::addWatch(string path, bool recursive){
     fs::file_status s = fs::status(path);
-    if(fs::is_directory(s)){ // adding a directory to watch
+    if(!fs::exists(s)){                 // file/directory does not exist
+        std::cout << path << " does not exist" << endl;
+    } else if(fs::is_directory(s)){     // adding a directory to watch
         addDirWatch(path, recursive);
-    } else if(fs::is_regular_file(s)){ // adding a regular file to watch
+    } else if(fs::is_regular_file(s)){  // adding a regular file to watch
         addFileWatch(path);
-    } else {
+    } else {                            // any other file type, e.g. IPC pipe
         std::cout << path << " is not a valid directory/file" << endl;
     }
 }

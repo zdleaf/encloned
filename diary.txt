@@ -9,7 +9,7 @@ Tues 16/6/2020
 - Read C++ project structure (directory layout conventions) webpages (see saved Firefox session 15/6)
 
 Wed 17/6/2020
-- Alterted directory structure to follow std form (/include, /src, /build directories)
+- Altered directory structure to follow std form (/include, /src, /build directories)
 - Configured CMakeLists.txt and correct building of project with cmake, including correct linking of std::filesystem
 - Built and tested inotify-cpp library to watch a directory
 
@@ -42,8 +42,6 @@ Mon 22/6/2020
 - DB structure - 2 tables created and initialised from code
     - WatchDirs - path
     - FileIndex - IDX/filename/path/mod time/size/file hash
-- todo: populate DB with files in directory
-- todo: check path is valid path before adding and error handling
 
 Tue 23/6/2020
 - Changed Watch class to have single instance with a vector of watched directories/files inside
@@ -75,4 +73,9 @@ Wed 24/6/2020
     1. changes in files (change in file mod time)
     2. file or directory deletion (file/directory does not exist)
     3. new file/directory is added (if the watched directory recursive flag is true, new directory and contained files added)
-- todo: research async - ideally need to run execLoop is separate thread, and Socket in a separate thread to avoid blocking
+- todo: research std::thread and std::jthread - ideally need to run execLoop is separate thread, and Socket in a separate thread to avoid blocking
+    - https://medium.com/@vgasparyan1995/a-new-thread-in-c-20-jthread-ebd121ae8906
+- todo: save watched files/dirs to db and restore on program open
+
+Thur 25/6/2020
+- Added path check for file/directory existing before adding

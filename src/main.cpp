@@ -9,9 +9,10 @@
 
 int main(){
     enclone *e = new enclone();
-    e->addWatch("/home/zach/enclone/tmp", true);
-    e->addWatch("/home/zach/enclone/tmp/subdir", false);
-    e->addWatch("/home/zach/enclone/tmp/file1", false);
+    e->addWatch("/home/zach/enclone/notexist", true); // check non existent file
+    e->addWatch("/home/zach/enclone/tmp", true); // recursive sadd
+    e->addWatch("/home/zach/enclone/tmp/subdir", false); // check dir already added
+    e->addWatch("/home/zach/enclone/tmp/file1", false); // check file already added
     e->displayWatches();
     e->execLoop();
 }
