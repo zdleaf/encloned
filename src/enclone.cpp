@@ -2,7 +2,7 @@
 
 enclone::enclone(){ // constructor
     db = new DB();
-    watch = new Watch();
+    watch = new Watch(db);
     //socket = new Socket();
     // restore from DB here
 }
@@ -19,6 +19,7 @@ int enclone::execLoop(){
     while(1){
         cout << "Scanning for file changes..." << endl; cout.flush();
         watch->scanFileChange();
+        watch->indexToDB();
         sleep(5);
     }
     return 0;

@@ -1,7 +1,11 @@
 #include <enclone/Watch.h>
 
-Watch::Watch(){ // constructor
+Watch::Watch(DB *db){ // constructor
+    this->db = db; // set DB handle
+}
 
+Watch::~Watch(){ // destructor
+    // delete db; // is this necessary?
 }
 
 void Watch::addWatch(string path, bool recursive){
@@ -14,6 +18,36 @@ void Watch::addWatch(string path, bool recursive){
         addFileWatch(path);
     } else {                            // any other file type, e.g. IPC pipe
         std::cout << path << " is not a valid directory/file" << endl;
+    }
+}
+
+void Watch::addDirWatch(string path, bool recursive){
+    auto result = dirIndex.insert({path, recursive});
+    if(result.second){ // check if insertion was successful i.e. result.second = true
+        cout << "Added watch to directory: " << path << endl;
+
+        for (const auto & entry : fs::directory_iterator(path)){ // iterate through all directory entries
+            fs::file_status s = fs::status(entry);
+            if(fs::is_directory(s) && recursive) { 
+                //cout << "Recursively adding: " << entry.path() << endl;
+                addWatch(entry.path().string(), true); 
+            } else if(fs::is_regular_file(s)){
+                addFileWatch(entry.path().string());
+            } else if(!fs::is_directory(s)){ 
+                cout << "Unknown file encountered: " << entry.path().string() << endl; 
+            }
+        }
+    } else { // duplicate - directory was not added
+        cout << "Watch to directory already exists: " << path << endl;
+    }
+}
+
+void Watch::addFileWatch(string path){
+    auto result = fileIndex.insert({path, fs::last_write_time(path)});
+    if(result.second){ // check if insertion was successful i.e. result.second = true
+        cout << "Added watch to file: " << path << endl;
+    } else { // duplicate
+        cout << "Watch to file already exists: " << path << endl;
     }
 }
 
@@ -57,34 +91,22 @@ void Watch::scanFileChange(){
     }
 }
 
-void Watch::addDirWatch(string path, bool recursive){
-    auto result = dirIndex.insert({path, recursive});
-    if(result.second){ // check if insertion was successful i.e. result.second = true
-        cout << "Added watch to directory: " << path << endl;
-
-        for (const auto & entry : fs::directory_iterator(path)){ // iterate through all directory entries
-            fs::file_status s = fs::status(entry);
-            if(fs::is_directory(s) && recursive) { 
-                //cout << "Recursively adding: " << entry.path() << endl;
-                addWatch(entry.path().string(), true); 
-            } else if(fs::is_regular_file(s)){
-                addFileWatch(entry.path().string());
-            } else if(!fs::is_directory(s)){ 
-                cout << "Unknown file encountered: " << entry.path().string() << endl; 
-            }
-        }
-    } else { // duplicate - directory was not added
-        cout << "Watch to directory already exists: " << path << endl;
-    }
+void Watch::indexToDB(){
+    dirIndexToDB();
+    fileIndexToDB();
 }
 
-void Watch::addFileWatch(string path){
-    auto result = fileIndex.insert({path, fs::last_write_time(path)});
-    if(result.second){ // check if insertion was successful i.e. result.second = true
-        cout << "Added watch to file: " << path << endl;
-    } else { // duplicate
-        cout << "Watch to file already exists: " << path << endl;
+void Watch::dirIndexToDB(){
+    std::stringstream sql;
+    //const char sqlchar[];
+    for(auto elem: dirIndex){
+        sql << "INSERT or IGNORE INTO dirIndex (PATH, RECURSIVE) VALUES ('" << elem.first << "'," << (elem.second ? "TRUE" : "FALSE") << ");";
     }
+    db->execSQL(sql.str().c_str()); // convert to c style string
+}
+
+void Watch::fileIndexToDB(){
+
 }
 
 void Watch::displayWatchDirs(){
@@ -99,6 +121,11 @@ void Watch::displayWatchFiles(){
     for(auto elem: fileIndex){
         cout << elem.first << " modtime: " << displayTime(elem.second);
     }
+}
+
+string Watch::displayTime(fs::file_time_type modtime) const{
+    std::time_t cftime = decltype(modtime)::clock::to_time_t(modtime);
+    return std::asctime(std::localtime(&cftime));
 }
 
 void Watch::listDir(string path){
@@ -130,9 +157,4 @@ void Watch::fileAttributes(const fs::path& path){
 
     // last modification time
     std::cout << "File write time is " << displayTime(fs::last_write_time(path)) << endl;
-}
-
-string Watch::displayTime(fs::file_time_type modtime) const{
-    std::time_t cftime = decltype(modtime)::clock::to_time_t(modtime);
-    return std::asctime(std::localtime(&cftime));
 }

@@ -79,3 +79,5 @@ Wed 24/6/2020
 
 Thur 25/6/2020
 - Added path check for file/directory existing before adding
+- Dump dirIndex to DB, unique specifier on path columns to avoid duplicates
+todo: bucket up SQL commands from Watch and execute at once - e.g. if file deleted, add delete SQL to bucket

@@ -17,7 +17,7 @@ class DB {
         DB();
         ~DB();
 
-        int execSQL(const char sql[]);
+        virtual int execSQL(const char sql[]);
 };
 
 #endif

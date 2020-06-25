@@ -27,7 +27,7 @@ int DB::execSQL(const char sql[]){
     int exitcode = sqlite3_exec(db, sql, NULL, NULL, &error);
     if(exitcode != SQLITE_OK) {
         if(error != NULL){
-            fprintf(stderr, "Error executing SQL: %s\n", error);
+            fprintf(stderr, "%d Error executing SQL: %s\n", exitcode, error);
             sqlite3_free(error);
             return 1;
         }
@@ -39,10 +39,10 @@ int DB::execSQL(const char sql[]){
 
 void DB::initialiseTables(){
     const char dirIndex[] = "CREATE TABLE IF NOT EXISTS dirIndex ("
-        "PATH       TEXT    NOT NULL,"
+        "PATH       TEXT    NOT NULL    UNIQUE,"
         "RECURSIVE  BOOLEAN NOT NULL    DEFAULT FALSE);";
     const char fileIndex[] = "CREATE TABLE IF NOT EXISTS fileIndex ("
-        "PATH       TEXT    NOT NULL," 
+        "PATH       TEXT    NOT NULL    UNIQUE," 
         "MODTIME    INTEGER NOT NULL,"
         "HASH       TEXT);";
     execSQL(dirIndex);
