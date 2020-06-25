@@ -17,8 +17,8 @@ namespace fs = std::filesystem;
 
 class Watch {
     private:
-        std::unordered_map<string, bool> watchDirs;
-        std::unordered_map<string, fs::file_time_type> watchFiles;
+        std::unordered_map<string, bool> dirIndex;                  // index of watched directories with bool recursive flag
+        std::unordered_map<string, fs::file_time_type> fileIndex;   // index of watched files with last mod time
 
         void addDirWatch(string path, bool recursive);
         void addFileWatch(string path);

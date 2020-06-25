@@ -4,6 +4,7 @@ enclone::enclone(){ // constructor
     db = new DB();
     watch = new Watch();
     //socket = new Socket();
+    // restore from DB here
 }
 
 enclone::~enclone(){ // destructor
@@ -11,6 +12,7 @@ enclone::~enclone(){ // destructor
     delete db; 
     delete watch;
     delete socket;
+    // save to DB here
 }
 
 int enclone::execLoop(){

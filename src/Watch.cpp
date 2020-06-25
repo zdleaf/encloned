@@ -19,36 +19,36 @@ void Watch::addWatch(string path, bool recursive){
 
 void Watch::scanFileChange(){
     // existing files that are being watched
-    for(auto elem: watchFiles){
+    for(auto elem: fileIndex){
         if(!fs::exists(elem.first)){ // if file has been deleted
             // code to update remotes as appropriate
             cout << "File no longer exists: " << elem.first << endl;
-            watchFiles.erase(elem.first); // remove file from watch list
+            fileIndex.erase(elem.first); // remove file from watch list
             break;
         }
         auto recentModTime = fs::last_write_time(elem.first);
         if(recentModTime != elem.second){ // if current last_write_time of file != saved value, file has changed
             cout << "File change detected: " << elem.first << endl;
             // code to handle new updated file
-            watchFiles[elem.first] = recentModTime;
+            fileIndex[elem.first] = recentModTime;
         }
     }
     // check watched directories for new files and directories
-    for(auto elem: watchDirs){
+    for(auto elem: dirIndex){
         if(!fs::exists(elem.first)){ // if directory has been deleted
             cout << "Directory no longer exists: " << elem.first << endl;
-            watchDirs.erase(elem.first); // remove watch to directory
+            dirIndex.erase(elem.first); // remove watch to directory
             break;
         }
         for (const auto &entry : fs::directory_iterator(elem.first)){ // iterate through all directory entries
             fs::file_status s = fs::status(entry);
             if(fs::is_directory(s) && elem.second) {// check recursive flag (elem.second) is true before checking if watch to dir already exists
-                if(!watchDirs.count(entry.path())){   // check if directory already exists in watched map
+                if(!dirIndex.count(entry.path())){   // check if directory already exists in watched map
                     cout << "New directory found: " << elem.first << endl;
                     addDirWatch(entry.path().string(), true);  // add new directory and any files contained within
                 }
             } else if(fs::is_regular_file(s)){
-                if(!watchFiles.count(entry.path())){  // check if each file already exists
+                if(!fileIndex.count(entry.path())){  // check if each file already exists
                     cout << "New file found: " << elem.first << endl;
                     addFileWatch(entry.path().string());
                 }
@@ -58,7 +58,7 @@ void Watch::scanFileChange(){
 }
 
 void Watch::addDirWatch(string path, bool recursive){
-    auto result = watchDirs.insert({path, recursive});
+    auto result = dirIndex.insert({path, recursive});
     if(result.second){ // check if insertion was successful i.e. result.second = true
         cout << "Added watch to directory: " << path << endl;
 
@@ -79,7 +79,7 @@ void Watch::addDirWatch(string path, bool recursive){
 }
 
 void Watch::addFileWatch(string path){
-    auto result = watchFiles.insert({path, fs::last_write_time(path)});
+    auto result = fileIndex.insert({path, fs::last_write_time(path)});
     if(result.second){ // check if insertion was successful i.e. result.second = true
         cout << "Added watch to file: " << path << endl;
     } else { // duplicate
@@ -89,14 +89,14 @@ void Watch::addFileWatch(string path){
 
 void Watch::displayWatchDirs(){
     cout << "\nWatched directories: " << endl;
-    for(auto elem: watchDirs){
+    for(auto elem: dirIndex){
         cout << elem.first << " recursive: " << elem.second << endl;
     }
 }
 
 void Watch::displayWatchFiles(){
     cout << "\nWatched files: " << endl;
-    for(auto elem: watchFiles){
+    for(auto elem: fileIndex){
         cout << elem.first << " modtime: " << displayTime(elem.second);
     }
 }

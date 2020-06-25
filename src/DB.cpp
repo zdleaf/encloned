@@ -22,28 +22,29 @@ void DB::closeDB(){
     sqlite3_close(db);
 }
 
-void DB::execSQL(const char sql[]){
+int DB::execSQL(const char sql[]){
     char* error;
     int exitcode = sqlite3_exec(db, sql, NULL, NULL, &error);
     if(exitcode != SQLITE_OK) {
         if(error != NULL){
             fprintf(stderr, "Error executing SQL: %s\n", error);
             sqlite3_free(error);
+            return 1;
         }
     } else {
       fprintf(stderr, "Successfully executed SQL statement: %.36s...\n", sql);
     }
+    return 0;
 }
 
 void DB::initialiseTables(){
-    const char watchdirs[] = "CREATE TABLE IF NOT EXISTS WatchDirs ("
-        "PATH       TEXT    NOT NULL);";
-    const char fileidx[] = "CREATE TABLE IF NOT EXISTS FileIndex ("
-        "FILENAME   TEXT    NOT NULL," 
+    const char dirIndex[] = "CREATE TABLE IF NOT EXISTS dirIndex ("
+        "PATH       TEXT    NOT NULL,"
+        "RECURSIVE  BOOLEAN NOT NULL    DEFAULT FALSE);";
+    const char fileIndex[] = "CREATE TABLE IF NOT EXISTS fileIndex ("
         "PATH       TEXT    NOT NULL," 
         "MODTIME    INTEGER NOT NULL,"
-        "SIZE       INTEGER,"
         "HASH       TEXT);";
-    execSQL(watchdirs);
-    execSQL(fileidx);
+    execSQL(dirIndex);
+    execSQL(fileIndex);
 }

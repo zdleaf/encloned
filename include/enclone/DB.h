@@ -8,14 +8,16 @@ class DB {
     private:
         sqlite3 *db; // index handle
 
+        void openDB();
+        void closeDB();
+        
+        void initialiseTables(); // initialise tables on first run
+
     public:
         DB();
         ~DB();
 
-        void openDB();
-        void closeDB();
-        void execSQL(const char sql[]);
-        void initialiseTables(); // initialise tables on first run
+        int execSQL(const char sql[]);
 };
 
 #endif
