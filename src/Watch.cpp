@@ -43,7 +43,9 @@ void Watch::addDirWatch(string path, bool recursive){
 }
 
 void Watch::addFileWatch(string path){
-    auto result = fileIndex.insert({path, fs::last_write_time(path)});
+    auto fstime = fs::last_write_time(path);
+    std::time_t modtime = decltype(fstime)::clock::to_time_t(fstime); 
+    auto result = fileIndex.insert({path, modtime});
     if(result.second){ // check if insertion was successful i.e. result.second = true
         cout << "Added watch to file: " << path << endl;
     } else { // duplicate
@@ -60,7 +62,8 @@ void Watch::scanFileChange(){
             fileIndex.erase(elem.first); // remove file from watch list
             break;
         }
-        auto recentModTime = fs::last_write_time(elem.first);
+        auto recentfsTime = fs::last_write_time(elem.first);
+        std::time_t recentModTime = decltype(recentfsTime)::clock::to_time_t(recentfsTime);
         if(recentModTime != elem.second){ // if current last_write_time of file != saved value, file has changed
             cout << "File change detected: " << elem.first << endl;
             // code to handle new updated file
@@ -94,19 +97,20 @@ void Watch::scanFileChange(){
 void Watch::indexToDB(){
     dirIndexToDB();
     fileIndexToDB();
+    db->execSQL(sql.str().c_str()); // convert to c style string and execute bucket
+    sql.clear(); // empty bucket
 }
 
 void Watch::dirIndexToDB(){
-    std::stringstream sql;
-    //const char sqlchar[];
     for(auto elem: dirIndex){
         sql << "INSERT or IGNORE INTO dirIndex (PATH, RECURSIVE) VALUES ('" << elem.first << "'," << (elem.second ? "TRUE" : "FALSE") << ");";
     }
-    db->execSQL(sql.str().c_str()); // convert to c style string
 }
 
 void Watch::fileIndexToDB(){
-
+    for(auto elem: fileIndex){
+        sql << "INSERT or IGNORE INTO fileIndex (PATH, MODTIME) VALUES ('" << elem.first << "'," << elem.second << ");";
+    }
 }
 
 void Watch::displayWatchDirs(){
@@ -123,9 +127,8 @@ void Watch::displayWatchFiles(){
     }
 }
 
-string Watch::displayTime(fs::file_time_type modtime) const{
-    std::time_t cftime = decltype(modtime)::clock::to_time_t(modtime);
-    return std::asctime(std::localtime(&cftime));
+string Watch::displayTime(std::time_t modtime) const{
+    return std::asctime(std::localtime(&modtime));
 }
 
 void Watch::listDir(string path){
@@ -156,5 +159,5 @@ void Watch::fileAttributes(const fs::path& path){
     }
 
     // last modification time
-    std::cout << "File write time is " << displayTime(fs::last_write_time(path)) << endl;
+    //std::cout << "File write time is " << displayTime(fs::last_write_time(path)) << endl;
 }

@@ -21,9 +21,10 @@ namespace fs = std::filesystem;
 class Watch {
     private:
         std::unordered_map<string, bool> dirIndex;                  // index of watched directories with bool recursive flag
-        std::unordered_map<string, fs::file_time_type> fileIndex;   // index of watched files with last mod time
+        std::unordered_map<string, std::time_t> fileIndex;          // index of watched files with last mod time
 
-        DB *db; // database handle
+        DB *db;                 // database handle
+        std::stringstream sql;  // sql bucket of queries to execute
 
         void addDirWatch(string path, bool recursive);
         void addFileWatch(string path);
@@ -33,7 +34,7 @@ class Watch {
 
         void restoreDB();
 
-        string displayTime(fs::file_time_type modtime) const;
+        string displayTime(std::time_t modtime) const;
 
         void listDir(string path);
         void fileAttributes(const fs::path& path);
