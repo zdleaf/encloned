@@ -5,7 +5,7 @@ Watch::Watch(DB *db){ // constructor
 }
 
 Watch::~Watch(){ // destructor
-    // delete db; // is this necessary?
+    // save watched objects to DB here
 }
 
 void Watch::addWatch(string path, bool recursive){

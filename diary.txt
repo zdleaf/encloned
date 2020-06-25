@@ -1,5 +1,5 @@
 Monday 15/6/2020
-- Setup and configured dev environment: VSCode on Windows with remote Debian WSL, configured C++ Intellisense to use g++ and boost libraries
+- Setup and configured dev environment: VSCode on Windows connected to remote Debian WSL, configured C++ Intellisense to use g++ and boost libraries
 - Figured out how to include boost and compile with g++
 - Installed CMake and Native Debug VSCode plugins
 - todo: test CMake compilation, test boost filesystem code, read C++ project structure webpages (see saved Firefox session 15/6)
@@ -83,3 +83,4 @@ Thur 25/6/2020
 - Added a "bucket" for SQL commands in Watch - stringstream sql will keep appending SQL queries to be executed at once in a bucket
 todo: bucket up remaining SQL commands from Watch and execute at once - e.g. if file deleted, add delete SQL to bucket
 todo: restore from DB on open
+todo: separate thread for polling loop, update db loop, and local socket connection
