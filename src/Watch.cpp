@@ -5,7 +5,7 @@ Watch::Watch(DB *db){ // constructor
 }
 
 Watch::~Watch(){ // destructor
-    // save watched objects to DB here
+    
 }
 
 void Watch::addWatch(string path, bool recursive){
@@ -23,12 +23,12 @@ void Watch::addWatch(string path, bool recursive){
 
 void Watch::addDirWatch(string path, bool recursive){
     auto result = dirIndex.insert({path, recursive});
-    if(result.second){ // check if insertion was successful i.e. result.second = true
+    if(result.second){ // check if insertion was successful i.e. result.second = true (false when already exists in map)
         cout << "Added watch to directory: " << path << endl;
-
+        sqlQueue << "INSERT or IGNORE INTO dirIndex (PATH, RECURSIVE) VALUES ('" << path << "'," << (recursive ? "TRUE" : "FALSE") << ");"; // queue SQL insert
         for (const auto & entry : fs::directory_iterator(path)){ // iterate through all directory entries
             fs::file_status s = fs::status(entry);
-            if(fs::is_directory(s) && recursive) { 
+            if(fs::is_directory(s) && recursive) { // check recursive flag before adding directories recursively
                 //cout << "Recursively adding: " << entry.path() << endl;
                 addWatch(entry.path().string(), true); 
             } else if(fs::is_regular_file(s)){
@@ -46,8 +46,9 @@ void Watch::addFileWatch(string path){
     auto fstime = fs::last_write_time(path);
     std::time_t modtime = decltype(fstime)::clock::to_time_t(fstime); 
     auto result = fileIndex.insert({path, modtime});
-    if(result.second){ // check if insertion was successful i.e. result.second = true
+    if(result.second){ // check if insertion was successful i.e. result.second = true (false when already exists in map)
         cout << "Added watch to file: " << path << endl;
+        sqlQueue << "INSERT or IGNORE INTO fileIndex (PATH, MODTIME) VALUES ('" << path << "'," << modtime << ");"; // if successful, queue an SQL insert into DB
     } else { // duplicate
         cout << "Watch to file already exists: " << path << endl;
     }
@@ -60,14 +61,15 @@ void Watch::scanFileChange(){
             // code to update remotes as appropriate
             cout << "File no longer exists: " << elem.first << endl;
             fileIndex.erase(elem.first); // remove file from watch list
+            sqlQueue << "DELETE from fileIndex where PATH='" << elem.first << "';"; // queue deletion from DB
             break;
         }
         auto recentfsTime = fs::last_write_time(elem.first);
         std::time_t recentModTime = decltype(recentfsTime)::clock::to_time_t(recentfsTime);
         if(recentModTime != elem.second){ // if current last_write_time of file != saved value, file has changed
             cout << "File change detected: " << elem.first << endl;
-            // code to handle new updated file
-            fileIndex[elem.first] = recentModTime;
+            fileIndex[elem.first] = recentModTime; // amend in fileIndex map
+            sqlQueue << "UPDATE fileIndex SET MODTIME = '" << recentModTime << "' WHERE PATH='" << elem.first << "';"; // queue SQL update
         }
     }
     // check watched directories for new files and directories
@@ -75,6 +77,7 @@ void Watch::scanFileChange(){
         if(!fs::exists(elem.first)){ // if directory has been deleted
             cout << "Directory no longer exists: " << elem.first << endl;
             dirIndex.erase(elem.first); // remove watch to directory
+            sqlQueue << "DELETE from dirIndex where PATH='" << elem.first << "';"; // queue deletion from DB
             break;
         }
         for (const auto &entry : fs::directory_iterator(elem.first)){ // iterate through all directory entries
@@ -94,22 +97,11 @@ void Watch::scanFileChange(){
     }
 }
 
-void Watch::indexToDB(){
-    dirIndexToDB();
-    fileIndexToDB();
-    db->execSQL(sql.str().c_str()); // convert to c style string and execute bucket
-    sql.clear(); // empty bucket
-}
-
-void Watch::dirIndexToDB(){
-    for(auto elem: dirIndex){
-        sql << "INSERT or IGNORE INTO dirIndex (PATH, RECURSIVE) VALUES ('" << elem.first << "'," << (elem.second ? "TRUE" : "FALSE") << ");";
-    }
-}
-
-void Watch::fileIndexToDB(){
-    for(auto elem: fileIndex){
-        sql << "INSERT or IGNORE INTO fileIndex (PATH, MODTIME) VALUES ('" << elem.first << "'," << elem.second << ");";
+void Watch::execQueuedSQL(){
+    if(sqlQueue.rdbuf()->in_avail() != 0) { // if queue is not empty
+        db->execSQL(sqlQueue.str().c_str()); // convert to c style string and execute bucket
+        sqlQueue.str(""); // empty bucket
+        sqlQueue.clear(); // clear error codes
     }
 }
 

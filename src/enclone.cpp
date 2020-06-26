@@ -8,18 +8,18 @@ enclone::enclone(){ // constructor
 }
 
 enclone::~enclone(){ // destructor
+    watch->execQueuedSQL(); // execute any pending SQL before closing
     // delete objects
     delete db; 
     delete watch;
     delete socket;
-    // save to DB here
 }
 
 int enclone::execLoop(){
     while(1){
         cout << "Scanning for file changes..." << endl; cout.flush();
         watch->scanFileChange();
-        watch->indexToDB();
+        watch->execQueuedSQL();
         sleep(5);
     }
     return 0;

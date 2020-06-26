@@ -27,12 +27,13 @@ int DB::execSQL(const char sql[]){
     int exitcode = sqlite3_exec(db, sql, NULL, NULL, &error);
     if(exitcode != SQLITE_OK) {
         if(error != NULL){
-            fprintf(stderr, "%d Error executing SQL: %s\n", exitcode, error);
+            fprintf(stderr, "%d Error executing SQL: %s\nSQL:%s", exitcode, error, sql);
             sqlite3_free(error);
             return 1;
         }
     } else {
-      fprintf(stderr, "Successfully executed SQL statement: %.36s...\n", sql);
+      //fprintf(stderr, "Successfully executed SQL statement: %.36s...\n", sql);
+      fprintf(stderr, "Successfully executed SQL statement: %s...\n", sql);
     }
     return 0;
 }

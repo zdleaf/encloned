@@ -80,7 +80,10 @@ Thur 25/6/2020
 - Added path check for file/directory existing before adding
 - Ammended fileIndex to store last modified time as std::time_t (unix time as integer) to enable storage in DB
 - Dump dirIndex and fileIndex to DB, unique specifier on path columns to avoid duplicates
-- Added a "bucket" for SQL commands in Watch - stringstream sql will keep appending SQL queries to be executed at once in a bucket
-todo: bucket up remaining SQL commands from Watch and execute at once - e.g. if file deleted, add delete SQL to bucket
+- Added a "bucket" for SQL commands in Watch - stringstream sqlQueue will keep appending SQL queries to be executed at once in a bucket similar to Nagles Algorithm
 todo: restore from DB on open
 todo: separate thread for polling loop, update db loop, and local socket connection
+
+Fri 26/6/2020
+- Added DB updates when file/directory is removed or changed
+- Changed sqlQueue to work more efficiently by not attempting to add entire fileIndex/dirIndex map contents each time. SQL insert/delete/update queries only queued on initial add/removal/update.

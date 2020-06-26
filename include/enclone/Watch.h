@@ -23,14 +23,11 @@ class Watch {
         std::unordered_map<string, bool> dirIndex;                  // index of watched directories with bool recursive flag
         std::unordered_map<string, std::time_t> fileIndex;          // index of watched files with last mod time
 
-        DB *db;                 // database handle
-        std::stringstream sql;  // sql bucket of queries to execute
+        DB *db;                         // database handle
+        std::stringstream sqlQueue;     // sql queue/bucket of queries to execute in batches
 
         void addDirWatch(string path, bool recursive);
         void addFileWatch(string path);
-
-        void dirIndexToDB();
-        void fileIndexToDB();
 
         void restoreDB();
 
@@ -46,7 +43,7 @@ class Watch {
         void addWatch(string path, bool recursive);
         void scanFileChange();
 
-        void indexToDB();
+        void execQueuedSQL();
 
         void displayWatchDirs();
         void displayWatchFiles();
