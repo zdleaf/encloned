@@ -74,7 +74,7 @@ Wed 24/6/2020
     2. file or directory deletion (file/directory does not exist)
     3. new file/directory is added (if the watched directory recursive flag is true, new directory and contained files added)
 - todo: research std::thread and std::jthread - ideally need to run execLoop is separate thread, and Socket in a separate thread to avoid blocking
-    - https://medium.com/@vgasparyan1995/a-new-thread-in-c-20-jthread-ebd121ae8906
+
 
 Thur 25/6/2020
 - Added path check for file/directory existing before adding
@@ -87,3 +87,11 @@ todo: separate thread for polling loop, update db loop, and local socket connect
 Fri 26/6/2020
 - Added DB updates when file/directory is removed or changed
 - Changed sqlQueue to work more efficiently by not attempting to add entire fileIndex/dirIndex map contents each time. SQL insert/delete/update queries only queued on initial add/removal/update.
+
+Sun 28/6/2020
+- Researched C++ multithreading - std::thread and std::jthread
+    - How to request a thread to stop with jthread: https://medium.com/@vgasparyan1995/a-new-thread-in-c-20-jthread-ebd121ae8906 (C++20)
+        - jthread not supported in latest stable Debian g++ - full C++20 features not yet available, similarly cannot use std::osyncstream to sync output stream between threads. Only a few experimental features of c++20 are available via flag -std=c++2a.
+    - std::mutex is required to lock/unlock shared data between threads, including cout to avoid garbled output. For processes that naturally come to an end, use std::lock_guard if preferable. mutex::lock() is required for our infinitely looping polling/DB threads.
+    - As our threads will be infinite loops, running for the duration of the program, use an "std::atomic<bool> stopFlag" as the thread loop condition as this is threadsafe. This atomic bool can then be safely set from outside the threads when we want to close down the thread/loop.
+    - test/thread-test.cpp created to test multi-threading and above concepts

@@ -20,7 +20,7 @@ int enclone::execLoop(){
         cout << "Scanning for file changes..." << endl; cout.flush();
         watch->scanFileChange();
         watch->execQueuedSQL();
-        sleep(5);
+        std::this_thread::sleep_for(std::chrono::seconds(5));
     }
     return 0;
 }
