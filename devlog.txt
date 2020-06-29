@@ -107,9 +107,14 @@ Mon 29/6/2020
         - Are there any ordering requirements between the operations done in this thread and those done in another? How are those requirements enforced?
         - Is the data loaded by this thread still valid? Could it have been modified by other threads?
         - If you assume that another thread could be modifying the data, what would that mean and how could you ensure that this never happens?
-- Deleted copy constructors from Watch class - this class should not be copied. Do not call a new thread on a class object as the class object is copied by default, and mutexes are unable to be copied. Call instead on a pointer to an entry function of an existing object i.e. std::thread t(&foo::bar, &f) and not std::thread t5(foo)
-- Implemented the Watch::scanFileChange() and Watch::execQueuedSQL loop in a separate thread run from enclone class - see Watch::execThread() for loop
+- Multi-threading:
+    - Implemented the Watch::scanFileChange() and Watch::execQueuedSQL loop in a separate thread run from enclone class - see Watch::execThread() for loop
+    - Socket now runs in a separate thread also, however significant work still required to test/check how socket works
     - Threads are terminated by setting std::atomic_bool flag in enclone class
-    - todo: ensure correct mutexes and locks are in place
-    - todo: write exception handling for file operations
-    - todo: does DB update want to be in the same thread as file system change? possibly not, in any case this wants to be more infrequent than filesystem polling
+    - Deleted copy constructors from Watch and Socket class - these classes should not be copied. 
+        - Do not call a new thread on a class object as the class object is copied by default, and mutexes are unable to be copied. 
+        - Call instead on a pointer to an entry function of an existing object i.e. std::thread t(&foo::bar, &f) and not std::thread t5(foo)
+- todo: ensure correct mutexes and locks are in place - wait until further classes are written and have a better understanding of what resources will be shared
+- todo: exception handling for file operations required?
+- todo: does DB update want to be in the same thread as file system change? possibly not, in any case this wants to be more infrequent than filesystem polling - use global define/vars/config to set update times
+- todo: start a basic upload to AWS S3 of watched files

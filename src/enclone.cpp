@@ -5,7 +5,7 @@ enclone::enclone(){ // constructor
 
     db = new DB();
     watch = new Watch(db, &runThreads);
-    //socket = new Socket();
+    socket = new Socket(&runThreads);
 }
 
 enclone::~enclone(){ // destructor
@@ -19,6 +19,11 @@ int enclone::execLoop(){
     cout << "Starting watch thread..." << endl;
     std::thread watchThread{&Watch::execThread, watch}; // start a thread scanning for filesystem changes
     watchThread.detach();                               // detach thread, we not want to wait for it to finish before continuing. execThread() loops until runThreads == false;
+
+/*     cout << "Starting socket thread..." << endl;
+    std::thread socketThread{&Socket::execThread, socket}; // start a thread scanning for filesystem changes
+    socketThread.detach();                               // detach thread, we not want to wait for it to finish before continuing. execThread() loops until runThreads == false; */
+
     while(1){
         // do nothing while watch thread is running
     }

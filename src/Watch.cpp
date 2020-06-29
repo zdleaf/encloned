@@ -11,12 +11,9 @@ Watch::~Watch(){ // destructor
 
 void Watch::execThread(){
     while(*runThreads){
-        mtx.lock(); // should we lock mutex without scanFileChange? is this blocking while scanning a large amount of files
         cout << "Scanning for file changes..." << endl; cout.flush(); 
         scanFileChange();
-        cout << "Exec queued SQL..." << endl; cout.flush(); 
         execQueuedSQL();
-        mtx.unlock();
         std::this_thread::sleep_for(std::chrono::seconds(5));
     }
 }
@@ -72,6 +69,7 @@ void Watch::scanFileChange(){
     for(auto elem: fileIndex){
         if(!fs::exists(elem.first)){ // if file has been deleted
             // code to update remotes as appropriate
+            std::lock_guard<std::mutex> guard(mtx);
             cout << "File no longer exists: " << elem.first << endl;
             fileIndex.erase(elem.first); // remove file from watch list
             sqlQueue << "DELETE from fileIndex where PATH='" << elem.first << "';"; // queue deletion from DB
@@ -80,6 +78,7 @@ void Watch::scanFileChange(){
         auto recentfsTime = fs::last_write_time(elem.first);
         std::time_t recentModTime = decltype(recentfsTime)::clock::to_time_t(recentfsTime);
         if(recentModTime != elem.second){ // if current last_write_time of file != saved value, file has changed
+            std::lock_guard<std::mutex> guard(mtx);
             cout << "File change detected: " << elem.first << endl;
             fileIndex[elem.first] = recentModTime; // amend in fileIndex map
             sqlQueue << "UPDATE fileIndex SET MODTIME = '" << recentModTime << "' WHERE PATH='" << elem.first << "';"; // queue SQL update
@@ -88,6 +87,7 @@ void Watch::scanFileChange(){
     // check watched directories for new files and directories
     for(auto elem: dirIndex){
         if(!fs::exists(elem.first)){ // if directory has been deleted
+            std::lock_guard<std::mutex> guard(mtx);
             cout << "Directory no longer exists: " << elem.first << endl;
             dirIndex.erase(elem.first); // remove watch to directory
             sqlQueue << "DELETE from dirIndex where PATH='" << elem.first << "';"; // queue deletion from DB
@@ -97,11 +97,13 @@ void Watch::scanFileChange(){
             fs::file_status s = fs::status(entry);
             if(fs::is_directory(s) && elem.second) {// check recursive flag (elem.second) is true before checking if watch to dir already exists
                 if(!dirIndex.count(entry.path())){   // check if directory already exists in watched map
+                    std::lock_guard<std::mutex> guard(mtx);
                     cout << "New directory found: " << elem.first << endl;
                     addDirWatch(entry.path().string(), true);  // add new directory and any files contained within
                 }
             } else if(fs::is_regular_file(s)){
                 if(!fileIndex.count(entry.path())){  // check if each file already exists
+                    std::lock_guard<std::mutex> guard(mtx);
                     cout << "New file found: " << elem.first << endl;
                     addFileWatch(entry.path().string());
                 }
@@ -111,6 +113,7 @@ void Watch::scanFileChange(){
 }
 
 void Watch::execQueuedSQL(){
+    std::lock_guard<std::mutex> guard(mtx);
     if(sqlQueue.rdbuf()->in_avail() != 0) { // if queue is not empty
         db->execSQL(sqlQueue.str().c_str()); // convert to c style string and execute bucket
         sqlQueue.str(""); // empty bucket

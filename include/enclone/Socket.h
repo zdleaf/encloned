@@ -11,10 +11,20 @@ namespace io = boost::asio;
 class Socket {
     private:
         io::io_context io_context;
+
+        // concurrency/multi-threading
+        std::mutex mtx;
+        std::atomic_bool *runThreads; // ptr to flag indicating if execThread should loop or close down
         
     public:
-        Socket();
+        Socket(std::atomic_bool *runThreads);
         ~Socket();
+
+        // delete copy constructors - this class should not be copied
+        Socket(const Socket&) = delete;
+        Socket& operator=(const Socket&) = delete;
+
+        void execThread();
 
         void openSocket();
         void closeSocket();
