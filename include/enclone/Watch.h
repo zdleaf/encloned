@@ -11,6 +11,11 @@
 #include <unordered_set>
 #include <unordered_map>
 
+// concurrency/multi-threading
+#include <thread>
+#include <mutex>
+#include <atomic>
+
 #include <enclone/DB.h>
 
 using std::string;
@@ -19,12 +24,33 @@ using std::endl;
 namespace fs = std::filesystem;
 
 class Watch {
+    public:
+        Watch(DB *db, std::atomic_bool *runThreads);
+        ~Watch();
+
+        // delete copy constructors - this class should not be copied
+        Watch(const Watch&) = delete;
+        Watch& operator=(const Watch&) = delete;
+
+        void execThread();
+
+        void addWatch(string path, bool recursive);
+        void scanFileChange();
+        void execQueuedSQL();
+
+        void displayWatchDirs();
+        void displayWatchFiles();
+
     private:
         std::unordered_map<string, bool> dirIndex;                  // index of watched directories with bool recursive flag
         std::unordered_map<string, std::time_t> fileIndex;          // index of watched files with last mod time
 
         DB *db;                         // database handle
         std::stringstream sqlQueue;     // sql queue/bucket of queries to execute in batches
+
+        // concurrency/multi-threading
+        std::mutex mtx;
+        std::atomic_bool *runThreads; // ptr to flag indicating if execThread should loop or close down
 
         void addDirWatch(string path, bool recursive);
         void addFileWatch(string path);
@@ -35,18 +61,6 @@ class Watch {
 
         void listDir(string path);
         void fileAttributes(const fs::path& path);
-
-    public:
-        Watch(DB *db);
-        ~Watch();
-
-        void addWatch(string path, bool recursive);
-        void scanFileChange();
-
-        void execQueuedSQL();
-
-        void displayWatchDirs();
-        void displayWatchFiles();
 };
 
 #endif

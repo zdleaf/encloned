@@ -1,11 +1,24 @@
 #include <enclone/Watch.h>
 
-Watch::Watch(DB *db){ // constructor
+Watch::Watch(DB *db, std::atomic_bool *runThreads){ // constructor
     this->db = db; // set DB handle
+    this->runThreads = runThreads;
 }
 
 Watch::~Watch(){ // destructor
-    
+    execQueuedSQL(); // execute any pending SQL before closing
+}
+
+void Watch::execThread(){
+    while(*runThreads){
+        mtx.lock(); // should we lock mutex without scanFileChange? is this blocking while scanning a large amount of files
+        cout << "Scanning for file changes..." << endl; cout.flush(); 
+        scanFileChange();
+        cout << "Exec queued SQL..." << endl; cout.flush(); 
+        execQueuedSQL();
+        mtx.unlock();
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+    }
 }
 
 void Watch::addWatch(string path, bool recursive){

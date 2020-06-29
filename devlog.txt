@@ -92,6 +92,24 @@ Sun 28/6/2020
 - Researched C++ multithreading - std::thread and std::jthread
     - How to request a thread to stop with jthread: https://medium.com/@vgasparyan1995/a-new-thread-in-c-20-jthread-ebd121ae8906 (C++20)
         - jthread not supported in latest stable Debian g++ - full C++20 features not yet available, similarly cannot use std::osyncstream to sync output stream between threads. Only a few experimental features of c++20 are available via flag -std=c++2a.
-    - std::mutex is required to lock/unlock shared data between threads, including cout to avoid garbled output. For processes that naturally come to an end, use std::lock_guard if preferable. mutex::lock() is required for our infinitely looping polling/DB threads.
+    - std::mutex is required to lock/unlock shared data between threads, including cout to avoid garbled output. For processes that naturally come to an end, std::lock_guard is preferable - this automatically locks then unlocks when function is complete. mutex::lock() is required for our infinitely looping polling/DB threads.
     - As our threads will be infinite loops, running for the duration of the program, use an "std::atomic<bool> stopFlag" as the thread loop condition as this is threadsafe. This atomic bool can then be safely set from outside the threads when we want to close down the thread/loop.
     - test/thread-test.cpp created to test multi-threading and above concepts
+
+Mon 29/6/2020
+- Reading C++ Concurrency in Action, PRACTICAL MULTITHREADING by ANTHONY WILLIAMS
+    - considerations (p304):
+        - Which data needs to be protected from concurrent access?
+        - How do you ensure that the data is protected?
+        - Where in the code could other threads be at this time?
+        - Which mutexes does this thread hold?
+        - Which mutexes might other threads hold?
+        - Are there any ordering requirements between the operations done in this thread and those done in another? How are those requirements enforced?
+        - Is the data loaded by this thread still valid? Could it have been modified by other threads?
+        - If you assume that another thread could be modifying the data, what would that mean and how could you ensure that this never happens?
+- Deleted copy constructors from Watch class - this class should not be copied. Do not call a new thread on a class object as the class object is copied by default, and mutexes are unable to be copied. Call instead on a pointer to an entry function of an existing object i.e. std::thread t(&foo::bar, &f) and not std::thread t5(foo)
+- Implemented the Watch::scanFileChange() and Watch::execQueuedSQL loop in a separate thread run from enclone class - see Watch::execThread() for loop
+    - Threads are terminated by setting std::atomic_bool flag in enclone class
+    - todo: ensure correct mutexes and locks are in place
+    - todo: write exception handling for file operations
+    - todo: does DB update want to be in the same thread as file system change? possibly not, in any case this wants to be more infrequent than filesystem polling

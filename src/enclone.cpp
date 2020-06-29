@@ -1,14 +1,14 @@
 #include <enclone/enclone.h>
 
 enclone::enclone(){ // constructor
+    runThreads = true;
+
     db = new DB();
-    watch = new Watch(db);
+    watch = new Watch(db, &runThreads);
     //socket = new Socket();
-    // restore from DB here
 }
 
 enclone::~enclone(){ // destructor
-    watch->execQueuedSQL(); // execute any pending SQL before closing
     // delete objects
     delete db; 
     delete watch;
@@ -16,11 +16,11 @@ enclone::~enclone(){ // destructor
 }
 
 int enclone::execLoop(){
+    cout << "Starting watch thread..." << endl;
+    std::thread watchThread{&Watch::execThread, watch}; // start a thread scanning for filesystem changes
+    watchThread.detach();                               // detach thread, we not want to wait for it to finish before continuing. execThread() loops until runThreads == false;
     while(1){
-        cout << "Scanning for file changes..." << endl; cout.flush();
-        watch->scanFileChange();
-        watch->execQueuedSQL();
-        std::this_thread::sleep_for(std::chrono::seconds(5));
+        // do nothing while watch thread is running
     }
     return 0;
 }

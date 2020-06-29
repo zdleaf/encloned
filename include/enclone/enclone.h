@@ -4,6 +4,12 @@
 #include <iostream>
 #include <vector>
 #include <memory> // shared_ptr
+#include <chrono>
+
+// concurrency/multi-threading
+#include <thread>
+#include <mutex>
+#include <atomic>
 
 #include <enclone/DB.h>
 #include <enclone/Watch.h>
@@ -16,6 +22,8 @@ class enclone {
         DB *db; // database handle
         Watch *watch; // watch file/directory class
         Socket *socket; // local unix domain socket for enclone-config
+
+        std::atomic<bool> runThreads; // flag to indicate whether detached threads should continue to run
         
     public:
         enclone();
@@ -23,7 +31,7 @@ class enclone {
 
         int execLoop();
 
-        void addWatch(string path, bool recursive);
+        void addWatch(string path, bool recursive); // needs mutex support
         void displayWatches();
 };
 
