@@ -9,7 +9,7 @@ enable_testing()
 set(CMAKE_CXX_STANDARD, 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# use shared libraries
+# use shared libraries (default ON)
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
 # find AWS SDK components

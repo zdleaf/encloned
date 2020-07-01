@@ -128,4 +128,5 @@ Wed 31/6/2020
 - Setup AWS CLI with correct credentials from AWS Educate/Vocareum (Account Details -> AWS CLI to get .aws/credentials file)
 - Built relevant parts of AWS SDK from source (s3)
 - Included AWS SDK in enclone, tested basic API call/connection and correct compilation with CMAKE
+- Added calls to S3 to list available buckets and list all objects within that bucket
 - todo: does AWS SDK want to be included as static or shared lib? BUILD_SHARED_LIBS CMAKE var
