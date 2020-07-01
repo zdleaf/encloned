@@ -98,7 +98,7 @@ Sun 28/6/2020
 
 Mon 29/6/2020
 - Reading C++ Concurrency in Action, PRACTICAL MULTITHREADING by ANTHONY WILLIAMS
-    - considerations (p304):
+    - Considerations from p304:
         - Which data needs to be protected from concurrent access?
         - How do you ensure that the data is protected?
         - Where in the code could other threads be at this time?
@@ -118,3 +118,9 @@ Mon 29/6/2020
 - todo: exception handling for file operations required?
 - todo: does DB update want to be in the same thread as file system change? possibly not, in any case this wants to be more infrequent than filesystem polling - use global define/vars/config to set update times
 - todo: start a basic upload to AWS S3 of watched files
+
+Tue 30/6/2020
+- Downloaded AWS C++ SDK and read through code, setup S3 bucket to test uploads
+
+Wed 31/6/2020
+-
