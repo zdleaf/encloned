@@ -121,6 +121,11 @@ Mon 29/6/2020
 
 Tue 30/6/2020
 - Downloaded AWS C++ SDK and read through code, setup S3 bucket to test uploads
+- Read AWS SDK documentation - https://docs.aws.amazon.com/sdk-for-cpp/v1/developer-guide/welcome.html
+- Read AWS S3 documentation
 
 Wed 31/6/2020
--
+- Setup AWS CLI with correct credentials from AWS Educate/Vocareum (Account Details -> AWS CLI to get .aws/credentials file)
+- Built relevant parts of AWS SDK from source (s3)
+- Included AWS SDK in enclone, tested basic API call/connection and correct compilation with CMAKE
+- todo: does AWS SDK want to be included as static or shared lib? BUILD_SHARED_LIBS CMAKE var
