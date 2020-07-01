@@ -125,8 +125,18 @@ Tue 30/6/2020
 - Read AWS S3 documentation
 
 Wed 31/6/2020
-- Setup AWS CLI with correct credentials from AWS Educate/Vocareum (Account Details -> AWS CLI to get .aws/credentials file)
-- Built relevant parts of AWS SDK from source (s3)
-- Included AWS SDK in enclone, tested basic API call/connection and correct compilation with CMAKE
-- Added calls to S3 to list available buckets and list all objects within that bucket
-- todo: does AWS SDK want to be included as static or shared lib? BUILD_SHARED_LIBS CMAKE var
+- AWS S3 remote
+    - Setup AWS CLI with correct credentials from AWS Educate/Vocareum (Account Details -> AWS CLI to get .aws/credentials file)
+    - Built relevant parts of AWS SDK from source (s3)
+    - Included AWS SDK in enclone, tested basic API call/connection and correct compilation with CMAKE
+    - Added calls to S3 to list available buckets and list all objects within that bucket
+        - todo: does AWS SDK want to be included as static or shared lib? BUILD_SHARED_LIBS CMAKE var
+        - todo: make S3 calls threaded so they are non-blocking
+        - todo: design generic remote interface/class structure/methods i.e. upload()
+- Started to design a flat encrypted file structure for remote locations
+    - Weakness of rclone is identical filenames encrypt to identical filenames on remote and directory structure is retained
+    - Potential solution is filename of encrypted file on remote is hash of original unencrypted file. Index contains mapping between original filepath and hash
+        - All encrypted files are uploaded in a flat directory structure, and structure is restored from index on restore from remote
+        - File hashes are already required to ensure integrity after upload/download so hashing is already in place
+        - Possible weakness is if you lose the index, you lose the directory structure and filenames - however index can also be encrypted and uploaded to remote. How expensive to keep encrypting/uploading index when modified? Should be small overhead.
+            - Known structure of index could pose a weakness for some encryption algorithms e.g. some block ciphers not using a Feedback Mode - can be avoided with appropriate encryption algos
