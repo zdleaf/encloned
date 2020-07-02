@@ -124,7 +124,7 @@ Tue 30/6/2020
 - Read AWS SDK documentation - https://docs.aws.amazon.com/sdk-for-cpp/v1/developer-guide/welcome.html
 - Read AWS S3 documentation
 
-Wed 31/6/2020
+Wed 1/7/2020
 - AWS S3 remote
     - Setup AWS CLI with correct credentials from AWS Educate/Vocareum (Account Details -> AWS CLI to get .aws/credentials file)
     - Built relevant parts of AWS SDK from source (s3)
@@ -140,3 +140,6 @@ Wed 31/6/2020
         - File hashes are already required to ensure integrity after upload/download so hashing is already in place
         - Possible weakness is if you lose the index, you lose the directory structure and filenames - however index can also be encrypted and uploaded to remote. How expensive to keep encrypting/uploading index when modified? Should be small overhead.
             - Known structure of index could pose a weakness for some encryption algorithms e.g. some block ciphers not using a Feedback Mode - can be avoided with appropriate encryption algos
+
+Thur 2/7/2020
+- Designed generic Queue class for a FIFO queue of objects to upload/delete on remote storage, using std::deque (double ended queue) for efficient addition and removal on both ends
