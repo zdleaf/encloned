@@ -7,11 +7,11 @@ Queue::Queue(){
 bool Queue::enqueueUpload(std::string path, std::string objectName){
     std::pair<string, string> item;
     if (!fs::exists(path)) {
-        std::cout << "ERROR: The specified file does not exist - unable to add to upload queue" << std::endl;
+        std::cout << "Queue: Error: file does not exist - unable to add " << path << std::endl;
         return false;
     }
     // check if object already exists on remote
-    std::make_pair(path, objectName);
+    item = std::make_pair(path, objectName);
     uploadQueue.push_back(item);
     return true;
 }

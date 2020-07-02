@@ -11,7 +11,7 @@ Watch::~Watch(){ // destructor
 
 void Watch::execThread(){
     while(*runThreads){
-        cout << "Scanning for file changes..." << endl; cout.flush(); 
+        cout << "Watch: Scanning for file changes..." << endl; cout.flush(); 
         scanFileChange();
         execQueuedSQL();
         std::this_thread::sleep_for(std::chrono::seconds(5));
@@ -21,20 +21,20 @@ void Watch::execThread(){
 void Watch::addWatch(string path, bool recursive){
     fs::file_status s = fs::status(path);
     if(!fs::exists(s)){                 // file/directory does not exist
-        std::cout << path << " does not exist" << endl;
+        std::cout << "Watch: " << path << " does not exist" << endl;
     } else if(fs::is_directory(s)){     // adding a directory to watch
         addDirWatch(path, recursive);
     } else if(fs::is_regular_file(s)){  // adding a regular file to watch
         addFileWatch(path);
     } else {                            // any other file type, e.g. IPC pipe
-        std::cout << path << " is not a valid directory/file" << endl;
+        std::cout << "Watch: " << path << " is not a valid directory/file" << endl;
     }
 }
 
 void Watch::addDirWatch(string path, bool recursive){
     auto result = dirIndex.insert({path, recursive});
     if(result.second){ // check if insertion was successful i.e. result.second = true (false when already exists in map)
-        cout << "Added watch to directory: " << path << endl;
+        cout << "Watch: "<< "Added watch to directory: " << path << endl;
         sqlQueue << "INSERT or IGNORE INTO dirIndex (PATH, RECURSIVE) VALUES ('" << path << "'," << (recursive ? "TRUE" : "FALSE") << ");"; // queue SQL insert
         for (const auto & entry : fs::directory_iterator(path)){ // iterate through all directory entries
             fs::file_status s = fs::status(entry);
@@ -44,11 +44,11 @@ void Watch::addDirWatch(string path, bool recursive){
             } else if(fs::is_regular_file(s)){
                 addFileWatch(entry.path().string());
             } else if(!fs::is_directory(s)){ 
-                cout << "Unknown file encountered: " << entry.path().string() << endl; 
+                cout << "Watch: " << "Unknown file encountered: " << entry.path().string() << endl; 
             }
         }
     } else { // duplicate - directory was not added
-        cout << "Watch to directory already exists: " << path << endl;
+        cout << "Watch: " << "Watch to directory already exists: " << path << endl;
     }
 }
 
@@ -57,10 +57,10 @@ void Watch::addFileWatch(string path){
     std::time_t modtime = decltype(fstime)::clock::to_time_t(fstime); 
     auto result = fileIndex.insert({path, modtime});
     if(result.second){ // check if insertion was successful i.e. result.second = true (false when already exists in map)
-        cout << "Added watch to file: " << path << endl;
+        cout << "Watch: " << "Added watch to file: " << path << endl;
         sqlQueue << "INSERT or IGNORE INTO fileIndex (PATH, MODTIME) VALUES ('" << path << "'," << modtime << ");"; // if successful, queue an SQL insert into DB
     } else { // duplicate
-        cout << "Watch to file already exists: " << path << endl;
+        cout << "Watch: " << "Watch to file already exists: " << path << endl;
     }
 }
 
@@ -70,7 +70,7 @@ void Watch::scanFileChange(){
         if(!fs::exists(elem.first)){ // if file has been deleted
             // code to update remotes as appropriate
             std::lock_guard<std::mutex> guard(mtx);
-            cout << "File no longer exists: " << elem.first << endl;
+            cout << "Watch: " << "File no longer exists: " << elem.first << endl;
             fileIndex.erase(elem.first); // remove file from watch list
             sqlQueue << "DELETE from fileIndex where PATH='" << elem.first << "';"; // queue deletion from DB
             break;
@@ -79,7 +79,7 @@ void Watch::scanFileChange(){
         std::time_t recentModTime = decltype(recentfsTime)::clock::to_time_t(recentfsTime);
         if(recentModTime != elem.second){ // if current last_write_time of file != saved value, file has changed
             std::lock_guard<std::mutex> guard(mtx);
-            cout << "File change detected: " << elem.first << endl;
+            cout << "Watch: " << "File change detected: " << elem.first << endl;
             fileIndex[elem.first] = recentModTime; // amend in fileIndex map
             sqlQueue << "UPDATE fileIndex SET MODTIME = '" << recentModTime << "' WHERE PATH='" << elem.first << "';"; // queue SQL update
         }
@@ -88,7 +88,7 @@ void Watch::scanFileChange(){
     for(auto elem: dirIndex){
         if(!fs::exists(elem.first)){ // if directory has been deleted
             std::lock_guard<std::mutex> guard(mtx);
-            cout << "Directory no longer exists: " << elem.first << endl;
+            cout << "Watch: " << "Directory no longer exists: " << elem.first << endl;
             dirIndex.erase(elem.first); // remove watch to directory
             sqlQueue << "DELETE from dirIndex where PATH='" << elem.first << "';"; // queue deletion from DB
             break;
@@ -98,13 +98,13 @@ void Watch::scanFileChange(){
             if(fs::is_directory(s) && elem.second) {// check recursive flag (elem.second) is true before checking if watch to dir already exists
                 if(!dirIndex.count(entry.path())){   // check if directory already exists in watched map
                     std::lock_guard<std::mutex> guard(mtx);
-                    cout << "New directory found: " << elem.first << endl;
+                    cout << "Watch: " << "New directory found: " << elem.first << endl;
                     addDirWatch(entry.path().string(), true);  // add new directory and any files contained within
                 }
             } else if(fs::is_regular_file(s)){
                 if(!fileIndex.count(entry.path())){  // check if each file already exists
                     std::lock_guard<std::mutex> guard(mtx);
-                    cout << "New file found: " << elem.first << endl;
+                    cout << "Watch: " << "New file found: " << elem.first << endl;
                     addFileWatch(entry.path().string());
                 }
             }

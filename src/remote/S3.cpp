@@ -18,8 +18,11 @@ S3::~S3()
 }
 
 void S3::execThread(){
+    queueForUpload("/home/zach/enclone/tmp/file2", "abcd2");
+    queueForUpload("/home/zach/enclone/tmp/file3", "abcd3");
+    queueForUpload("/home/zach/enclone/tmp/file4", "abcd3");
     while(*runThreads){
-        cout << "S3: Calling S3 API..." << endl; cout.flush(); 
+        cout << "S3: Calling S3 API..." << endl; cout.flush();
         callAPI();
         std::this_thread::sleep_for(std::chrono::seconds(30));
     }
@@ -46,7 +49,7 @@ void S3::uploadQueue(Aws::S3::S3Client s3_client){
     std::pair<string, string> returnValue;
     std::pair<string, string> *returnValuePtr = &returnValue;
     while(queue->dequeueUpload(returnValuePtr)){ // returns true until queue is empty
-        cout << "S3: Uploading" << returnValuePtr->first << " : " << returnValuePtr->second << endl;
+        cout << "S3: Uploading " << returnValuePtr->first << " as " << returnValuePtr->second << endl;
     }
     cout << "S3: uploadQueue is empty" << endl;
 }

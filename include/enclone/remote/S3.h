@@ -34,7 +34,7 @@ class S3 {
         
         // concurrency/multi-threading
         std::mutex mtx;
-        //std::shared_ptr<std::mutex> mtxPtr;
+        
         std::atomic_bool *runThreads; // ptr to flag indicating if execThread should loop or close down
 
         // S3 specific
