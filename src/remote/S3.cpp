@@ -38,14 +38,14 @@ void S3::callAPI(){
 
 bool S3::queueForUpload(std::string path, std::string objectName){
     std::lock_guard<std::mutex> guard(mtx);
-    return queue->pushUpload(path, objectName);
+    return queue->enqueueUpload(path, objectName);
 }
 
 void S3::uploadQueue(Aws::S3::S3Client s3_client){
     std::lock_guard<std::mutex> guard(mtx);
     std::pair<string, string> returnValue;
     std::pair<string, string> *returnValuePtr = &returnValue;
-    while(queue->popUpload(returnValuePtr)){ // returns true until queue is empty
+    while(queue->dequeueUpload(returnValuePtr)){ // returns true until queue is empty
         cout << "S3: Uploading" << returnValuePtr->first << " : " << returnValuePtr->second << endl;
     }
     cout << "S3: uploadQueue is empty" << endl;

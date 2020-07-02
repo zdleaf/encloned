@@ -21,12 +21,12 @@ class Queue{
     public:
         Queue();
 
-        bool pushUpload(std::string path, std::string objectName);
-        bool popUpload(std::pair<string, string>* returnValue);
+        bool enqueueUpload(std::string path, std::string objectName);
+        bool dequeueUpload(std::pair<string, string>* returnValue);
         bool uploadEmpty();
 
-        bool pushDelete();
-        void popDelete();
+        bool enqueueDelete();
+        void dequeueDelete();
         bool deleteEmpty();
 
 };

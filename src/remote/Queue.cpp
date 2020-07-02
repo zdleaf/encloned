@@ -4,7 +4,7 @@ Queue::Queue(){
     
 }
 
-bool Queue::pushUpload(std::string path, std::string objectName){
+bool Queue::enqueueUpload(std::string path, std::string objectName){
     std::pair<string, string> item;
     if (!fs::exists(path)) {
         std::cout << "ERROR: The specified file does not exist - unable to add to upload queue" << std::endl;
@@ -16,7 +16,7 @@ bool Queue::pushUpload(std::string path, std::string objectName){
     return true;
 }
 
-bool Queue::popUpload(std::pair<string, string> *returnValue){
+bool Queue::dequeueUpload(std::pair<string, string> *returnValue){
     if(uploadQueue.empty()){ 
         return false; 
     } else if(!uploadQueue.empty()){
