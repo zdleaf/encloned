@@ -6,7 +6,7 @@ enclone::enclone(){ // constructor
     db = new DB();
     watch = new Watch(db, &runThreads);
     socket = new Socket(&runThreads);
-    s3 = new S3();
+    s3 = new S3(&runThreads);
 
 }
 
@@ -18,8 +18,9 @@ enclone::~enclone(){ // destructor
 }
 
 int enclone::execLoop(){
-    cout << "Calling S3 API..." << endl;
-    s3->callAPI();
+    cout << "Starting S3 thread..." << endl;
+    std::thread s3Thread{&S3::execThread, s3}; // start a thread scanning for filesystem changes
+    s3Thread.detach();                               // detach thread, we not want to wait for it to finish before continuing. execThread() loops until runThreads == false;
 
     cout << "Starting watch thread..." << endl;
     std::thread watchThread{&Watch::execThread, watch}; // start a thread scanning for filesystem changes

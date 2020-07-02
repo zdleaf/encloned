@@ -143,3 +143,4 @@ Wed 1/7/2020
 
 Thur 2/7/2020
 - Designed generic Queue class for a FIFO queue of objects to upload/delete on remote storage, using std::deque (double ended queue) for efficient addition and removal on both ends
+- Amended S3.h to include generic Queue object, S3.h to run in separate thread, regularly uploading and deleting objects from the queue on the remote
