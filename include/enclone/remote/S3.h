@@ -39,7 +39,7 @@ class S3 {
         // S3 specific
         bool listBuckets(Aws::S3::S3Client s3_client);
         bool listObjects(Aws::S3::S3Client s3_client);
-        bool put_s3_object(Aws::S3::S3Client s3_client, const Aws::String& s3_bucket_name, const Aws::String& s3_object_name, const std::string& path);
+        bool put_s3_object(Aws::S3::S3Client s3_client, const Aws::String& s3_bucket_name, const std::string& path, const Aws::String& s3_object_name);
 
     public:
         S3(std::atomic_bool *runThreads);

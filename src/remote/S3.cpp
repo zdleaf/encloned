@@ -46,8 +46,15 @@ void S3::uploadQueue(Aws::S3::S3Client s3_client){
     std::pair<string, string> returnValue;
     std::pair<string, string> *returnValuePtr = &returnValue;
     while(queue->dequeueUpload(returnValuePtr)){ // returns true until queue is empty
-        cout << "S3: Uploading " << returnValuePtr->first << " as " << returnValuePtr->second << endl;
+        std::string path(returnValuePtr->first);
+        Aws::String objectName(returnValuePtr->second);
+        bool result = put_s3_object(s3_client, BUCKET_NAME, path, objectName);
+        (result ? 
+            cout << "S3: Upload of " << path << " as " << objectName << " successful" << endl 
+            : 
+            cout << "S3: Upload of " << path << " as " << objectName << " failed" << endl); 
     }
+    
     cout << "S3: uploadQueue is empty" << endl;
 }
 
@@ -99,8 +106,8 @@ bool S3::listObjects(Aws::S3::S3Client s3_client){
 
 bool S3::put_s3_object( Aws::S3::S3Client s3_client,
                         const Aws::String& s3_bucketName, 
-                        const Aws::String& s3_objectName, 
-                        const std::string& path)
+                        const std::string& path,
+                        const Aws::String& s3_objectName)
 {
     // check again that path exists
     if (!fs::exists(path)) {

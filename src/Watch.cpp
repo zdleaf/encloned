@@ -60,7 +60,7 @@ void Watch::addFileWatch(string path){
     if(result.second){ // check if insertion was successful i.e. result.second = true (false when already exists in map)
         cout << "Watch: " << "Added watch to file: " << path << endl;
         sqlQueue << "INSERT or IGNORE INTO fileIndex (PATH, MODTIME) VALUES ('" << path << "'," << modtime << ");"; // if successful, queue an SQL insert into DB
-        remote->queueForUpload(path, "abcd1"); // queue for upload on remote 
+        remote->queueForUpload(path, path); // queue for upload on remote 
     } else { // duplicate
         cout << "Watch: " << "Watch to file already exists: " << path << endl;
     }

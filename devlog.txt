@@ -148,7 +148,23 @@ Thur 2/7/2020
 
 Fri 3/7/2020
 - Added Remote.h stub class for later addition allowing handling of multiple remotes. 
-    - Remotes do not need to run in their own separate thread, they can all run under the Remote thread sequentially.
+    - Remotes do not need to run in their own separate thread, they can all run under the Remote thread sequentially
+- Tested actual upload of watched files to S3 bucket using AWS C++ SDK, retaining original directory hierarchy/filenames
 - Changed all class object instances to std::shared_ptrs to avoid memory leaks and ensure correct clean up of objects
 - todo: hash files to get filename for remote
-- todo: test actual upload to S3
+- Researching suitable hashing algorithms for filename encryption and file integrity
+    - Do we hash only the filename or hash the whole file?
+        - Depends if we use the same hash for integrity/checksum purposes. May be faster to use a faster algorithm for integrity/checksums
+    - CRC - only suitable for accidental data corruption, does not protect against malicious tampering
+    - SHA-1 and md5 unsuitable for encryption purposes - only suitable for checksums
+        - if using salts does this become more suitable?
+    - SHA-2 with 256 bit hash should be sufficient for file integrity - can test vs 512 bit hash for speed
+        - libraries:
+            - PicoSHA2 - unknown implementation with STL, header only include
+            - OpenSSL - known implementation, well tested
+    - Possible attack vector is compute large rainbow table of possible/known paths/filenames or files, and compare hashes 
+        - therefore a random salt should be generated and hashed with the filename or binary file database
+            - if we are using the same hash for file integrity we need to store the salt to later compare - can do so by storing hash in index as std::pair<hash, salt>
+            - otherwise if not using the hash for integrity, since the hashing is only computed once, we do not need to store the salt. only store the salted hash in index
+    - If we're not using for integrity, what's the benefit of hashing anything with a salt, not just generating random output - benefits of ensuring uniqueness?
+    - S3 automatically generates MD5 hash of data uploaded and stores in an ETag - however this is different for files uploaded via multipart (https://stackoverflow.com/questions/12186993/what-is-the-algorithm-to-compute-the-amazon-s3-etag-for-a-file-larger-than-5gb/19896823#19896823)
