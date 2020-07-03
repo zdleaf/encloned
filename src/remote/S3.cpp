@@ -5,7 +5,7 @@
 S3::S3(std::atomic_bool *runThreads)
 {
     this->runThreads = runThreads;
-    queue = new Queue();            
+    queue = std::make_shared<Queue>();         
 
     // S3 logging options
     options.loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Info; // turn logging on using the default logger
@@ -14,13 +14,10 @@ S3::S3(std::atomic_bool *runThreads)
 
 S3::~S3()
 {
-    delete queue;
+
 }
 
 void S3::execThread(){
-    queueForUpload("/home/zach/enclone/tmp/file2", "abcd2");
-    queueForUpload("/home/zach/enclone/tmp/file3", "abcd3");
-    queueForUpload("/home/zach/enclone/tmp/file4", "abcd3");
     while(*runThreads){
         cout << "S3: Calling S3 API..." << endl; cout.flush();
         callAPI();

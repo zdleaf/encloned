@@ -145,4 +145,10 @@ Thur 2/7/2020
 - Designed generic Queue class for a FIFO queue of objects to upload/delete on remote storage, using std::deque (double ended queue) for efficient addition and removal on both ends
 - Amended S3.h to include generic Queue object, S3.h to run in separate thread, regularly uploading and deleting objects from the queue on the remote
     - Tested uploadQueue to call upload function before actually uploading to S3
-    - todo: find a way to call S3/add items to uploadQueue from Watch class
+
+Fri 3/7/2020
+- Added Remote.h stub class for later addition allowing handling of multiple remotes. 
+    - Remotes do not need to run in their own separate thread, they can all run under the Remote thread sequentially.
+- Changed all class object instances to std::shared_ptrs to avoid memory leaks and ensure correct clean up of objects
+- todo: hash files to get filename for remote
+- todo: test actual upload to S3

@@ -27,14 +27,13 @@ using std::endl;
 
 class S3 {
     private:
-        Queue *queue; // queue of items to be uploaded
+        std::shared_ptr<Queue> queue; // queue of items to be uploaded
 
         Aws::SDKOptions options;
         const Aws::String BUCKET_NAME = "enclone";
         
         // concurrency/multi-threading
         std::mutex mtx;
-        
         std::atomic_bool *runThreads; // ptr to flag indicating if execThread should loop or close down
 
         // S3 specific

@@ -17,6 +17,7 @@
 #include <atomic>
 
 #include <enclone/DB.h>
+#include <enclone/remote/Remote.h>
 
 using std::string;
 using std::cout;
@@ -25,7 +26,7 @@ namespace fs = std::filesystem;
 
 class Watch {
     public:
-        Watch(DB *db, std::atomic_bool *runThreads);
+        Watch(std::shared_ptr<DB> db, std::atomic_bool *runThreads, std::shared_ptr<Remote> remote);
         ~Watch();
 
         // delete copy constructors - this class should not be copied
@@ -45,7 +46,9 @@ class Watch {
         std::unordered_map<string, bool> dirIndex;                  // index of watched directories with bool recursive flag
         std::unordered_map<string, std::time_t> fileIndex;          // index of watched files with last mod time
 
-        DB *db;                         // database handle
+        std::shared_ptr<Remote> remote; // pointer to Remote handler
+        
+        std::shared_ptr<DB> db;         // database handle
         std::stringstream sqlQueue;     // sql queue/bucket of queries to execute in batches
 
         // concurrency/multi-threading

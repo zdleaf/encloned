@@ -14,16 +14,16 @@
 #include <enclone/DB.h>
 #include <enclone/Watch.h>
 #include <enclone/Socket.h>
-#include <enclone/remote/S3.h>
+#include <enclone/remote/Remote.h>
 
 namespace io = boost::asio;
 
 class enclone {
     private:
-        DB *db; // database handle
-        Watch *watch; // watch file/directory class
-        Socket *socket; // local unix domain socket for enclone-config
-        S3 *s3;
+        std::shared_ptr<DB> db; // database handle
+        std::shared_ptr<Watch> watch; // watch file/directory class
+        std::shared_ptr<Socket> socket; // local unix domain socket for enclone-config
+        std::shared_ptr<Remote> remote; // remote backend handler
 
         std::atomic<bool> runThreads; // flag to indicate whether detached threads should continue to run
         
