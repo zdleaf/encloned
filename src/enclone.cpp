@@ -14,9 +14,9 @@ enclone::~enclone(){ // destructor
 }
 
 int enclone::execLoop(){
-    cout << "Starting Remote thread..." << endl;
+/*     cout << "Starting Remote thread..." << endl;
     std::thread remoteThread{&Remote::execThread, remote}; // start a thread scanning for filesystem changes
-    remoteThread.detach();                               // detach thread, we not want to wait for it to finish before continuing. execThread() loops until runThreads == false;
+    remoteThread.detach();                               // detach thread, we not want to wait for it to finish before continuing. execThread() loops until runThreads == false; */
 
     cout << "Starting Watch thread..." << endl;
     std::thread watchThread{&Watch::execThread, watch}; // start a thread scanning for filesystem changes

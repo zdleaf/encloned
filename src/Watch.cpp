@@ -11,6 +11,7 @@ Watch::~Watch(){ // destructor
 }
 
 void Watch::execThread(){
+    restoreDB();
     while(*runThreads){
         cout << "Watch: Scanning for file changes..." << endl; cout.flush(); 
         scanFileChange();
@@ -60,10 +61,10 @@ void Watch::addFileWatch(string path){
     auto result = fileIndex.insert({path, modtime});
     if(result.second){ // check if insertion was successful i.e. result.second = true (false when already exists in map)
         // compute unique filename hash for file
-        string pathHash = Encryption::sha256(path);
+        string pathHash = Encryption::hashPath(path);
         pathHashIndex.insert({path, pathHash});
         
-        cout << "Watch: " << "Added watch to file: " << path << " with hash: " << pathHash << endl;
+        cout << "Watch: " << "Added watch to file: " << path << " with hash: " << pathHash.substr(0,10) << "..." << endl;
         sqlQueue << "INSERT or IGNORE INTO fileIndex (PATH, MODTIME, PATHHASH) VALUES ('" << path << "'," << modtime << ",'" << pathHash << "');"; // if successful, queue an SQL insert into DB
 
         remote->queueForUpload(path, pathHash); // queue for upload on remote 
@@ -137,21 +138,24 @@ void Watch::execQueuedSQL(){
 }
 
 void Watch::displayWatchDirs(){
-    cout << "\nWatched directories: " << endl;
+    cout << "Watched directories: " << endl;
     for(auto elem: dirIndex){
         cout << elem.first << " recursive: " << elem.second << endl;
     }
 }
 
 void Watch::displayWatchFiles(){
-    cout << "\nWatched files: " << endl;
+    cout << "Watched files: " << endl;
     for(auto elem: fileIndex){
-        cout << elem.first << " modtime: " << displayTime(elem.second);
+        cout << elem.first << " modtime: " << displayTime(elem.second) << endl;
+        // to display pathhash also: << " pathhash: " << pathHashIndex[elem.first].substr(0,10) 
     }
 }
 
 string Watch::displayTime(std::time_t modtime) const{
-    return std::asctime(std::localtime(&modtime));
+    string time = std::asctime(std::localtime(&modtime));
+    time.pop_back(); // asctime returns a '\n' on the end of the string - use str.pop_back to remove this
+    return time; 
 }
 
 void Watch::listDir(string path){
@@ -183,4 +187,64 @@ void Watch::fileAttributes(const fs::path& path){
 
     // last modification time
     //std::cout << "File write time is " << displayTime(fs::last_write_time(path)) << endl;
+}
+
+void Watch::restoreDB(){
+    std::lock_guard<std::mutex> guard(mtx);
+    cout << "Restoring file index from DB..." << endl;
+    restoreFileIdx();
+    displayWatchFiles();
+    cout << "Restoring directory index from DB..." << endl;
+    restoreDirIdx();
+    displayWatchDirs();
+}
+
+void Watch::restoreFileIdx(){
+    const char getFiles[] = "SELECT * FROM fileIndex;";
+
+    int rc, i, ncols;
+    sqlite3_stmt *stmt;
+    const char *tail;
+    rc = sqlite3_prepare(db->getDbPtr(), getFiles, strlen(getFiles), &stmt, &tail);
+    if(rc != SQLITE_OK) {
+        fprintf(stderr, "restoreFileIdx: SQL error: %s\n", sqlite3_errmsg(db->getDbPtr()));
+    }
+
+    rc = sqlite3_step(stmt);
+    ncols = sqlite3_column_count(stmt);
+
+    while(rc == SQLITE_ROW) {
+        string path = string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0)));
+        std::time_t modtime = (time_t)sqlite3_column_int(stmt, 1);
+        string pathhash = string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2)));
+        fileIndex.insert({path, modtime});      // insert path and modtime into fileIndex map
+        pathHashIndex.insert({path, pathhash}); // insert path and filename hash into pathHashIndex
+        rc = sqlite3_step(stmt);
+    }
+
+    sqlite3_finalize(stmt);
+}
+
+void Watch::restoreDirIdx(){
+    const char getDirs[] = "SELECT * FROM dirIndex;";
+
+    int rc, i, ncols;
+    sqlite3_stmt *stmt;
+    const char *tail;
+    rc = sqlite3_prepare(db->getDbPtr(), getDirs, strlen(getDirs), &stmt, &tail);
+    if(rc != SQLITE_OK) {
+        fprintf(stderr, "restoreDirIdx: SQL error: %s\n", sqlite3_errmsg(db->getDbPtr()));
+    }
+
+    rc = sqlite3_step(stmt);
+    ncols = sqlite3_column_count(stmt);
+
+    while(rc == SQLITE_ROW) {
+        string path = string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0)));
+        int recursiveFlag = sqlite3_column_int(stmt, 1);
+        dirIndex.insert({path, recursiveFlag});      // insert path and recursive flag into dirIndex
+        rc = sqlite3_step(stmt);
+    }
+
+    sqlite3_finalize(stmt);
 }

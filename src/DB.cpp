@@ -22,6 +22,10 @@ void DB::closeDB(){
     sqlite3_close(db);
 }
 
+sqlite3* DB::getDbPtr(){
+    return db;
+}
+
 int DB::execSQL(const char sql[]){
     char* error;
     int exitcode = sqlite3_exec(db, sql, NULL, NULL, &error);

@@ -17,6 +17,7 @@ class DB {
         DB();
         ~DB();
 
+        sqlite3* getDbPtr();
         virtual int execSQL(const char sql[]);
 };
 

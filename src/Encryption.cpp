@@ -14,3 +14,21 @@ string Encryption::sha256(const string str)
     }
     return ss.str();
 }
+
+string Encryption::randomString(std::size_t length)
+{
+    const std::string CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    std::random_device random_device;
+    std::mt19937 generator(random_device());
+    std::uniform_int_distribution<> distribution(0, CHARACTERS.size() - 1);
+
+    std::string randomString;
+    for (std::size_t i = 0; i < length; ++i) randomString += CHARACTERS[distribution(generator)];
+
+    return randomString;
+}
+
+string Encryption::hashPath(const string path){
+    const string saltedPath = path + randomString(24);
+    return sha256(saltedPath);
+}

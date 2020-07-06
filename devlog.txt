@@ -173,6 +173,7 @@ Mon 6/7/2020
 - Determined S3 does not retain original modtime when uploading - S3 last modtime is time first uploaded to S3
 - Created stub abstract class Encryption.h (pure virtual) to handle encryption and hashing functions
     - Included OpenSSL library, linked library within CMAKE
-- Simple hash of filename with SHA-256, stored in index and DB and uploaded to S3 with this hash instead of full path
-    - todo: include random salt with this hash so filename:hash mappings are not 1:1 (same filename hashes to different values)
-        - implement restore from DB first or random salt/hash will change on each run
+    - hashPath() - simple hash of filename and random salt with SHA-256, stored in index and DB and uploaded to S3 with this hash instead of full path
+        - random salt ensures that identical paths hash to different digests to avoid filename analysis with rainbow tables as above (how secure is this - need to add more random characters for more entropy?)
+- Restore fileIndex and dirIndex from index.db on startup
+- todo: delete from DB on remove

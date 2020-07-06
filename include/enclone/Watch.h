@@ -61,6 +61,8 @@ class Watch {
         void addFileWatch(string path);
 
         void restoreDB();
+        void restoreFileIdx();
+        void restoreDirIdx();
 
         string displayTime(std::time_t modtime) const;
 
