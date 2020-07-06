@@ -17,6 +17,7 @@
 #include <atomic>
 
 #include <enclone/DB.h>
+#include <enclone/Encryption.h>
 #include <enclone/remote/Remote.h>
 
 using std::string;
@@ -45,9 +46,10 @@ class Watch {
     private:
         std::unordered_map<string, bool> dirIndex;                  // index of watched directories with bool recursive flag
         std::unordered_map<string, std::time_t> fileIndex;          // index of watched files with last mod time
+        std::unordered_map<string, string> pathHashIndex;                // stores the path of a file with it's computed filename hash
 
         std::shared_ptr<Remote> remote; // pointer to Remote handler
-        
+
         std::shared_ptr<DB> db;         // database handle
         std::stringstream sqlQueue;     // sql queue/bucket of queries to execute in batches
 

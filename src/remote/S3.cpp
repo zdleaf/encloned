@@ -93,7 +93,8 @@ bool S3::listObjects(Aws::S3::S3Client s3_client){
         std::cout << "S3: Files on S3 bucket " << BUCKET_NAME << std::endl;
         for (auto const &s3_object : object_list)
         {
-            std::cout << "* " << s3_object.GetKey() << std::endl;
+            auto modtime = s3_object.GetLastModified().ToGmtString(Aws::Utils::DateFormat::ISO_8601);
+            std::cout << "* " << s3_object.GetKey() << " modtime: " << modtime << std::endl;
         }
         return true;
     } else {

@@ -168,3 +168,11 @@ Fri 3/7/2020
             - otherwise if not using the hash for integrity, since the hashing is only computed once, we do not need to store the salt. only store the salted hash in index
     - If we're not using for integrity, what's the benefit of hashing anything with a salt, not just generating random output - benefits of ensuring uniqueness?
     - S3 automatically generates MD5 hash of data uploaded and stores in an ETag - however this is different for files uploaded via multipart (https://stackoverflow.com/questions/12186993/what-is-the-algorithm-to-compute-the-amazon-s3-etag-for-a-file-larger-than-5gb/19896823#19896823)
+
+Mon 6/7/2020
+- Determined S3 does not retain original modtime when uploading - S3 last modtime is time first uploaded to S3
+- Created stub abstract class Encryption.h (pure virtual) to handle encryption and hashing functions
+    - Included OpenSSL library, linked library within CMAKE
+- Simple hash of filename with SHA-256, stored in index and DB and uploaded to S3 with this hash instead of full path
+    - todo: include random salt with this hash so filename:hash mappings are not 1:1 (same filename hashes to different values)
+        - implement restore from DB first or random salt/hash will change on each run

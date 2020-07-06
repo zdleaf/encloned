@@ -54,13 +54,19 @@ void Watch::addDirWatch(string path, bool recursive){
 }
 
 void Watch::addFileWatch(string path){
+    
     auto fstime = fs::last_write_time(path);
     std::time_t modtime = decltype(fstime)::clock::to_time_t(fstime); 
     auto result = fileIndex.insert({path, modtime});
     if(result.second){ // check if insertion was successful i.e. result.second = true (false when already exists in map)
-        cout << "Watch: " << "Added watch to file: " << path << endl;
-        sqlQueue << "INSERT or IGNORE INTO fileIndex (PATH, MODTIME) VALUES ('" << path << "'," << modtime << ");"; // if successful, queue an SQL insert into DB
-        remote->queueForUpload(path, path); // queue for upload on remote 
+        // compute unique filename hash for file
+        string pathHash = Encryption::sha256(path);
+        pathHashIndex.insert({path, pathHash});
+        
+        cout << "Watch: " << "Added watch to file: " << path << " with hash: " << pathHash << endl;
+        sqlQueue << "INSERT or IGNORE INTO fileIndex (PATH, MODTIME, PATHHASH) VALUES ('" << path << "'," << modtime << ",'" << pathHash << "');"; // if successful, queue an SQL insert into DB
+
+        remote->queueForUpload(path, pathHash); // queue for upload on remote 
     } else { // duplicate
         cout << "Watch: " << "Watch to file already exists: " << path << endl;
     }
@@ -69,21 +75,28 @@ void Watch::addFileWatch(string path){
 void Watch::scanFileChange(){
     // existing files that are being watched
     for(auto elem: fileIndex){
-        if(!fs::exists(elem.first)){ // if file has been deleted
-            // code to update remotes as appropriate
+
+        // if file has been deleted
+
+        if(!fs::exists(elem.first)){ 
             std::lock_guard<std::mutex> guard(mtx);
             cout << "Watch: " << "File no longer exists: " << elem.first << endl;
             fileIndex.erase(elem.first); // remove file from watch list
             sqlQueue << "DELETE from fileIndex where PATH='" << elem.first << "';"; // queue deletion from DB
+            // queue for delete on remote
             break;
         }
+
+        // if current last_write_time of file != saved value, file has changed
+
         auto recentfsTime = fs::last_write_time(elem.first);
         std::time_t recentModTime = decltype(recentfsTime)::clock::to_time_t(recentfsTime);
-        if(recentModTime != elem.second){ // if current last_write_time of file != saved value, file has changed
+        if(recentModTime != elem.second){ 
             std::lock_guard<std::mutex> guard(mtx);
             cout << "Watch: " << "File change detected: " << elem.first << endl;
             fileIndex[elem.first] = recentModTime; // amend in fileIndex map
             sqlQueue << "UPDATE fileIndex SET MODTIME = '" << recentModTime << "' WHERE PATH='" << elem.first << "';"; // queue SQL update
+            remote->queueForUpload(elem.first, elem.first); // queue for upload on remote 
         }
     }
     // check watched directories for new files and directories

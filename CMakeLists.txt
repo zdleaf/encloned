@@ -12,20 +12,21 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # use shared libraries (default ON)
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
-# find AWS SDK components
+# find required components
 find_package(AWSSDK REQUIRED COMPONENTS s3)
+find_package(OpenSSL REQUIRED)
 
 # flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lboost_system -lboost_thread -std=c++17 -lstdc++fs -lsqlite3 -pthread")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lboost_system -lboost_thread -std=c++17 -lstdc++fs -lsqlite3 -pthread -lcrypto")
 
 # include files
 include_directories( include src )
 
 # target
-add_executable(${PROJECT_NAME} ./src/main.cpp ./src/enclone.cpp ./src/Watch.cpp ./src/DB.cpp ./src/Socket.cpp ./src/remote/S3.cpp ./src/remote/Queue.cpp ./src/remote/Remote.cpp)
+add_executable(${PROJECT_NAME} ./src/main.cpp ./src/enclone.cpp ./src/Watch.cpp ./src/DB.cpp ./src/Socket.cpp ./src/remote/S3.cpp ./src/remote/Queue.cpp ./src/remote/Remote.cpp ./src/Encryption.cpp)
 
 # link std filesystem library
-target_link_libraries(enclone stdc++fs sqlite3 ${AWSSDK_LINK_LIBRARIES})
+target_link_libraries(enclone stdc++fs sqlite3 ${AWSSDK_LINK_LIBRARIES} OpenSSL::SSL)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

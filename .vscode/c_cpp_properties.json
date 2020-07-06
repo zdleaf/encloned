@@ -15,7 +15,8 @@
                 "-lsqlite3",
                 "-lboost_system",
                 "-lboost_thread",
-                "-pthread"
+                "-pthread",
+                "-lcrypto"
             ],
             "cStandard": "c18",
             "cppStandard": "c++17",

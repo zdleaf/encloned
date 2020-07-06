@@ -45,7 +45,8 @@ void DB::initialiseTables(){
     const char fileIndex[] = "CREATE TABLE IF NOT EXISTS fileIndex ("
         "PATH       TEXT    NOT NULL    UNIQUE," 
         "MODTIME    INTEGER NOT NULL,"
-        "HASH       TEXT);";
+        "PATHHASH       TEXT,"
+        "FILEHASH       TEXT);";
     execSQL(dirIndex);
     execSQL(fileIndex);
 }
