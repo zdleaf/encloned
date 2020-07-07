@@ -27,6 +27,12 @@ using std::endl;
 using std::get;
 namespace fs = std::filesystem;
 
+struct FileVersion {
+    std::time_t modtime;
+    std::string pathhash;
+    std::string filehash;
+};
+
 class Watch {
     public:
         Watch(std::shared_ptr<DB> db, std::atomic_bool *runThreads, std::shared_ptr<Remote> remote);
@@ -47,7 +53,7 @@ class Watch {
 
     private:
         std::unordered_map<string, bool> dirIndex;                  // index of watched directories with bool recursive flag
-        std::unordered_map<string, std::vector<std::tuple<std::time_t, std::string, std::string>>> fileIndex;   // index of watched files, key = path, with a vector of different available file versions
+        std::unordered_map<string, std::vector<FileVersion>> fileIndex;   // index of watched files, key = path, with a vector of different available file versions
 
         std::shared_ptr<Remote> remote; // pointer to Remote handler
 

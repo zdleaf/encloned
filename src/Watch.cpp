@@ -65,11 +65,11 @@ void Watch::addFileWatch(string path){
     //auto result = fileIndex.insert({path, fileVector});
     auto result = fileIndex.insert(std::pair<   
                                                 string, 
-                                                std::vector<std::tuple<std::time_t, std::string, std::string>>
+                                                std::vector<FileVersion>
                                             >
                                                 (
                                                 path, 
-                                                std::vector<std::tuple<std::time_t, std::string, std::string>>()) // initialise with empty vector
+                                                std::vector<FileVersion>()) // initialise with empty vector
                                                 );
 
     if(result.second){ // check if insertion was successful i.e. result.second = true (false when already exists in map)
@@ -85,9 +85,11 @@ void Watch::addFileVersion(std::string path){
     auto fstime = fs::last_write_time(path); // get modtime from file
     std::time_t modtime = decltype(fstime)::clock::to_time_t(fstime);
     string pathHash = Encryption::hashPath(path); // compute unique filename hash for file
-    std::tuple<std::time_t, std::string, std::string> tupleInit = std::make_tuple(modtime, pathHash, "");
+
+    struct FileVersion fileVersion = {modtime, pathHash, ""};
+    //std::tuple<std::time_t, std::string, std::string> tupleInit = std::make_tuple(modtime, pathHash, "");
     //cout << "Tuple 0 & 1: " << get<0>(tupleInit) << " : " << get<1>(tupleInit) << endl;
-    fileVector->push_back(tupleInit);
+    fileVector->push_back(fileVersion);
     //cout << "Tuple from vec: " << get<0>(fileVector->back()) << " : " << get<1>(fileVector->back()) << endl;
     cout << "Watch: " << "Added file version: " << path << " with hash: " << pathHash.substr(0,10) << "..." << " modtime: " << modtime << endl;
 
@@ -158,7 +160,8 @@ void Watch::scanFileChange(){
 }
 
 std::time_t Watch::getLastModTime(std::string path){
-    return std::get<0>(fileIndex[path].back());
+    return fileIndex[path].back().modtime;
+    //return std::get<0>(fileIndex[path].back());
 }
 
 void Watch::execQueuedSQL(){
@@ -180,7 +183,7 @@ void Watch::displayWatchDirs(){
 void Watch::displayWatchFiles(){
     cout << "Watched files: " << endl;
     for(auto elem: fileIndex){
-        cout << elem.first << " last modtime: " << displayTime(std::get<0>(*elem.second.end())) << endl;
+        cout << elem.first << " last modtime: " << getLastModTime(elem.first) << endl;
         // to display pathhash also: << " pathhash: " << pathHashIndex[elem.first].substr(0,10) 
     }
 }
