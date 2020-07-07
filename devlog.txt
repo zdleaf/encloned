@@ -181,3 +181,11 @@ Mon 6/7/2020
 Tue 7/7/2020
 - Delete from S3 if file is removed on local filesystem
     - todo: cross reference cloud files vs local and add to upload queue if appropriate? some files may fail to delete/add we can check for this
+- problem: if accidently deleted on local, it's removed from DB and from remote - so cannot restore this backup - it's a one way sync, do we need to keep on remote and keep in index
+    - rclone this is sync vs copy - sync ensures local:remote is 1:1, copy doesn't delete on remote
+todo: restore from remote
+- Multiple versions of the same file can now be stored/tracked.
+    - Store fileIndex map with path as key, value being a vector of tuples of <modtime, pathhash, filehash>. When a file is updated, we can push_back a tuple in the vector. This way the most up to date file can be pulled from the back of the vector and it gives us a chronological ordering.
+        - alternative was a multimap - so the map have multiple duplicate keys, however we are not guaranteed order when iterating through values without expensive ordered of the entire map, so chronological ordering of vector approach above is preferred
+    - If file changes multiple times before file is encrypted/uploaded, the original file is not there to upload - so have to find someway to remove - check file with correct modtime exists before encrypting to avoid race conditions.
+    - todo: fix delete, fix database structure to accept multiple file versions

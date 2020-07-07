@@ -8,6 +8,7 @@
 //#include <sys/inotify.h>
 #include <chrono>
 #include <vector>
+#include <tuple>
 #include <unordered_set>
 #include <unordered_map>
 
@@ -23,6 +24,7 @@
 using std::string;
 using std::cout;
 using std::endl;
+using std::get;
 namespace fs = std::filesystem;
 
 class Watch {
@@ -45,8 +47,7 @@ class Watch {
 
     private:
         std::unordered_map<string, bool> dirIndex;                  // index of watched directories with bool recursive flag
-        std::unordered_map<string, std::time_t> fileIndex;          // index of watched files with last mod time
-        std::unordered_map<string, string> pathHashIndex;                // stores the path of a file with it's computed filename hash
+        std::unordered_map<string, std::vector<std::tuple<std::time_t, std::string, std::string>>> fileIndex;   // index of watched files, key = path, with a vector of different available file versions
 
         std::shared_ptr<Remote> remote; // pointer to Remote handler
 
@@ -59,6 +60,8 @@ class Watch {
 
         void addDirWatch(string path, bool recursive);
         void addFileWatch(string path);
+        void addFileVersion(std::string path);
+        std::time_t getLastModTime(std::string path);
 
         void restoreDB();
         void restoreFileIdx();

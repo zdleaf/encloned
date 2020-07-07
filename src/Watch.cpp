@@ -11,7 +11,7 @@ Watch::~Watch(){ // destructor
 }
 
 void Watch::execThread(){
-    restoreDB();
+    //restoreDB();
 
     addWatch("/home/zach/enclone/notexist", true); // check non existent file
     addWatch("/home/zach/enclone/tmp", true); // recursive sadd
@@ -61,51 +61,71 @@ void Watch::addDirWatch(string path, bool recursive){
 }
 
 void Watch::addFileWatch(string path){
-    
-    auto fstime = fs::last_write_time(path);
-    std::time_t modtime = decltype(fstime)::clock::to_time_t(fstime); 
-    auto result = fileIndex.insert({path, modtime});
+    //std::vector<std::tuple<std::time_t, std::string, std::string>> fileVector;
+    //auto result = fileIndex.insert({path, fileVector});
+    auto result = fileIndex.insert(std::pair<   
+                                                string, 
+                                                std::vector<std::tuple<std::time_t, std::string, std::string>>
+                                            >
+                                                (
+                                                path, 
+                                                std::vector<std::tuple<std::time_t, std::string, std::string>>()) // initialise with empty vector
+                                                );
+
     if(result.second){ // check if insertion was successful i.e. result.second = true (false when already exists in map)
-        
-        // compute unique filename hash for file
-        string pathHash = Encryption::hashPath(path);
-        pathHashIndex.insert({path, pathHash});
-        
-        cout << "Watch: " << "Added watch to file: " << path << " with hash: " << pathHash.substr(0,10) << "..." << endl;
-
-        // queue for upload on remote and insertion into DB
-        sqlQueue << "INSERT or IGNORE INTO fileIndex (PATH, MODTIME, PATHHASH) VALUES ('" << path << "'," << modtime << ",'" << pathHash << "');"; // if successful, queue an SQL insert into DB
-        remote->queueForUpload(path, pathHash); 
-
+        cout << "Watch: " << "Added watch to file: " << path << endl;
+        addFileVersion(path);
     } else { // duplicate
         cout << "Watch: " << "Watch to file already exists: " << path << endl;
     }
+}
+
+void Watch::addFileVersion(std::string path){
+    auto fileVector = &fileIndex[path];
+    auto fstime = fs::last_write_time(path); // get modtime from file
+    std::time_t modtime = decltype(fstime)::clock::to_time_t(fstime);
+    string pathHash = Encryption::hashPath(path); // compute unique filename hash for file
+    std::tuple<std::time_t, std::string, std::string> tupleInit = std::make_tuple(modtime, pathHash, "");
+    //cout << "Tuple 0 & 1: " << get<0>(tupleInit) << " : " << get<1>(tupleInit) << endl;
+    fileVector->push_back(tupleInit);
+    //cout << "Tuple from vec: " << get<0>(fileVector->back()) << " : " << get<1>(fileVector->back()) << endl;
+    cout << "Watch: " << "Added file version: " << path << " with hash: " << pathHash.substr(0,10) << "..." << " modtime: " << modtime << endl;
+
+    // queue for upload on remote and insertion into DB
+    sqlQueue << "INSERT or IGNORE INTO fileIndex (PATH, MODTIME, PATHHASH) VALUES ('" << path << "'," << modtime << ",'" << pathHash << "');"; // if successful, queue an SQL insert into DB
+    remote->queueForUpload(path, pathHash); 
 }
 
 void Watch::scanFileChange(){
 
     // existing files that are being watched
     for(auto elem: fileIndex){
+        string path = elem.first;
 
         // if file has been deleted
-        if(!fs::exists(elem.first)){ 
+        if(!fs::exists(path)){ 
             std::lock_guard<std::mutex> guard(mtx);
-            cout << "Watch: " << "File no longer exists: " << elem.first << endl;
-            fileIndex.erase(elem.first); // remove file from watch list
-            sqlQueue << "DELETE from fileIndex where PATH='" << elem.first << "';"; // queue deletion from DB
-            remote->queueForDelete(pathHashIndex[elem.first]);
+            cout << "Watch: " << "File no longer exists: " << path << endl;
+            fileIndex.erase(path); // remove file from watch list
+            sqlQueue << "DELETE from fileIndex where PATH='" << path << "';"; // queue deletion from DB
+
+            // FIX ME
+            //remote->queueForDelete(pathHashIndex[path]);
             break;
         }
 
-        // if current last_write_time of file != saved value, file has changed
-        auto recentfsTime = fs::last_write_time(elem.first);
+        // if current last_write_time of file != last saved value, file has changed
+        auto recentfsTime = fs::last_write_time(path);
         std::time_t recentModTime = decltype(recentfsTime)::clock::to_time_t(recentfsTime);
-        if(recentModTime != elem.second){ 
+        cout << "Watch: Comparing new: " << recentModTime << " to old: " << getLastModTime(path) << endl;
+        if(recentModTime != getLastModTime(path)){ 
             std::lock_guard<std::mutex> guard(mtx);
-            cout << "Watch: " << "File change detected: " << elem.first << endl;
-            fileIndex[elem.first] = recentModTime; // amend in fileIndex map
-            sqlQueue << "UPDATE fileIndex SET MODTIME = '" << recentModTime << "' WHERE PATH='" << elem.first << "';"; // queue SQL update
-            remote->queueForUpload(elem.first, elem.first); // queue for upload on remote 
+            
+            cout << "Watch: " << "File change detected: " << path << endl;
+            addFileVersion(path);
+
+            //sqlQueue << "UPDATE fileIndex SET MODTIME = '" << recentModTime << "' WHERE PATH='" << elem.first << "';"; // queue SQL update
+            //remote->queueForUpload(elem.first, elem.first); // queue for upload on remote 
         }
     }
 
@@ -137,6 +157,10 @@ void Watch::scanFileChange(){
     }
 }
 
+std::time_t Watch::getLastModTime(std::string path){
+    return std::get<0>(fileIndex[path].back());
+}
+
 void Watch::execQueuedSQL(){
     std::lock_guard<std::mutex> guard(mtx);
     if(sqlQueue.rdbuf()->in_avail() != 0) { // if queue is not empty
@@ -156,7 +180,7 @@ void Watch::displayWatchDirs(){
 void Watch::displayWatchFiles(){
     cout << "Watched files: " << endl;
     for(auto elem: fileIndex){
-        cout << elem.first << " modtime: " << displayTime(elem.second) << endl;
+        cout << elem.first << " last modtime: " << displayTime(std::get<0>(*elem.second.end())) << endl;
         // to display pathhash also: << " pathhash: " << pathHashIndex[elem.first].substr(0,10) 
     }
 }
@@ -226,8 +250,8 @@ void Watch::restoreFileIdx(){
         string path = string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0)));
         std::time_t modtime = (time_t)sqlite3_column_int(stmt, 1);
         string pathhash = string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2)));
-        fileIndex.insert({path, modtime});      // insert path and modtime into fileIndex map
-        pathHashIndex.insert({path, pathhash}); // insert path and filename hash into pathHashIndex
+        //fileIndex.insert({path, modtime});      // insert path and modtime into fileIndex map
+        //pathHashIndex.insert({path, pathhash}); // insert path and filename hash into pathHashIndex
         rc = sqlite3_step(stmt);
     }
 
