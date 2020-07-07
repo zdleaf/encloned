@@ -31,6 +31,7 @@ struct FileVersion {
     std::time_t modtime;
     std::string pathhash;
     std::string filehash;
+    // flag for on remote, and which remote it's on - not all file versions will get uploaded
 };
 
 class Watch {

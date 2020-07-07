@@ -183,9 +183,11 @@ Tue 7/7/2020
     - todo: cross reference cloud files vs local and add to upload queue if appropriate? some files may fail to delete/add we can check for this
 - problem: if accidently deleted on local, it's removed from DB and from remote - so cannot restore this backup - it's a one way sync, do we need to keep on remote and keep in index
     - rclone this is sync vs copy - sync ensures local:remote is 1:1, copy doesn't delete on remote
-todo: restore from remote
 - Multiple versions of the same file can now be stored/tracked.
     - Store fileIndex map with path as key, value being a vector of FileVersion struct objects. When a file is updated, we can push_back a FileVersion in the vector. This way the most up to date file can be pulled from the back of the vector and it gives us a chronological ordering. Considered a tuple instead of struct data type, but this is less flexible and syntax more verbose.
         - alternative was a multimap. multimap would allow duplicate keys with multiple values, however we are not guaranteed order when iterating through values without expensive ordered of the entire map. chronological ordering of vector approach above is preferred.
     - If file changes multiple times before file is encrypted/uploaded, the original file is not there to upload - so have to find someway to remove - check file with correct modtime exists before encrypting to avoid race conditions.
-    - todo: fix delete, fix database structure to accept multiple file versions
+    - DB structure updated to accept multiple versions of files, fixed Watch::restoreFromDB() to correctly repopulate fileIndex map on start.
+- Temporary exclusion for .swp temporary files added for testing until full exclusion system developed
+- todo: fix/find solutions for deleted items
+- todo: restore from remote

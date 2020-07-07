@@ -47,7 +47,7 @@ void DB::initialiseTables(){
         "PATH       TEXT    NOT NULL    UNIQUE,"
         "RECURSIVE  BOOLEAN NOT NULL    DEFAULT FALSE);";
     const char fileIndex[] = "CREATE TABLE IF NOT EXISTS fileIndex ("
-        "PATH       TEXT    NOT NULL    UNIQUE," 
+        "PATH       TEXT    NOT NULL," 
         "MODTIME    INTEGER NOT NULL,"
         "PATHHASH       TEXT,"
         "FILEHASH       TEXT);";
