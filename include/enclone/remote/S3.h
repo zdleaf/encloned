@@ -17,6 +17,7 @@
 #include <aws/s3/model/ListObjectsRequest.h>
 #include <aws/s3/model/Object.h>
 #include <aws/s3/model/PutObjectRequest.h>
+#include <aws/s3/model/DeleteObjectRequest.h>
 
 #include <enclone/remote/Queue.h>
 
@@ -28,6 +29,7 @@ using std::endl;
 class S3 {
     private:
         std::shared_ptr<Queue> queue; // queue of items to be uploaded
+        std::vector<string> remoteObjects;
 
         Aws::SDKOptions options;
         const Aws::String BUCKET_NAME = "enclone";
@@ -40,6 +42,7 @@ class S3 {
         bool listBuckets(Aws::S3::S3Client s3_client);
         bool listObjects(Aws::S3::S3Client s3_client);
         bool put_s3_object(Aws::S3::S3Client s3_client, const Aws::String& s3_bucket_name, const std::string& path, const Aws::String& s3_object_name);
+        bool delete_s3_object(Aws::S3::S3Client s3_client, const Aws::String& objectKey, const Aws::String& fromBucket);
 
     public:
         S3(std::atomic_bool *runThreads);
@@ -54,8 +57,9 @@ class S3 {
 
         // generic
         bool queueForUpload(std::string path, std::string objectName);
-        bool queueForDelete();
+        bool queueForDelete(std::string objectName);
         void uploadQueue(Aws::S3::S3Client s3_client);
+        void deleteQueue(Aws::S3::S3Client s3_client);
 
 };
 

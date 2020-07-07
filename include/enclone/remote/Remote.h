@@ -26,7 +26,7 @@ class Remote{
         void callRemotes();
 
         bool queueForUpload(std::string path, std::string objectName);
-        bool queueForDelete();
+        bool queueForDelete(std::string objectName);
 };
 
 #endif

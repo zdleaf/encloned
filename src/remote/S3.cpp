@@ -32,6 +32,7 @@ void S3::callAPI(){
         //listBuckets(s3_client);
         listObjects(s3_client);
         uploadQueue(s3_client);
+        deleteQueue(s3_client);
     }
     Aws::ShutdownAPI(options);
 }
@@ -39,6 +40,11 @@ void S3::callAPI(){
 bool S3::queueForUpload(std::string path, std::string objectName){
     std::lock_guard<std::mutex> guard(mtx);
     return queue->enqueueUpload(path, objectName);
+}
+
+bool S3::queueForDelete(std::string objectName){
+    std::lock_guard<std::mutex> guard(mtx);
+    return queue->enqueueDelete(objectName);
 }
 
 void S3::uploadQueue(Aws::S3::S3Client s3_client){
@@ -49,13 +55,19 @@ void S3::uploadQueue(Aws::S3::S3Client s3_client){
         std::string path(returnValuePtr->first);
         Aws::String objectName(returnValuePtr->second);
         bool result = put_s3_object(s3_client, BUCKET_NAME, path, objectName);
-        (result ? 
-            cout << "S3: Upload of " << path << " as " << objectName << " successful" << endl 
-            : 
-            cout << "S3: Upload of " << path << " as " << objectName << " failed" << endl); 
     }
-    
     cout << "S3: uploadQueue is empty" << endl;
+}
+
+void S3::deleteQueue(Aws::S3::S3Client s3_client){
+    std::lock_guard<std::mutex> guard(mtx);
+    std::string returnValue;
+    std::string* returnValuePtr = &returnValue;
+    while(queue->dequeueDelete(returnValuePtr)){ // returns true until queue is empty
+        Aws::String objectName(*returnValuePtr);
+        bool result = delete_s3_object(s3_client, objectName, BUCKET_NAME);
+    }
+    cout << "S3: deleteQueue is empty" << endl;
 }
 
 bool S3::listBuckets(Aws::S3::S3Client s3_client){
@@ -95,6 +107,7 @@ bool S3::listObjects(Aws::S3::S3Client s3_client){
         {
             auto modtime = s3_object.GetLastModified().ToGmtString(Aws::Utils::DateFormat::ISO_8601);
             std::cout << "* " << s3_object.GetKey() << " modtime: " << modtime << std::endl;
+            remoteObjects.push_back(s3_object.GetKey().c_str());
         }
         return true;
     } else {
@@ -132,7 +145,28 @@ bool S3::put_s3_object( Aws::S3::S3Client s3_client,
         auto error = put_object_outcome.GetError();
         std::cout << "S3: ERROR: " << error.GetExceptionName() << ": " 
             << error.GetMessage() << std::endl;
+        cout << "S3: Upload of " << path << " as " << s3_objectName << " failed" << endl;
         return false;
     }
+    cout << "S3: Upload of " << path << " as " << s3_objectName << " successful" << endl; 
+    return true;
+}
+
+bool S3::delete_s3_object(Aws::S3::S3Client s3_client, const Aws::String& objectName, const Aws::String& fromBucket){
+    Aws::S3::Model::DeleteObjectRequest request;
+
+    request.WithKey(objectName).WithBucket(fromBucket);
+
+    Aws::S3::Model::DeleteObjectOutcome result = s3_client.DeleteObject(request);
+
+    if (!result.IsSuccess())
+    {
+        cout << "S3: Delete of " << objectName << " failed" << endl;
+        auto err = result.GetError();
+        std::cout << "Error: DeleteObject: " <<
+            err.GetExceptionName() << ": " << err.GetMessage() << std::endl;
+        return false;
+    }
+    cout << "S3: Delete of " << objectName << " successful" << endl;
     return true;
 }

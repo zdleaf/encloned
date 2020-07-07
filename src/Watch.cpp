@@ -12,6 +12,12 @@ Watch::~Watch(){ // destructor
 
 void Watch::execThread(){
     restoreDB();
+
+    addWatch("/home/zach/enclone/notexist", true); // check non existent file
+    addWatch("/home/zach/enclone/tmp", true); // recursive sadd
+    addWatch("/home/zach/enclone/tmp/subdir", false); // check dir already added
+    addWatch("/home/zach/enclone/tmp/file1", false); // check file already added
+
     while(*runThreads){
         cout << "Watch: Scanning for file changes..." << endl; cout.flush(); 
         scanFileChange();
@@ -60,36 +66,38 @@ void Watch::addFileWatch(string path){
     std::time_t modtime = decltype(fstime)::clock::to_time_t(fstime); 
     auto result = fileIndex.insert({path, modtime});
     if(result.second){ // check if insertion was successful i.e. result.second = true (false when already exists in map)
+        
         // compute unique filename hash for file
         string pathHash = Encryption::hashPath(path);
         pathHashIndex.insert({path, pathHash});
         
         cout << "Watch: " << "Added watch to file: " << path << " with hash: " << pathHash.substr(0,10) << "..." << endl;
-        sqlQueue << "INSERT or IGNORE INTO fileIndex (PATH, MODTIME, PATHHASH) VALUES ('" << path << "'," << modtime << ",'" << pathHash << "');"; // if successful, queue an SQL insert into DB
 
-        remote->queueForUpload(path, pathHash); // queue for upload on remote 
+        // queue for upload on remote and insertion into DB
+        sqlQueue << "INSERT or IGNORE INTO fileIndex (PATH, MODTIME, PATHHASH) VALUES ('" << path << "'," << modtime << ",'" << pathHash << "');"; // if successful, queue an SQL insert into DB
+        remote->queueForUpload(path, pathHash); 
+
     } else { // duplicate
         cout << "Watch: " << "Watch to file already exists: " << path << endl;
     }
 }
 
 void Watch::scanFileChange(){
+
     // existing files that are being watched
     for(auto elem: fileIndex){
 
         // if file has been deleted
-
         if(!fs::exists(elem.first)){ 
             std::lock_guard<std::mutex> guard(mtx);
             cout << "Watch: " << "File no longer exists: " << elem.first << endl;
             fileIndex.erase(elem.first); // remove file from watch list
             sqlQueue << "DELETE from fileIndex where PATH='" << elem.first << "';"; // queue deletion from DB
-            // queue for delete on remote
+            remote->queueForDelete(pathHashIndex[elem.first]);
             break;
         }
 
         // if current last_write_time of file != saved value, file has changed
-
         auto recentfsTime = fs::last_write_time(elem.first);
         std::time_t recentModTime = decltype(recentfsTime)::clock::to_time_t(recentfsTime);
         if(recentModTime != elem.second){ 
@@ -100,6 +108,7 @@ void Watch::scanFileChange(){
             remote->queueForUpload(elem.first, elem.first); // queue for upload on remote 
         }
     }
+
     // check watched directories for new files and directories
     for(auto elem: dirIndex){
         if(!fs::exists(elem.first)){ // if directory has been deleted

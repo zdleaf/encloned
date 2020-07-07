@@ -26,6 +26,21 @@ bool Queue::dequeueUpload(std::pair<string, string> *returnValue){
     return true;
 }
 
+bool Queue::enqueueDelete(std::string objectName){
+    deleteQueue.push_back(objectName);
+    return true;
+}
+
+bool Queue::dequeueDelete(std::string* returnValue){
+    if(deleteQueue.empty()){ 
+        return false; 
+    } else if(!deleteQueue.empty()){
+        *returnValue = deleteQueue.front();
+        deleteQueue.pop_front(); // delete element once we've returned
+    }
+    return true;
+}
+
 bool Queue::uploadEmpty(){
     return uploadQueue.empty();
 }

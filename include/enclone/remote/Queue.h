@@ -25,8 +25,8 @@ class Queue{
         bool dequeueUpload(std::pair<string, string>* returnValue);
         bool uploadEmpty();
 
-        bool enqueueDelete();
-        void dequeueDelete();
+        bool enqueueDelete(std::string objectName);
+        bool dequeueDelete(std::string* returnValue);
         bool deleteEmpty();
 
 };

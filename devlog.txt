@@ -176,4 +176,8 @@ Mon 6/7/2020
     - hashPath() - simple hash of filename and random salt with SHA-256, stored in index and DB and uploaded to S3 with this hash instead of full path
         - random salt ensures that identical paths hash to different digests to avoid filename analysis with rainbow tables as above (how secure is this - need to add more random characters for more entropy?)
 - Restore fileIndex and dirIndex from index.db on startup
-- todo: delete from DB on remove
+- todo - possible feature, we can also hash files with modtime and save X amount of versions? use a multi-map to store multiple versions of the same file in index
+
+Tue 7/7/2020
+- Delete from S3 if file is removed on local filesystem
+    - todo: cross reference cloud files vs local and add to upload queue if appropriate? some files may fail to delete/add we can check for this

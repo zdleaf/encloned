@@ -4,3 +4,4 @@ Feature list
 - config file
 - output logs to named files, each thread has own log file - can watch live in console with "tail -f file.log"
 - add exclusions, e.g. ".swp" temporary files
+- hash pathnames on remote with modtime, so we can have a versioning control - save X different previous versions of files
