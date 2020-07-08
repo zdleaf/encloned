@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <string>
 #include <sstream>
+#include <exception>
 //#include <sys/inotify.h>
 #include <chrono>
 #include <vector>
@@ -31,7 +32,9 @@ struct FileVersion {
     std::time_t modtime;
     std::string pathhash;
     std::string filehash;
-    // flag for on remote, and which remote it's on - not all file versions will get uploaded
+    bool localExists = true; // false if file has been deleted from local filesystem
+    bool remoteExists = false; // set flag once successfully uploaded to remote
+    std::string remoteLocation; // remote locations the file exists
 };
 
 class Watch {

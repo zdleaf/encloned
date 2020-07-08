@@ -50,7 +50,9 @@ void DB::initialiseTables(){
         "PATH       TEXT    NOT NULL," 
         "MODTIME    INTEGER NOT NULL,"
         "PATHHASH       TEXT,"
-        "FILEHASH       TEXT);";
+        "FILEHASH       TEXT,"
+        "LOCALEXISTS    BOOLEAN,"
+        "REMOTEEXISTS   BOOLEAN);";
     execSQL(dirIndex);
     execSQL(fileIndex);
 }

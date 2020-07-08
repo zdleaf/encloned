@@ -189,5 +189,10 @@ Tue 7/7/2020
     - If file changes multiple times before file is encrypted/uploaded, the original file is not there to upload - so have to find someway to remove - check file with correct modtime exists before encrypting to avoid race conditions.
     - DB structure updated to accept multiple versions of files, fixed Watch::restoreFromDB() to correctly repopulate fileIndex map on start.
 - Temporary exclusion for .swp temporary files added for testing until full exclusion system developed
-- todo: fix/find solutions for deleted items
 - todo: restore from remote
+
+Wed 8/7/2020
+- Added flags in FileVersion struct to track if this file exists both locally and remotely. It may be deleted locally, but we still want to track to be able to restore from remote.
+    - Ammended DB to include this flag
+    - if file is changed or deleted before uploadQueue is executed, we cannot upload this version, so need to check modtime stamps before uploading and need to remove that version from vector
+    - todo: before deleting from fileIndex we need to ensure that for ALL versions of a file (not only the most recent), they neither exist locally or remotely

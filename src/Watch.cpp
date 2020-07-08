@@ -13,10 +13,10 @@ Watch::~Watch(){ // destructor
 void Watch::execThread(){
     restoreDB();
 
-/*     addWatch("/home/zach/enclone/notexist", true); // check non existent file
+    //addWatch("/home/zach/enclone/notexist", true); // check non existent file
     addWatch("/home/zach/enclone/tmp", true); // recursive sadd
-    addWatch("/home/zach/enclone/tmp/subdir", false); // check dir already added
-    addWatch("/home/zach/enclone/tmp/file1", false); // check file already added */
+    //addWatch("/home/zach/enclone/tmp/subdir", false); // check dir already added
+    //addWatch("/home/zach/enclone/tmp/file1", false); // check file already added
 
     while(*runThreads){
         cout << "Watch: Scanning for file changes..." << endl; cout.flush(); 
@@ -82,11 +82,11 @@ void Watch::addFileVersion(std::string path){
     auto fstime = fs::last_write_time(path); // get modtime from file
     std::time_t modtime = decltype(fstime)::clock::to_time_t(fstime);
     string pathHash = Encryption::hashPath(path); // compute unique filename hash for file
-    fileVector->push_back(FileVersion{modtime, pathHash, ""}); // create new FileVersion struct object and push to back of vector
+    fileVector->push_back(FileVersion{modtime, pathHash}); // create new FileVersion struct object and push to back of vector
     cout << "Watch: " << "Added file version: " << path << " with hash: " << pathHash.substr(0,10) << "..." << " modtime: " << modtime << endl;
 
     // queue for upload on remote and insertion into DB
-    sqlQueue << "INSERT or IGNORE INTO fileIndex (PATH, MODTIME, PATHHASH) VALUES ('" << path << "'," << modtime << ",'" << pathHash << "');"; // if successful, queue an SQL insert into DB
+    sqlQueue << "INSERT or IGNORE INTO fileIndex (PATH, MODTIME, PATHHASH, LOCALEXISTS) VALUES ('" << path << "'," << modtime << ",'" << pathHash << "',TRUE" << ");"; // if successful, queue an SQL insert into DB
     remote->queueForUpload(path, pathHash); 
 }
 
@@ -96,15 +96,25 @@ void Watch::scanFileChange(){
     for(auto elem: fileIndex){
         string path = elem.first;
 
-        // if file has been deleted
-        if(!fs::exists(path)){ 
+        // do not scan for file changes if file is already marked as not existing locally
+        if(elem.second.back().localExists == false){ break; } 
+
+        // if file has been deleted, but is still marked as existing locally
+        if(!fs::exists(path) && elem.second.back().localExists == true){ 
             std::lock_guard<std::mutex> guard(mtx);
             cout << "Watch: " << "File no longer exists: " << path << endl;
-            fileIndex.erase(path); // remove file from watch list
             
-            // FIX ME
-            //sqlQueue << "DELETE from fileIndex where PATH='" << path << "';"; // queue deletion from DB
+            fileIndex[path].back().localExists = false;
+            
+            // delete from fileIndex if ALL versions do not exist remotely - if file doesn't exist locally or remotely in any form, it is lost
+/*             if(ALL VERSIONS !remoteExist){
+                fileIndex.erase(path);
+                sqlQueue << "DELETE from fileIndex where PATH='" << path << "';"; // queue deletion from DB
+            } */
+
+            // FIX ME - when to delete from remote - if sync mode is set, otherwise no
             //remote->queueForDelete(pathHashIndex[path]);
+            
             break;
         }
 
@@ -115,6 +125,7 @@ void Watch::scanFileChange(){
         if(recentModTime != getLastModTime(path)){ 
             std::lock_guard<std::mutex> guard(mtx);
             cout << "Watch: " << "File change detected: " << path << endl;
+            fileIndex[path].back().localExists = false;
             addFileVersion(path);
         }
     }
@@ -170,7 +181,7 @@ void Watch::displayWatchDirs(){
 void Watch::displayWatchFiles(){
     cout << "Watched files: " << endl;
     for(auto elem: fileIndex){
-        cout << elem.first << " last modtime: " << elem.second.back().modtime << " # of versions: " << elem.second.size() << endl;
+        cout << elem.first << " last modtime: " << elem.second.back().modtime << ", # of versions: " << elem.second.size() << ", exists locally: " << elem.second.back().localExists << ", exists remotely: " << elem.second.back().remoteExists << endl;
     }
 }
 
@@ -239,12 +250,16 @@ void Watch::restoreFileIdx(){
         string path = string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0)));
         std::time_t modtime = (time_t)sqlite3_column_int(stmt, 1);
         string pathHash = string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2)));
+        bool localExists = sqlite3_column_int(stmt, 4);
+        bool remoteExists = sqlite3_column_int(stmt, 5);
         if(fileIndex.find(path) == fileIndex.end()){ // if entry for path does not exist
             //cout << path << " does not exist in fileIndex - adding and init vector.." << endl;
             fileIndex.insert({  path, std::vector<FileVersion>{ // create entry and initialise vector 
                                     FileVersion{    modtime,  // brace initialisation of first object
                                                     pathHash, 
-                                                    ""  }
+                                                    "",
+                                                    localExists,
+                                                    remoteExists  }
                                     }
                             }); 
         } else {
