@@ -28,7 +28,6 @@ using std::endl;
 using std::get;
 namespace fs = std::filesystem;
 
-class enclone;
 class Remote;
 
 struct FileVersion {
@@ -42,8 +41,10 @@ struct FileVersion {
 
 class Watch {
     public:
-        Watch(std::shared_ptr<DB> db, std::atomic_bool *runThreads, std::shared_ptr<enclone> encloneInstance);
+        Watch(std::shared_ptr<DB> db, std::atomic_bool *runThreads);
         ~Watch();
+
+        void setPtr(std::shared_ptr<Remote> remote);
 
         // delete copy constructors - this class should not be copied
         Watch(const Watch&) = delete;
@@ -60,14 +61,15 @@ class Watch {
         void displayWatchDirs();
         void displayWatchFiles();
 
+        void uploadSuccess(std::string path, std::string objectName, int remoteID);
+
     private:
         std::unordered_map<string, bool> dirIndex;                  // index of watched directories with bool recursive flag
         std::unordered_map<string, std::vector<FileVersion>> fileIndex;   // index of watched files, key = path, with a vector of different available file versions
 
-        std::shared_ptr<enclone> encloneInstance;
         std::shared_ptr<Remote> remote; // pointer to Remote handler
-
         std::shared_ptr<DB> db;         // database handle
+
         std::stringstream sqlQueue;     // sql queue/bucket of queries to execute in batches
 
         // concurrency/multi-threading

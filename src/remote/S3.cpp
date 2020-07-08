@@ -2,10 +2,10 @@
 
 // example API calls - https://docs.aws.amazon.com/sdk-for-cpp/v1/developer-guide/examples-s3-objects.html
 
-S3::S3(std::atomic_bool *runThreads, std::shared_ptr<Remote> remote)
+S3::S3(std::atomic_bool *runThreads, Remote *remote)
 {
-    this->runThreads = runThreads;
     this->remote = remote;
+    this->runThreads = runThreads;
     queue = std::make_shared<Queue>();         
 
     // S3 logging options
@@ -57,6 +57,7 @@ void S3::uploadQueue(Aws::S3::S3Client s3_client){
         Aws::String objectName(returnValuePtr->second);
         bool success = put_s3_object(s3_client, BUCKET_NAME, path, objectName);
         if(success){
+            cout << "Calling uploadSuccess from S3" << endl;
             remote->uploadSuccess(path, objectName.c_str(), remoteID);
         }
     }

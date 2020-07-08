@@ -193,7 +193,10 @@ Tue 7/7/2020
 
 Wed 8/7/2020
 - Added flags in FileVersion struct to track if this file exists both locally and remotely. It may be deleted locally, but we still want to track to be able to restore from remote.
-    - Ammended DB to include this flag
+    - Ammended DB to include these flags
+    - remoteExists flag is set and saved to DB on successful upload from remote
     - if file is changed or deleted before uploadQueue is executed, we cannot upload this version, so need to check modtime stamps before uploading and need to remove that version from vector
     - todo: before deleting from fileIndex we need to ensure that for ALL versions of a file (not only the most recent), they neither exist locally or remotely
-- Interface problem - Watch needs to be able to interact with specific instance of Remote, and Remote needs to interact with specific instance of Watch - this creates a circular problem as we cannot pass pointers in this circular way due to the order of each class being instantiated. If we first create Remote we cannot pass a pointer to Watch as it is not yet instantiated, and vice versa.
+- Interface problem - Watch needs to be able to interact with specific instance of Remote, and Remote needs to interact with specific instance of Watch - this creates a circular problem as we cannot pass pointers in constructors in this circular way due to the order of each class being instantiated. If we first create Remote we cannot pass a pointer to Watch as it is not yet instantiated, and vice versa.
+    - Solved by passing shared pointers to the objects after all construction has completed.
+    - For S3 class which is spawned by Remote, we passed a regular pointer to the Remote class instance with "this" key in S3 constructor, as S3 needs to call specific functions on Remote.

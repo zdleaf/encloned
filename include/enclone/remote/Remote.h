@@ -12,13 +12,11 @@
 // needs to store which remotes are available and turned on for upload
 
 class S3;
-class enclone;
 class Watch;
 
 class Remote{
     private:
         // object pointers
-        std::shared_ptr<enclone> encloneInstance;
         std::shared_ptr<Watch> watch; 
 
         // available remotes
@@ -29,7 +27,8 @@ class Remote{
         std::atomic_bool *runThreads; // ptr to flag indicating if execThread should loop or close down
 
     public:
-        Remote(std::atomic_bool *runThreads, std::shared_ptr<enclone> encloneInstance);
+        Remote(std::atomic_bool *runThreads);
+        void setPtr(std::shared_ptr<Watch> watch);
 
         void execThread();
         void callRemotes();

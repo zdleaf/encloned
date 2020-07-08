@@ -4,24 +4,14 @@ enclone::enclone(){ // constructor
     runThreads = true;
     db = std::make_shared<DB>();
     socket = std::make_shared<Socket>(&runThreads);
-    remote = std::make_shared<Remote>(&runThreads, getPtr());
-    watch = std::make_shared<Watch>(db, &runThreads, getPtr());
+    remote = std::make_shared<Remote>(&runThreads);
+    watch = std::make_shared<Watch>(db, &runThreads);
+    remote->setPtr(watch);
+    watch->setPtr(remote);
 }
 
 enclone::~enclone(){ // destructor
     // delete objects
-}
-
-std::shared_ptr<enclone> enclone::getPtr(){
-        return shared_from_this();
-}
-
-std::shared_ptr<Remote> enclone::getRemotePtr(){
-    return remote;
-}
-
-std::shared_ptr<Watch> enclone::getWatchPtr(){
-    return watch;
 }
 
 int enclone::execLoop(){

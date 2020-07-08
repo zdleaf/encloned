@@ -1,19 +1,19 @@
 #include <enclone/Watch.h>
 
-Watch::Watch(std::shared_ptr<DB> db, std::atomic_bool *runThreads, std::shared_ptr<enclone> encloneInstance){ // constructor
+Watch::Watch(std::shared_ptr<DB> db, std::atomic_bool *runThreads){ // constructor
     this->db = db; // set DB handle
     this->runThreads = runThreads;
-    this->encloneInstance = encloneInstance;
 }
 
 Watch::~Watch(){ // destructor
     execQueuedSQL(); // execute any pending SQL before closing
 }
 
+void Watch::setPtr(std::shared_ptr<Remote> remote){
+    this->remote = remote;
+}
+
 void Watch::execThread(){
-
-    remote = encloneInstance->getRemotePtr();
-
     restoreDB();
 
     //addWatch("/home/zach/enclone/notexist", true); // check non existent file
@@ -304,4 +304,17 @@ void Watch::restoreDirIdx(){
     }
 
     sqlite3_finalize(stmt);
+}
+
+void Watch::uploadSuccess(std::string path, std::string objectName, int remoteID){
+    auto fileVersionVector = fileIndex.at(path);
+    // set the remoteExists flag for correct entry in fileIndex
+    cout << "Remote: uploadSuccess called" << endl;
+    for(auto it = fileVersionVector.rbegin(); it != fileVersionVector.rend(); ++it){ // iterate in reverse, most likely the last entry is the one we're looking for
+        if(it->pathhash == objectName){ 
+            it->remoteExists = true;
+            // also add remoteID to list of remotes it's been uploaded to e.g. remoteLocation
+        }
+    }
+    sqlQueue << "UPDATE fileIndex SET REMOTEEXISTS = TRUE WHERE PATHHASH ='" << objectName << "';"; // queue SQL update  
 }

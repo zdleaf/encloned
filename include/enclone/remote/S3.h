@@ -33,7 +33,8 @@ class S3 {
     private:
         int remoteID = 1; // each remote has a unique remoteID
 
-        std::shared_ptr<Remote> remote;
+        Remote *remote; // ptr to class instance of Remote that spawned this S3 instance
+        
         std::shared_ptr<Queue> queue; // queue of items to be uploaded
         std::vector<string> remoteObjects;
 
@@ -51,8 +52,10 @@ class S3 {
         bool delete_s3_object(Aws::S3::S3Client s3_client, const Aws::String& objectKey, const Aws::String& fromBucket);
 
     public:
-        S3(std::atomic_bool *runThreads, std::shared_ptr<Remote> remote);
+        S3(std::atomic_bool *runThreads, Remote *remote);
         ~S3();
+
+        //void setPtr(std::shared_ptr<Remote> remote);
 
         // delete copy constructors - this class should not be copied
         S3(const S3&) = delete;

@@ -3,3 +3,5 @@ main
 build/*
 test/thread
 log/*
+tmp/*
+tmp2/*

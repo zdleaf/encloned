@@ -1,21 +1,20 @@
 #include <enclone/remote/Remote.h>
 
-Remote::Remote(std::atomic_bool *runThreads, std::shared_ptr<enclone> encloneInstance)
+Remote::Remote(std::atomic_bool *runThreads)
 {
-    this->encloneInstance = encloneInstance;
     this->runThreads = runThreads;
+    s3 = std::make_shared<S3>(runThreads, this);
+}
+
+void Remote::setPtr(std::shared_ptr<Watch> watch){
+    this->watch = watch;
 }
 
 void Remote::execThread(){
-
-    // all objects have been created, set correct pointers
-    s3 = std::make_shared<S3>(runThreads, encloneInstance->getRemotePtr());
-    this->watch = encloneInstance->getWatchPtr();
-
     while(*runThreads){
         cout << "Remote: Calling Remote cloud storage..." << endl; cout.flush();
         callRemotes();
-        std::this_thread::sleep_for(std::chrono::seconds(30));
+        std::this_thread::sleep_for(std::chrono::seconds(15));
     }
 }
 
@@ -37,13 +36,5 @@ bool Remote::queueForDelete(std::string objectName){
 }
 
 void Remote::uploadSuccess(std::string path, std::string objectName, int remoteID){ // update fileIndex if upload to remote is succesfull
-    auto fileIndex = watch->getFileIndex(); // get ptr to fileIndex
-    auto fileVersionVector = fileIndex->at(path);
-    // set the remoteExists flag for correct entry in fileIndex
-    for(auto it = fileVersionVector.rbegin(); it != fileVersionVector.rend(); ++it){ // iterate in reverse, most likely the last entry is the one we're looking for
-        if(it->pathhash == objectName){
-            it->remoteExists = true;
-        }
-    }
-    // also add remoteID to list of remotes it's been uploaded to e.g. remoteLocation
+    watch->uploadSuccess(path, objectName, remoteID);
 }
