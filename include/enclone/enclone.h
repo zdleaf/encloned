@@ -18,7 +18,9 @@
 
 namespace io = boost::asio;
 
-class enclone {
+class Watch;
+
+class enclone: std::enable_shared_from_this<enclone>{
     private:
         std::shared_ptr<DB> db; // database handle
         std::shared_ptr<Watch> watch; // watch file/directory class
@@ -30,6 +32,10 @@ class enclone {
     public:
         enclone();
         ~enclone();
+
+        std::shared_ptr<enclone> getPtr();
+        std::shared_ptr<Remote> getRemotePtr();
+        std::shared_ptr<Watch> getWatchPtr();
 
         int execLoop();
 

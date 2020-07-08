@@ -20,14 +20,20 @@
 #include <aws/s3/model/DeleteObjectRequest.h>
 
 #include <enclone/remote/Queue.h>
+#include <enclone/remote/Remote.h>
 
 namespace fs = std::filesystem;
 using std::string;
 using std::cout;
 using std::endl;
 
+class Remote;
+
 class S3 {
     private:
+        int remoteID = 1; // each remote has a unique remoteID
+
+        std::shared_ptr<Remote> remote;
         std::shared_ptr<Queue> queue; // queue of items to be uploaded
         std::vector<string> remoteObjects;
 
@@ -45,7 +51,7 @@ class S3 {
         bool delete_s3_object(Aws::S3::S3Client s3_client, const Aws::String& objectKey, const Aws::String& fromBucket);
 
     public:
-        S3(std::atomic_bool *runThreads);
+        S3(std::atomic_bool *runThreads, std::shared_ptr<Remote> remote);
         ~S3();
 
         // delete copy constructors - this class should not be copied

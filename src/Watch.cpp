@@ -1,9 +1,9 @@
 #include <enclone/Watch.h>
 
-Watch::Watch(std::shared_ptr<DB> db, std::atomic_bool *runThreads, std::shared_ptr<Remote> remote){ // constructor
+Watch::Watch(std::shared_ptr<DB> db, std::atomic_bool *runThreads, std::shared_ptr<enclone> encloneInstance){ // constructor
     this->db = db; // set DB handle
     this->runThreads = runThreads;
-    this->remote = remote;
+    this->encloneInstance = encloneInstance;
 }
 
 Watch::~Watch(){ // destructor
@@ -11,6 +11,9 @@ Watch::~Watch(){ // destructor
 }
 
 void Watch::execThread(){
+
+    remote = encloneInstance->getRemotePtr();
+
     restoreDB();
 
     //addWatch("/home/zach/enclone/notexist", true); // check non existent file
@@ -24,6 +27,10 @@ void Watch::execThread(){
         execQueuedSQL();
         std::this_thread::sleep_for(std::chrono::seconds(5));
     }
+}
+
+std::unordered_map<string, std::vector<FileVersion>>* Watch::getFileIndex(){
+    return &fileIndex;
 }
 
 void Watch::addWatch(string path, bool recursive){
@@ -115,6 +122,7 @@ void Watch::scanFileChange(){
             // FIX ME - when to delete from remote - if sync mode is set, otherwise no
             //remote->queueForDelete(pathHashIndex[path]);
             
+
             break;
         }
 

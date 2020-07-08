@@ -196,3 +196,4 @@ Wed 8/7/2020
     - Ammended DB to include this flag
     - if file is changed or deleted before uploadQueue is executed, we cannot upload this version, so need to check modtime stamps before uploading and need to remove that version from vector
     - todo: before deleting from fileIndex we need to ensure that for ALL versions of a file (not only the most recent), they neither exist locally or remotely
+- Interface problem - Watch needs to be able to interact with specific instance of Remote, and Remote needs to interact with specific instance of Watch - this creates a circular problem as we cannot pass pointers in this circular way due to the order of each class being instantiated. If we first create Remote we cannot pass a pointer to Watch as it is not yet instantiated, and vice versa.
