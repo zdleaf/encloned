@@ -5,8 +5,7 @@
 S3::S3(std::atomic_bool *runThreads, Remote *remote)
 {
     this->remote = remote;
-    this->runThreads = runThreads;
-    queue = std::make_shared<Queue>();         
+    this->runThreads = runThreads;       
 
     // S3 logging options
     options.loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Info; // turn logging on using the default logger
@@ -38,26 +37,15 @@ void S3::callAPI(){
     Aws::ShutdownAPI(options);
 }
 
-bool S3::queueForUpload(std::string path, std::string objectName){
-    std::lock_guard<std::mutex> guard(mtx);
-    return queue->enqueueUpload(path, objectName);
-}
-
-bool S3::queueForDelete(std::string objectName){
-    std::lock_guard<std::mutex> guard(mtx);
-    return queue->enqueueDelete(objectName);
-}
-
 void S3::uploadQueue(Aws::S3::S3Client s3_client){
     std::lock_guard<std::mutex> guard(mtx);
     std::pair<string, string> returnValue;
     std::pair<string, string> *returnValuePtr = &returnValue;
-    while(queue->dequeueUpload(returnValuePtr)){ // returns true until queue is empty
+    while(dequeueUpload(returnValuePtr)){ // returns true until queue is empty
         std::string path(returnValuePtr->first);
         Aws::String objectName(returnValuePtr->second);
         bool success = put_s3_object(s3_client, BUCKET_NAME, path, objectName);
         if(success){
-            cout << "Calling uploadSuccess from S3" << endl;
             remote->uploadSuccess(path, objectName.c_str(), remoteID);
         }
     }
@@ -68,7 +56,7 @@ void S3::deleteQueue(Aws::S3::S3Client s3_client){
     std::lock_guard<std::mutex> guard(mtx);
     std::string returnValue;
     std::string* returnValuePtr = &returnValue;
-    while(queue->dequeueDelete(returnValuePtr)){ // returns true until queue is empty
+    while(dequeueDelete(returnValuePtr)){ // returns true until queue is empty
         Aws::String objectName(*returnValuePtr);
         bool result = delete_s3_object(s3_client, objectName, BUCKET_NAME);
     }

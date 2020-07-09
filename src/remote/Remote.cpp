@@ -26,13 +26,13 @@ void Remote::callRemotes(){
 bool Remote::queueForUpload(std::string path, std::string objectName){
     std::lock_guard<std::mutex> guard(mtx);
     // call remotes
-    return s3->queueForUpload(path, objectName);
+    return s3->enqueueUpload(path, objectName);
 }
 
 bool Remote::queueForDelete(std::string objectName){
     std::lock_guard<std::mutex> guard(mtx);
     // call remotes
-    return s3->queueForDelete(objectName);
+    return s3->enqueueDelete(objectName);
 }
 
 void Remote::uploadSuccess(std::string path, std::string objectName, int remoteID){ // update fileIndex if upload to remote is succesfull

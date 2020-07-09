@@ -1,5 +1,10 @@
 #include <enclone/enclone.h>
 
+int main(){
+    enclone e;
+    e.execLoop();
+}
+
 enclone::enclone(){ // constructor
     runThreads = true;
     db = std::make_shared<DB>();

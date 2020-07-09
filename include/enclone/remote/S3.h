@@ -29,13 +29,12 @@ using std::endl;
 
 class Remote;
 
-class S3 {
+class S3: public Queue {
     private:
         int remoteID = 1; // each remote has a unique remoteID
 
         Remote *remote; // ptr to class instance of Remote that spawned this S3 instance
         
-        std::shared_ptr<Queue> queue; // queue of items to be uploaded
         std::vector<string> remoteObjects;
 
         Aws::SDKOptions options;
@@ -46,8 +45,12 @@ class S3 {
         std::atomic_bool *runThreads; // ptr to flag indicating if execThread should loop or close down
 
         // S3 specific
+        void uploadQueue(Aws::S3::S3Client s3_client);
+        void deleteQueue(Aws::S3::S3Client s3_client);
+
         bool listBuckets(Aws::S3::S3Client s3_client);
         bool listObjects(Aws::S3::S3Client s3_client);
+
         bool put_s3_object(Aws::S3::S3Client s3_client, const Aws::String& s3_bucket_name, const std::string& path, const Aws::String& s3_object_name);
         bool delete_s3_object(Aws::S3::S3Client s3_client, const Aws::String& objectKey, const Aws::String& fromBucket);
 
@@ -63,13 +66,6 @@ class S3 {
 
         void callAPI();
         void execThread();
-
-        // generic
-        bool queueForUpload(std::string path, std::string objectName);
-        bool queueForDelete(std::string objectName);
-        void uploadQueue(Aws::S3::S3Client s3_client);
-        void deleteQueue(Aws::S3::S3Client s3_client);
-
 };
 
 #endif

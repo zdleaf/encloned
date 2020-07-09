@@ -61,7 +61,6 @@ Tue 23/6/2020
         - 4. Boost.Interprocess - allows shared memory/messages between processes, but unecessary, do not require shared objects etc, only simple messages
     - for development/testing/debugging, seems easier to run daemon in foreground, then amend code later to run in systemd e.g. have systemd create and activate sockets as recommended, rather than manually creating them
 - Include Boost.Asio and created new Socket.h classes - code compiles and runs but is not async so blocks further code from running
-- todo: finish watch directory and files db, produce MVP - can implement sockets to control later
 
 Wed 24/6/2020
 - Populated watchFiles with files to watch and their attributes and abstracted and tidied up elements of the Watch::addWatch() method
@@ -75,14 +74,11 @@ Wed 24/6/2020
     3. new file/directory is added (if the watched directory recursive flag is true, new directory and contained files added)
 - todo: research std::thread and std::jthread - ideally need to run execLoop is separate thread, and Socket in a separate thread to avoid blocking
 
-
 Thur 25/6/2020
 - Added path check for file/directory existing before adding
 - Ammended fileIndex to store last modified time as std::time_t (unix time as integer) to enable storage in DB
 - Dump dirIndex and fileIndex to DB, unique specifier on path columns to avoid duplicates
 - Added a "bucket" for SQL commands in Watch - stringstream sqlQueue will keep appending SQL queries to be executed at once in a bucket similar to Nagles Algorithm
-todo: restore from DB on open
-todo: separate thread for polling loop, update db loop, and local socket connection
 
 Fri 26/6/2020
 - Added DB updates when file/directory is removed or changed
@@ -117,7 +113,6 @@ Mon 29/6/2020
 - todo: ensure correct mutexes and locks are in place - wait until further classes are written and have a better understanding of what resources will be shared
 - todo: exception handling for file operations required?
 - todo: does DB update want to be in the same thread as file system change? possibly not, in any case this wants to be more infrequent than filesystem polling - use global define/vars/config to set update times
-- todo: start a basic upload to AWS S3 of watched files
 
 Tue 30/6/2020
 - Downloaded AWS C++ SDK and read through code, setup S3 bucket to test uploads
@@ -151,7 +146,6 @@ Fri 3/7/2020
     - Remotes do not need to run in their own separate thread, they can all run under the Remote thread sequentially
 - Tested actual upload of watched files to S3 bucket using AWS C++ SDK, retaining original directory hierarchy/filenames
 - Changed all class object instances to std::shared_ptrs to avoid memory leaks and ensure correct clean up of objects
-- todo: hash files to get filename for remote
 - Researching suitable hashing algorithms for filename encryption and file integrity
     - Do we hash only the filename or hash the whole file?
         - Depends if we use the same hash for integrity/checksum purposes. May be faster to use a faster algorithm for integrity/checksums
@@ -189,7 +183,6 @@ Tue 7/7/2020
     - If file changes multiple times before file is encrypted/uploaded, the original file is not there to upload - so have to find someway to remove - check file with correct modtime exists before encrypting to avoid race conditions.
     - DB structure updated to accept multiple versions of files, fixed Watch::restoreFromDB() to correctly repopulate fileIndex map on start.
 - Temporary exclusion for .swp temporary files added for testing until full exclusion system developed
-- todo: restore from remote
 
 Wed 8/7/2020
 - Added flags in FileVersion struct to track if this file exists both locally and remotely. It may be deleted locally, but we still want to track to be able to restore from remote.
@@ -200,3 +193,12 @@ Wed 8/7/2020
 - Interface problem - Watch needs to be able to interact with specific instance of Remote, and Remote needs to interact with specific instance of Watch - this creates a circular problem as we cannot pass pointers in constructors in this circular way due to the order of each class being instantiated. If we first create Remote we cannot pass a pointer to Watch as it is not yet instantiated, and vice versa.
     - Solved by passing shared pointers to the objects after all construction has completed.
     - For S3 class which is spawned by Remote, we passed a regular pointer to the Remote class instance with "this" key in S3 constructor, as S3 needs to call specific functions on Remote.
+- todo: restore from remote
+- todo: socket control
+
+Thur 9/7/2020
+- Changed S3 to inherit from Queue instead of spawning an instance 
+    - Remote can now call queue methods directly i.e. Remote -> Queue, without having a middle man method to pass the function call Remote -> S3 -> Queue
+- Research on design patterns and Singletons, and other techniques compared to current dependency injection
+    - research on inheritance over currently implemented composition
+    - some modules do need to be single instances for resource contention e.g. DB, Watch when multi-threading

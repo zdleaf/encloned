@@ -309,7 +309,6 @@ void Watch::restoreDirIdx(){
 void Watch::uploadSuccess(std::string path, std::string objectName, int remoteID){
     auto fileVersionVector = fileIndex.at(path);
     // set the remoteExists flag for correct entry in fileIndex
-    cout << "Remote: uploadSuccess called" << endl;
     for(auto it = fileVersionVector.rbegin(); it != fileVersionVector.rend(); ++it){ // iterate in reverse, most likely the last entry is the one we're looking for
         if(it->pathhash == objectName){ 
             it->remoteExists = true;
