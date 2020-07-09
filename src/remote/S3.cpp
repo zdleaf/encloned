@@ -39,6 +39,7 @@ void S3::callAPI(){
         listObjects(s3_client);
 
         uploadQueue(transferManager);
+        bool result = downloadObject(transferManager, BUCKET_NAME, "1b8716cc70e1874aa0a1a4c485ec991fb06b3b694deff33b1acd1f036cde2fe3", "filename");
         //deleteQueue(s3_client);
         //get_s3_object(s3_client, "1b8716cc70e1874aa0a1a4c485ec991fb06b3b694deff33b1acd1f036cde2fe3", BUCKET_NAME);
     }
@@ -55,13 +56,13 @@ void S3::uploadQueue(std::shared_ptr<Aws::Transfer::TransferManager> transferMan
     cout << "S3: uploadQueue is empty" << endl;
 }
 
-void S3::deleteQueue(Aws::S3::S3Client s3_client){
+void S3::deleteQueue(std::shared_ptr<Aws::S3::S3Client> s3_client){
     std::lock_guard<std::mutex> guard(mtx);
     std::string returnValue;
     std::string* returnValuePtr = &returnValue;
     while(dequeueDelete(returnValuePtr)){ // returns true until queue is empty
         Aws::String objectName(*returnValuePtr);
-        bool result = delete_s3_object(s3_client, objectName, BUCKET_NAME);
+        bool result = deleteObject(s3_client, objectName, BUCKET_NAME);
     }
     cout << "S3: deleteQueue is empty" << endl;
 }
@@ -132,6 +133,30 @@ bool S3::uploadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferMa
     return false;
 }
 
+bool S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferManager, const Aws::String& bucketName, const std::string& objectName, const std::string& writeToFile){
+    Aws::String awsWriteToFile(writeToFile);
+    Aws::String awsObjectName(objectName);
+
+/*     try {
+        fs::create_directories(downloadDir);
+        cout << "Created directories for path: " << writeToFile << endl;
+    }
+    catch (std::exception& e) {
+        std::cout << e.what() << std::endl;
+    } */
+
+    auto downloadHandle = transferManager->DownloadFile(bucketName, awsObjectName, awsWriteToFile);
+    downloadHandle->WaitUntilFinished();
+    if(downloadHandle->GetStatus() == Aws::Transfer::TransferStatus::COMPLETED){
+        cout << "S3: Download of " << objectName << " to " << writeToFile << " successful" << endl;
+        return true;
+    } else {
+        cout << "S3: Download of " << objectName << " to " << writeToFile << " failed" << endl;
+        cout << downloadHandle->GetStatus() << endl;
+    }
+    return false;
+}
+
 // legacy upload/delete/download below - not using TransferManager
 
 bool S3::put_s3_object( std::shared_ptr<Aws::S3::S3Client> s3_client,
@@ -168,12 +193,12 @@ bool S3::put_s3_object( std::shared_ptr<Aws::S3::S3Client> s3_client,
     return true;
 }
 
-bool S3::delete_s3_object(Aws::S3::S3Client s3_client, const Aws::String& objectName, const Aws::String& fromBucket){
+bool S3::deleteObject(std::shared_ptr<Aws::S3::S3Client> s3_client, const Aws::String& objectName, const Aws::String& fromBucket){
     Aws::S3::Model::DeleteObjectRequest request;
 
     request.WithKey(objectName).WithBucket(fromBucket);
 
-    Aws::S3::Model::DeleteObjectOutcome result = s3_client.DeleteObject(request);
+    Aws::S3::Model::DeleteObjectOutcome result = s3_client->DeleteObject(request);
 
     if (!result.IsSuccess())
     {

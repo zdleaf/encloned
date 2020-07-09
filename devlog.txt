@@ -203,6 +203,8 @@ Thur 9/7/2020
 - Research on design patterns and Singletons, and other techniques compared to current dependency injection
     - research on inheritance over currently implemented composition
     - some modules do need to be single instances for resource contention e.g. DB, Watch when multi-threading
-- todo: Use Aws TransferManager to upload/download
+- Ammended code to use Aws::Transfer::TransferManager to upload/download
+    - Supports DownloadToDirectory() - download entire S3 bucket to directory
     - https://stackoverflow.com/questions/57520608/amazon-example-transfermanager-code-does-not-compile
     - https://github.com/aws/aws-sdk-cpp/blob/master/aws-cpp-sdk-transfer-tests/TransferTests.cpp
+    - Download working - but need to make directory if does not exist
