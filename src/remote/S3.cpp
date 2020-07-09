@@ -33,6 +33,7 @@ void S3::callAPI(){
         listObjects(s3_client);
         uploadQueue(s3_client);
         deleteQueue(s3_client);
+        get_s3_object(s3_client, "1b8716cc70e1874aa0a1a4c485ec991fb06b3b694deff33b1acd1f036cde2fe3", BUCKET_NAME);
     }
     Aws::ShutdownAPI(options);
 }
@@ -162,4 +163,36 @@ bool S3::delete_s3_object(Aws::S3::S3Client s3_client, const Aws::String& object
     }
     cout << "S3: Delete of " << objectName << " successful" << endl;
     return true;
+}
+
+bool S3::get_s3_object(Aws::S3::S3Client s3_client, const Aws::String& objectName, const Aws::String& fromBucket)
+{
+    // s3_client.getObject(new GetObjectRequest(bucket,key),file)
+
+    Aws::S3::Model::GetObjectRequest objectRequest;
+    objectRequest.SetBucket(fromBucket);
+    objectRequest.SetKey(objectName);
+
+    Aws::S3::Model::GetObjectOutcome getObjectOutcome = s3_client.GetObject(objectRequest);
+
+    if (getObjectOutcome.IsSuccess())
+    {
+        auto& retrieved_file = getObjectOutcome.GetResultWithOwnership().GetBody();
+
+        // Print a beginning portion of the text file.
+        std::cout << "Beginning of file contents:\n";
+        char file_data[255] = { 0 };
+        retrieved_file.getline(file_data, 254);
+        std::cout << file_data << std::endl;
+
+        return true;
+    }
+    else
+    {
+        auto err = getObjectOutcome.GetError();
+        std::cout << "Error: GetObject: " <<
+            err.GetExceptionName() << ": " << err.GetMessage() << std::endl;
+
+        return false;
+    }
 }

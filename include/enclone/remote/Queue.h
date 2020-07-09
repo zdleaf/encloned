@@ -17,6 +17,7 @@ class Queue{
     private:
         std::deque<std::pair<string, string>> uploadQueue; // pair<string path, string objectName>
         std::deque<string> deleteQueue;
+        // download queue
 
     public:
         Queue();

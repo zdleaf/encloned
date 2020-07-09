@@ -193,7 +193,7 @@ Wed 8/7/2020
 - Interface problem - Watch needs to be able to interact with specific instance of Remote, and Remote needs to interact with specific instance of Watch - this creates a circular problem as we cannot pass pointers in constructors in this circular way due to the order of each class being instantiated. If we first create Remote we cannot pass a pointer to Watch as it is not yet instantiated, and vice versa.
     - Solved by passing shared pointers to the objects after all construction has completed.
     - For S3 class which is spawned by Remote, we passed a regular pointer to the Remote class instance with "this" key in S3 constructor, as S3 needs to call specific functions on Remote.
-- todo: restore from remote
+- todo: restore from remote, download queue
 - todo: socket control
 
 Thur 9/7/2020
@@ -202,3 +202,5 @@ Thur 9/7/2020
 - Research on design patterns and Singletons, and other techniques compared to current dependency injection
     - research on inheritance over currently implemented composition
     - some modules do need to be single instances for resource contention e.g. DB, Watch when multi-threading
+- todo: to upload/download from S3, use instead Aws::Transfer::TransferClient (see https://gist.github.com/toneill818/d90c85a453d935e7e9aed6eab1d75f8a for example code)
+    - upload/download in separate thread?

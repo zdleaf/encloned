@@ -17,7 +17,7 @@ void Watch::execThread(){
     restoreDB();
 
     //addWatch("/home/zach/enclone/notexist", true); // check non existent file
-    addWatch("/home/zach/enclone/tmp", true); // recursive sadd
+    addWatch("/home/zach/enclone/tmp2", true); // recursive sadd
     //addWatch("/home/zach/enclone/tmp/subdir", false); // check dir already added
     //addWatch("/home/zach/enclone/tmp/file1", false); // check file already added
 

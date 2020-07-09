@@ -18,6 +18,11 @@
 #include <aws/s3/model/Object.h>
 #include <aws/s3/model/PutObjectRequest.h>
 #include <aws/s3/model/DeleteObjectRequest.h>
+#include <aws/s3/model/GetObjectRequest.h>
+
+#include <aws/transfer/TransferClient.h>
+#include <aws/transfer/UploadFileRequest.h>
+#include <aws/transfer/DownloadFileRequest.h>
 
 #include <enclone/remote/Queue.h>
 #include <enclone/remote/Remote.h>
@@ -52,7 +57,8 @@ class S3: public Queue {
         bool listObjects(Aws::S3::S3Client s3_client);
 
         bool put_s3_object(Aws::S3::S3Client s3_client, const Aws::String& s3_bucket_name, const std::string& path, const Aws::String& s3_object_name);
-        bool delete_s3_object(Aws::S3::S3Client s3_client, const Aws::String& objectKey, const Aws::String& fromBucket);
+        bool delete_s3_object(Aws::S3::S3Client s3_client, const Aws::String& objectName, const Aws::String& fromBucket);
+        bool get_s3_object(Aws::S3::S3Client s3_client, const Aws::String& objectName, const Aws::String& fromBucket);
 
     public:
         S3(std::atomic_bool *runThreads, Remote *remote);
