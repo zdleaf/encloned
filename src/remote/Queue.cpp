@@ -26,6 +26,23 @@ bool Queue::dequeueUpload(std::pair<string, string> *returnValue){
     return true;
 }
 
+bool Queue::enqueueDownload(std::string path, std::string objectName){
+    std::pair<string, string> item;
+    item = std::make_pair(path, objectName);
+    downloadQueue.push_back(item);
+    return true;
+}
+
+bool Queue::dequeueDownload(std::pair<string, string> *returnValue){
+    if(downloadQueue.empty()){ 
+        return false; 
+    } else if(!downloadQueue.empty()){
+        *returnValue = downloadQueue.front();
+        downloadQueue.pop_front(); // delete element once we've returned
+    }
+    return true;
+}
+
 bool Queue::enqueueDelete(std::string objectName){
     deleteQueue.push_back(objectName);
     return true;
@@ -43,6 +60,10 @@ bool Queue::dequeueDelete(std::string* returnValue){
 
 bool Queue::uploadEmpty(){
     return uploadQueue.empty();
+}
+
+bool Queue::downloadEmpty(){
+    return downloadQueue.empty();
 }
 
 bool Queue::deleteEmpty(){

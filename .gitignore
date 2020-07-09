@@ -5,4 +5,4 @@ test/thread
 log/*
 tmp/*
 tmp2/*
-download/*
+dl/*

@@ -29,6 +29,12 @@ bool Remote::queueForUpload(std::string path, std::string objectName){
     return s3->enqueueUpload(path, objectName);
 }
 
+bool Remote::queueForDownload(std::string path, std::string objectName){
+    std::lock_guard<std::mutex> guard(mtx);
+    // call remotes
+    return s3->enqueueDownload(path, objectName);
+}
+
 bool Remote::queueForDelete(std::string objectName){
     std::lock_guard<std::mutex> guard(mtx);
     // call remotes

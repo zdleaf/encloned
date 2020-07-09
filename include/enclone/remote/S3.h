@@ -49,14 +49,14 @@ class S3: public Queue {
 
         // S3 specific
         void uploadQueue(std::shared_ptr<Aws::Transfer::TransferManager> transferManager);
+        void downloadQueue(std::shared_ptr<Aws::Transfer::TransferManager> transferManager);
         void deleteQueue(std::shared_ptr<Aws::S3::S3Client> s3_client);
 
         bool listBuckets(std::shared_ptr<Aws::S3::S3Client> s3_client);
         bool listObjects(std::shared_ptr<Aws::S3::S3Client> s3_client);
 
         bool uploadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferManager, const Aws::String& bucketName, const std::string& path, const std::string& objectName);
-        bool downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferManager, const Aws::String& bucketName, const std::string& objectName, const std::string& writeToFile);
-        
+        bool downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferManager, const Aws::String& bucketName, const std::string& writeToFile, const std::string& objectName);
         bool deleteObject(std::shared_ptr<Aws::S3::S3Client> s3_client, const Aws::String& objectName, const Aws::String& fromBucket);
         
         bool put_s3_object(std::shared_ptr<Aws::S3::S3Client> s3_client, const Aws::String& s3_bucket_name, const std::string& path, const Aws::String& s3_object_name);
