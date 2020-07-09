@@ -20,9 +20,13 @@
 #include <aws/s3/model/DeleteObjectRequest.h>
 #include <aws/s3/model/GetObjectRequest.h>
 
-#include <aws/transfer/TransferClient.h>
-#include <aws/transfer/UploadFileRequest.h>
-#include <aws/transfer/DownloadFileRequest.h>
+#include <aws/core/utils/threading/Executor.h>
+#include <aws/transfer/TransferManager.h>
+#include <aws/core/utils/memory/AWSMemory.h>
+#include <aws/core/utils/memory/stl/AWSStreamFwd.h>
+#include <aws/core/utils/stream/PreallocatedStreamBuf.h>
+#include <aws/core/utils/StringUtils.h>
+#include <fstream>
 
 #include <enclone/remote/Queue.h>
 #include <enclone/remote/Remote.h>
@@ -50,13 +54,15 @@ class S3: public Queue {
         std::atomic_bool *runThreads; // ptr to flag indicating if execThread should loop or close down
 
         // S3 specific
-        void uploadQueue(Aws::S3::S3Client s3_client);
+        void uploadQueue(std::shared_ptr<Aws::Transfer::TransferManager> transferManager);
         void deleteQueue(Aws::S3::S3Client s3_client);
 
-        bool listBuckets(Aws::S3::S3Client s3_client);
-        bool listObjects(Aws::S3::S3Client s3_client);
+        bool listBuckets(std::shared_ptr<Aws::S3::S3Client> s3_client);
+        bool listObjects(std::shared_ptr<Aws::S3::S3Client> s3_client);
 
-        bool put_s3_object(Aws::S3::S3Client s3_client, const Aws::String& s3_bucket_name, const std::string& path, const Aws::String& s3_object_name);
+        bool uploadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferManager, const Aws::String& bucketName, const std::string& path, const std::string& objectName);
+
+        bool put_s3_object(std::shared_ptr<Aws::S3::S3Client> s3_client, const Aws::String& s3_bucket_name, const std::string& path, const Aws::String& s3_object_name);
         bool delete_s3_object(Aws::S3::S3Client s3_client, const Aws::String& objectName, const Aws::String& fromBucket);
         bool get_s3_object(Aws::S3::S3Client s3_client, const Aws::String& objectName, const Aws::String& fromBucket);
 

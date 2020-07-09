@@ -28,27 +28,29 @@ void S3::execThread(){
 void S3::callAPI(){
     Aws::InitAPI(options);
     {
-        Aws::S3::S3Client s3_client;
+        //Aws::S3::S3Client s3_client;
+        auto s3_client = Aws::MakeShared<Aws::S3::S3Client>("S3Client");
+        auto executor = Aws::MakeShared<Aws::Utils::Threading::PooledThreadExecutor>("executor", 25);
+        Aws::Transfer::TransferManagerConfiguration transferConfig(executor.get());
+        transferConfig.s3Client = s3_client;
+        auto transferManager = Aws::Transfer::TransferManager::Create(transferConfig);
+
         //listBuckets(s3_client);
         listObjects(s3_client);
-        uploadQueue(s3_client);
-        deleteQueue(s3_client);
-        get_s3_object(s3_client, "1b8716cc70e1874aa0a1a4c485ec991fb06b3b694deff33b1acd1f036cde2fe3", BUCKET_NAME);
+
+        uploadQueue(transferManager);
+        //deleteQueue(s3_client);
+        //get_s3_object(s3_client, "1b8716cc70e1874aa0a1a4c485ec991fb06b3b694deff33b1acd1f036cde2fe3", BUCKET_NAME);
     }
     Aws::ShutdownAPI(options);
 }
 
-void S3::uploadQueue(Aws::S3::S3Client s3_client){
+void S3::uploadQueue(std::shared_ptr<Aws::Transfer::TransferManager> transferManager){
     std::lock_guard<std::mutex> guard(mtx);
     std::pair<string, string> returnValue;
     std::pair<string, string> *returnValuePtr = &returnValue;
     while(dequeueUpload(returnValuePtr)){ // returns true until queue is empty
-        std::string path(returnValuePtr->first);
-        Aws::String objectName(returnValuePtr->second);
-        bool success = put_s3_object(s3_client, BUCKET_NAME, path, objectName);
-        if(success){
-            remote->uploadSuccess(path, objectName.c_str(), remoteID);
-        }
+        uploadObject(transferManager, BUCKET_NAME, returnValuePtr->first, returnValuePtr->second);
     }
     cout << "S3: uploadQueue is empty" << endl;
 }
@@ -64,8 +66,8 @@ void S3::deleteQueue(Aws::S3::S3Client s3_client){
     cout << "S3: deleteQueue is empty" << endl;
 }
 
-bool S3::listBuckets(Aws::S3::S3Client s3_client){
-    auto outcome = s3_client.ListBuckets();
+bool S3::listBuckets(std::shared_ptr<Aws::S3::S3Client> s3_client){
+    auto outcome = s3_client->ListBuckets();
     if (outcome.IsSuccess())
     {
         std::cout << "S3: List of available buckets:" << std::endl;
@@ -87,11 +89,11 @@ bool S3::listBuckets(Aws::S3::S3Client s3_client){
     }
 }
 
-bool S3::listObjects(Aws::S3::S3Client s3_client){
+bool S3::listObjects(std::shared_ptr<Aws::S3::S3Client> s3_client){
     Aws::S3::Model::ListObjectsRequest objects_request;
     objects_request.WithBucket(BUCKET_NAME);
 
-    auto list_objects_outcome = s3_client.ListObjects(objects_request);
+    auto list_objects_outcome = s3_client->ListObjects(objects_request);
 
     if (list_objects_outcome.IsSuccess()) {
         Aws::Vector<Aws::S3::Model::Object> object_list =
@@ -112,7 +114,27 @@ bool S3::listObjects(Aws::S3::S3Client s3_client){
     }
 }
 
-bool S3::put_s3_object( Aws::S3::S3Client s3_client,
+bool S3::uploadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferManager, const Aws::String& bucketName, const std::string& path, const std::string& objectName){
+    Aws::String awsPath(path);
+    Aws::String awsObjectName(objectName);
+
+    auto uploadHandle = transferManager->UploadFile(awsPath, bucketName, awsObjectName, "", Aws::Map<Aws::String, Aws::String>());
+    uploadHandle->WaitUntilFinished();
+    if(uploadHandle->GetStatus() == Aws::Transfer::TransferStatus::COMPLETED){
+        cout << "S3: Upload of " << path << " as " << objectName << " successful" << endl;
+        assert(uploadHandle->GetBytesTotalSize() == uploadHandle->GetBytesTransferred()); // verify upload expected length of data
+        remote->uploadSuccess(path, objectName, remoteID);
+        return true;
+    } else {
+        cout << "S3: Upload of " << path << " as " << objectName << " failed" << endl;
+        cout << uploadHandle->GetStatus() << endl;
+    }
+    return false;
+}
+
+// legacy upload/delete/download below - not using TransferManager
+
+bool S3::put_s3_object( std::shared_ptr<Aws::S3::S3Client> s3_client,
                         const Aws::String& s3_bucketName, 
                         const std::string& path,
                         const Aws::String& s3_objectName)
@@ -134,7 +156,7 @@ bool S3::put_s3_object( Aws::S3::S3Client s3_client,
     object_request.SetBody(input_data);
 
     // Put the object
-    auto put_object_outcome = s3_client.PutObject(object_request);
+    auto put_object_outcome = s3_client->PutObject(object_request);
     if (!put_object_outcome.IsSuccess()) {
         auto error = put_object_outcome.GetError();
         std::cout << "S3: ERROR: " << error.GetExceptionName() << ": " 

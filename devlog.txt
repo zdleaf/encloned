@@ -122,11 +122,12 @@ Tue 30/6/2020
 Wed 1/7/2020
 - AWS S3 remote
     - Setup AWS CLI with correct credentials from AWS Educate/Vocareum (Account Details -> AWS CLI to get .aws/credentials file)
-    - Built relevant parts of AWS SDK from source (s3)
+    - Built relevant parts of AWS SDK from source (s3 and transfer manager)
+        - see https://docs.aws.amazon.com/sdk-for-cpp/v1/developer-guide/setup.html
+        - sudo cmake -D CMAKE_BUILD_TYPE=Release -D BUILD_ONLY="s3;transfer"
     - Included AWS SDK in enclone, tested basic API call/connection and correct compilation with CMAKE
     - Added calls to S3 to list available buckets and list all objects within that bucket
         - todo: does AWS SDK want to be included as static or shared lib? BUILD_SHARED_LIBS CMAKE var
-        - todo: make S3 calls threaded so they are non-blocking
         - todo: design generic remote interface/class structure/methods i.e. upload()
 - Started to design a flat encrypted file structure for remote locations
     - Weakness of rclone is identical filenames encrypt to identical filenames on remote and directory structure is retained
@@ -202,5 +203,6 @@ Thur 9/7/2020
 - Research on design patterns and Singletons, and other techniques compared to current dependency injection
     - research on inheritance over currently implemented composition
     - some modules do need to be single instances for resource contention e.g. DB, Watch when multi-threading
-- todo: to upload/download from S3, use instead Aws::Transfer::TransferClient (see https://gist.github.com/toneill818/d90c85a453d935e7e9aed6eab1d75f8a for example code)
-    - upload/download in separate thread?
+- todo: Use Aws TransferManager to upload/download
+    - https://stackoverflow.com/questions/57520608/amazon-example-transfermanager-code-does-not-compile
+    - https://github.com/aws/aws-sdk-cpp/blob/master/aws-cpp-sdk-transfer-tests/TransferTests.cpp
