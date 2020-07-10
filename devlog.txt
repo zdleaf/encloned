@@ -207,6 +207,9 @@ Thur 9/7/2020
     - Supports DownloadToDirectory() - download entire S3 bucket to directory
     - https://stackoverflow.com/questions/57520608/amazon-example-transfermanager-code-does-not-compile
     - https://github.com/aws/aws-sdk-cpp/blob/master/aws-cpp-sdk-transfer-tests/TransferTests.cpp
-= Implememented download queue similar to queue system used for uploads
-    - Download working - but issue with specifying which directory to download to - only downloads into full previous path - possible issue with if path doesn't exist
-        - likely failing due to directories not existing, may need to pull apart full path to specify download to a different directory
+- Implememented download queue similar to queue system used for uploads
+
+Fri 10/7/2020
+- Fixed download locations 
+    - all directories in the download path need to be created before attempting to download to that location, otherwise download states successful but nothing is saved on disk
+    - todo: will need testing/further error checking when handling user input e.g. trailing slash vs no trailing slash

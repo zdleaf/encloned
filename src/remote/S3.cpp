@@ -142,17 +142,27 @@ bool S3::uploadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferMa
     return false;
 }
 
-bool S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferManager, const Aws::String& bucketName, const std::string& writeToFile, const std::string& objectName){
-    Aws::String awsWriteToFile("/home/zach/enclone" + writeToFile); // NOT WORKING - SPECIFY DIRECTORY BROKEN
-    Aws::String awsObjectName(objectName);
+bool S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferManager, const Aws::String& bucketName, const std::string& writeToPath, const std::string& objectName){
+    // the directory we want to download to
+    string downloadDir = "/home/zach/enclone/dl"; 
 
-/*     try {
-        fs::create_directories(downloadDir);
-        cout << "Created directories for path: " << writeToFile << endl;
+    // split path into directory path and filename
+    std::size_t found = writeToPath.find_last_of("/");
+    string dirPath = downloadDir + writeToPath.substr(0,found+1); // put 
+    string fileName = writeToPath.substr(found+1);
+    cout << "path is " << dirPath << ", fileName is " << fileName << endl;
+
+    // need to create the full directory structure at path if it's doesn't already exist, or download will say successful but not save to disk
+    try {
+        fs::create_directories(dirPath);
+        cout << "Created directories for path: " << dirPath << endl;
     }
     catch (std::exception& e) {
         std::cout << e.what() << std::endl;
-    } */
+    }
+
+    Aws::String awsWriteToFile(dirPath + fileName);
+    Aws::String awsObjectName(objectName);
 
     auto downloadHandle = transferManager->DownloadFile(bucketName, awsObjectName, awsWriteToFile);
     downloadHandle->WaitUntilFinished();
