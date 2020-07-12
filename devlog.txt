@@ -213,3 +213,8 @@ Fri 10/7/2020
 - Fixed download locations 
     - all directories in the download path need to be created before attempting to download to that location, otherwise download states successful but nothing is saved on disk
     - todo: will need testing/further error checking when handling user input e.g. trailing slash vs no trailing slash
+
+Sun 12/7/2020
+- Research on Boost::ASIO - for handling local unix domain socket for interprocess communication between daemon and control/command program
+    - built and tested example code for local unix domain sockets
+- Split project into encloned (daemon/service) and enclone (CLI control application)

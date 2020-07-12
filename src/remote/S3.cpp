@@ -39,9 +39,7 @@ void S3::callAPI(){
         listObjects(s3_client);
         uploadQueue(transferManager);
         downloadQueue(transferManager);
-        //bool result = downloadObject(transferManager, BUCKET_NAME, "filename", "1b8716cc70e1874aa0a1a4c485ec991fb06b3b694deff33b1acd1f036cde2fe3");
-        //deleteQueue(s3_client);
-        //get_s3_object(s3_client, "1b8716cc70e1874aa0a1a4c485ec991fb06b3b694deff33b1acd1f036cde2fe3", BUCKET_NAME);
+        deleteQueue(s3_client);
     }
     Aws::ShutdownAPI(options);
 }

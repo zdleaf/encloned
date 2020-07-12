@@ -1,48 +1,10 @@
 #include <enclone/enclone.h>
 
 int main(){
-    enclone e;
-    e.execLoop();
-}
+    std::cout << "Starting enclone..." << std::endl;
+    boost::asio::io_service io_service;
+    local::stream_protocol::endpoint ep("/tmp/enclone");
+    local::stream_protocol::socket socket(io_service);
+    socket.connect(ep);
 
-enclone::enclone(){ // constructor
-    runThreads = true;
-    db = std::make_shared<DB>();
-    socket = std::make_shared<Socket>(&runThreads);
-    remote = std::make_shared<Remote>(&runThreads);
-    watch = std::make_shared<Watch>(db, &runThreads);
-    remote->setPtr(watch);
-    watch->setPtr(remote);
-}
-
-enclone::~enclone(){ // destructor
-    // delete objects
-}
-
-int enclone::execLoop(){
-    cout << "Starting Watch thread..." << endl;
-    std::thread watchThread{&Watch::execThread, watch}; // start a thread scanning for filesystem changes
-    watchThread.detach();                               // detach thread, we not want to wait for it to finish before continuing. execThread() loops until runThreads == false;
-
-    cout << "Starting Remote thread..." << endl;
-    std::thread remoteThread{&Remote::execThread, remote}; // start a thread scanning for filesystem changes
-    remoteThread.detach();                               // detach thread, we not want to wait for it to finish before continuing. execThread() loops until runThreads == false;
-
-/*     cout << "Starting socket thread..." << endl;
-    std::thread socketThread{&Socket::execThread, socket}; // start a thread scanning for filesystem changes
-    socketThread.detach();                               // detach thread, we not want to wait for it to finish before continuing. execThread() loops until runThreads == false; */
-
-    while(1){
-        // do nothing while watch thread is running
-    }
-    return 0;
-}
-
-void enclone::addWatch(string path, bool recursive){
-    watch->addWatch(path, recursive);
-}
-
-void enclone::displayWatches(){
-    watch->displayWatchDirs();
-    watch->displayWatchFiles();
 }

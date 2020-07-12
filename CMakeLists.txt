@@ -22,11 +22,12 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lboost_system -lboost_thread -std=c++17
 # include files
 include_directories( include src )
 
-# target
-add_executable(${PROJECT_NAME} ./src/enclone.cpp ./src/Watch.cpp ./src/DB.cpp ./src/Socket.cpp ./src/remote/S3.cpp ./src/remote/Queue.cpp ./src/remote/Remote.cpp ./src/Encryption.cpp)
+# targets
+add_executable(encloned ./src/encloned.cpp ./src/Watch.cpp ./src/DB.cpp ./src/Socket.cpp ./src/remote/S3.cpp ./src/remote/Queue.cpp ./src/remote/Remote.cpp ./src/Encryption.cpp)
+add_executable(enclone ./src/enclone.cpp)
 
 # link std filesystem library
-target_link_libraries(enclone stdc++fs sqlite3 ${AWSSDK_LINK_LIBRARIES} OpenSSL::SSL)
+target_link_libraries(encloned stdc++fs sqlite3 ${AWSSDK_LINK_LIBRARIES} OpenSSL::SSL)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

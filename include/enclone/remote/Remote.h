@@ -6,7 +6,7 @@
 #include <memory>
 
 #include <enclone/remote/S3.h>
-#include <enclone/enclone.h>
+#include <enclone/Watch.h>
 
 // stub class - this will be the middle man for handling multiple remotes at one time, e.g. multiple upload to different locations
 // needs to store which remotes are available and turned on for upload
