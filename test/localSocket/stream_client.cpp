@@ -34,9 +34,8 @@ int main(int argc, char* argv[])
     } */
 
     boost::asio::io_service io_service;
-
     stream_protocol::socket localSocket(io_service);
-    io::local::stream_protocol::endpoint ep("/tmp/encloned");
+    asio::local::stream_protocol::endpoint ep("/tmp/encloned");
     localSocket.connect(ep);
 
     using namespace std; // For strlen.

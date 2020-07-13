@@ -43,6 +43,7 @@ class Session: public std::enable_shared_from_this<Session>{
         
     public:
         Session(asio::io_service& io_service);
+        ~Session();
 
         stream_protocol::socket& socket();
 

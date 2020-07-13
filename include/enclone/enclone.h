@@ -13,11 +13,13 @@ enum { max_length = 1024 };
 
 class enclone{
     private:
-
+        asio::io_service io_service;
         
     public:
         enclone();
         ~enclone();
+
+        bool connect();
 
 };
 

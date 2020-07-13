@@ -216,5 +216,12 @@ Fri 10/7/2020
 
 Sun 12/7/2020
 - Research on Boost::ASIO - for handling local unix domain socket for interprocess communication between daemon and control/command program
-    - built and tested example code for local unix domain sockets
+    - built, tested and ammended example code for local unix domain sockets
 - Split project into encloned (daemon/service) and enclone (CLI control application)
+
+Mon 13/7/2020
+- Integrated local socket test code in encloned and enclone, split into header/implementation
+- Tested concurrent socket connections - works correctly
+- todo: 1. devise a messaging system/function caller
+        2. cmd line arguments
+        3. security concerns - can any user connect to the daemon - what auth, if any, is required

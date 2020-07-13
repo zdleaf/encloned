@@ -23,13 +23,7 @@ void Socket::openSocket(){
     catch (std::exception& e)
     {
         std::cerr << "Exception: " << e.what() << "\n";
-    }
-/*     ::unlink("/tmp/enclone"); // remove previous binding
-    io::local::stream_protocol::endpoint ep("/tmp/enclone");
-    io::local::stream_protocol::acceptor acceptor(io_context, ep);
-    io::local::stream_protocol::socket socket(io_context);
-    acceptor.accept(socket);  */  
-    
+    }    
 }
 
 void Socket::closeSocket(){
@@ -39,6 +33,10 @@ void Socket::closeSocket(){
 Session::Session(asio::io_service& io_service): socket_(io_service)
 {
     std::cout << "Socket: New session started..." << std::endl; 
+}
+
+Session::~Session(){
+    std::cout << "Socket: Session closed..." << std::endl; 
 }
 
 stream_protocol::socket& Session::socket()
@@ -84,11 +82,11 @@ Server::Server(asio::io_service& io_service, asio::local::stream_protocol::endpo
     :   io_service_(io_service), 
         acceptor_(io_service, ep)
 {
+    std::cout << "Socket: Local socket open..." << std::endl;
     std::shared_ptr<Session> newSession = std::make_shared<Session>(io_service_);
     acceptor_.async_accept(newSession->socket(),
         boost::bind(&Server::handle_accept, this, newSession,
         asio::placeholders::error));
-    std::cout << "Socket: Local socket open..." << std::endl; 
 }
 
 void Server::handle_accept(std::shared_ptr<Session> newSession, const boost::system::error_code& error){

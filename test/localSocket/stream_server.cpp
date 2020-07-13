@@ -30,6 +30,11 @@ class session: public std::enable_shared_from_this<session>{
         session(asio::io_service& io_service)
             : socket_(io_service)
         {
+            std::cout << "Socket: New session started..." << std::endl;
+        }
+
+        ~session(){
+            std::cout << "Socket: Session closed..." << std::endl; 
         }
 
         stream_protocol::socket& socket()
