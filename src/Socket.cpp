@@ -15,9 +15,10 @@ void Socket::execThread(){
 void Socket::openSocket(){
     try
     {
-        ::unlink("/tmp/encloned"); // remove previous binding
-        asio::local::stream_protocol::endpoint ep("/tmp/encloned");
+        ::unlink(SOCKET_FILE); // remove previous binding
+        asio::local::stream_protocol::endpoint ep(SOCKET_FILE);
         Server s(io_service, ep);
+        fs::permissions(SOCKET_FILE, fs::perms::owner_all); // restrict file permissions to the socket to owner only (+0700 rwx------)
         io_service.run();
     }
     catch (std::exception& e)
@@ -81,7 +82,7 @@ void Session::handle_write(const boost::system::error_code& error){
 Server::Server(asio::io_service& io_service, asio::local::stream_protocol::endpoint ep)
     :   io_service_(io_service), 
         acceptor_(io_service, ep)
-{
+{   
     std::cout << "Socket: Local socket open..." << std::endl;
     std::shared_ptr<Session> newSession = std::make_shared<Session>(io_service_);
     acceptor_.async_accept(newSession->socket(),

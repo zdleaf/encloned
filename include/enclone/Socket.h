@@ -2,11 +2,13 @@
 #define SOCKET_H
 
 #include <iostream>
+#include <filesystem>
 #include <boost/asio.hpp> // unix domain local sockets
 #include <boost/bind.hpp>
 
 #if defined(BOOST_ASIO_HAS_LOCAL_SOCKETS)
 
+namespace fs = std::filesystem;
 namespace asio = boost::asio;
 using boost::asio::local::stream_protocol;
 
@@ -15,6 +17,7 @@ class Server;
 
 class Socket {
     private:
+        const char* SOCKET_FILE = "/tmp/encloned";
         //io::io_context io_context;
         asio::io_service io_service;
 
