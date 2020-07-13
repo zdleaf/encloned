@@ -38,6 +38,7 @@ std::unordered_map<string, std::vector<FileVersion>>* Watch::getFileIndex(){
 }
 
 void Watch::addWatch(string path, bool recursive){
+    std::lock_guard<std::mutex> guard(mtx);
     fs::file_status s = fs::status(path);
     if(!fs::exists(s)){                 // file/directory does not exist
         std::cout << "Watch: " << path << " does not exist" << endl;
@@ -102,7 +103,6 @@ void Watch::addFileVersion(std::string path){
 }
 
 void Watch::scanFileChange(){
-
     // existing files that are being watched
     for(auto elem: fileIndex){
         string path = elem.first;

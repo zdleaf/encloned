@@ -28,6 +28,7 @@ add_executable(enclone ./src/enclone.cpp)
 
 # link std filesystem library
 target_link_libraries(encloned stdc++fs sqlite3 ${AWSSDK_LINK_LIBRARIES} OpenSSL::SSL)
+target_link_libraries(enclone stdc++fs)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

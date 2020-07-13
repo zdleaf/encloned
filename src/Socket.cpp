@@ -8,6 +8,10 @@ Socket::~Socket(){ // destructor
     closeSocket();
 }
 
+void Socket::setPtr(std::shared_ptr<Watch> watch){
+    this->watch = watch;
+}
+
 void Socket::execThread(){
     openSocket();
 }
@@ -17,7 +21,7 @@ void Socket::openSocket(){
     {
         ::unlink(SOCKET_FILE); // remove previous binding
         asio::local::stream_protocol::endpoint ep(SOCKET_FILE);
-        Server s(io_service, ep);
+        Server s(io_service, ep, watch);
         fs::permissions(SOCKET_FILE, fs::perms::owner_all); // restrict file permissions to the socket to owner only (+0700 rwx------)
         io_service.run();
     }
@@ -31,9 +35,10 @@ void Socket::closeSocket(){
     
 }
 
-Session::Session(asio::io_service& io_service): socket_(io_service)
+Session::Session(asio::io_service& io_service, std::shared_ptr<Watch> watch): socket_(io_service)
 {
-    std::cout << "Socket: New session started..." << std::endl; 
+    std::cout << "Socket: New session started..." << std::endl;
+    this->watch = watch; 
 }
 
 Session::~Session(){
@@ -58,6 +63,10 @@ void Session::start(){
 void Session::handle_read(const boost::system::error_code& error, size_t bytes_transferred){
     if (!error)
     {
+        // input handling here
+        std::string path(std::begin(data_), data_.begin()+bytes_transferred);
+        watch->addWatch(path, false);
+
         asio::async_write(
             socket_,
             asio::buffer(data_, bytes_transferred),
@@ -79,12 +88,13 @@ void Session::handle_write(const boost::system::error_code& error){
     }
 }
 
-Server::Server(asio::io_service& io_service, asio::local::stream_protocol::endpoint ep)
+Server::Server(asio::io_service& io_service, asio::local::stream_protocol::endpoint ep, std::shared_ptr<Watch> watch)
     :   io_service_(io_service), 
         acceptor_(io_service, ep)
 {   
     std::cout << "Socket: Local socket open..." << std::endl;
-    std::shared_ptr<Session> newSession = std::make_shared<Session>(io_service_);
+    this->watch = watch;
+    std::shared_ptr<Session> newSession = std::make_shared<Session>(io_service_, watch);
     acceptor_.async_accept(newSession->socket(),
         boost::bind(&Server::handle_accept, this, newSession,
         asio::placeholders::error));
@@ -96,7 +106,7 @@ void Server::handle_accept(std::shared_ptr<Session> newSession, const boost::sys
         newSession->start(); 
     }
     
-    newSession.reset(new Session(io_service_));
+    newSession.reset(new Session(io_service_, watch));
     acceptor_.async_accept(newSession->socket(),
         boost::bind(&Server::handle_accept, this, newSession,
         asio::placeholders::error));

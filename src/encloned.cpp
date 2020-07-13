@@ -13,6 +13,7 @@ encloned::encloned(){ // constructor
     watch = std::make_shared<Watch>(db, &runThreads);
     remote->setPtr(watch);
     watch->setPtr(remote);
+    socket->setPtr(watch);
 }
 
 encloned::~encloned(){ // destructor

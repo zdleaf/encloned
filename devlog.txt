@@ -240,3 +240,7 @@ Mon 13/7/2020
         - supported ciphers - https://www.cryptopp.com/
         - benchmarks https://www.cryptopp.com/benchmarks.html
         - more stream cipher options (typically faster than block ciphers - but less secure?)
+- Looked into command line argument parsing options
+    - boost::program_options vs hand written
+        - boost allows easy extension for config files, clear syntax and error handling, easy capture of multiple files given as arguments and different flags
+- Tested basic daemon function call from command sent through local socket - call addWatch() method in Watch.h with supplied path to CLI
