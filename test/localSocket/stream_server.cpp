@@ -18,8 +18,8 @@
 
 #if defined(BOOST_ASIO_HAS_LOCAL_SOCKETS)
 
-using boost::asio::local::stream_protocol;
-namespace io = boost::asio;
+namespace asio = boost::asio;
+using asio::local::stream_protocol;
 
 class session: public std::enable_shared_from_this<session>{
     private:
@@ -27,7 +27,7 @@ class session: public std::enable_shared_from_this<session>{
         std::array<char, 1024> data_;     // buffer used to store data received from the client
         
     public:
-        session(boost::asio::io_service& io_service)
+        session(asio::io_service& io_service)
             : socket_(io_service)
         {
         }
@@ -39,67 +39,65 @@ class session: public std::enable_shared_from_this<session>{
 
         void start(){
             socket_.async_read_some(
-                boost::asio::buffer(data_),
+                asio::buffer(data_),
                 boost::bind(&session::handle_read,
                 shared_from_this(),
-                boost::asio::placeholders::error,
-                boost::asio::placeholders::bytes_transferred)
+                asio::placeholders::error,
+                asio::placeholders::bytes_transferred)
                 );
         }
 
-        void handle_read(const boost::system::error_code& error,
-            size_t bytes_transferred)
-        {
+        void handle_read(const boost::system::error_code& error, size_t bytes_transferred){
             if (!error)
             {
-            boost::asio::async_write(socket_,
-                boost::asio::buffer(data_, bytes_transferred),
-                boost::bind(&session::handle_write,
+                asio::async_write(
+                    socket_,
+                    asio::buffer(data_, bytes_transferred),
+                    boost::bind(&session::handle_write,
                     shared_from_this(),
-                    boost::asio::placeholders::error));
+                    asio::placeholders::error)
+                );
             }
         }
 
-        void handle_write(const boost::system::error_code& error)
-        {
+        void handle_write(const boost::system::error_code& error){
             if (!error)
-            {
-            socket_.async_read_some(boost::asio::buffer(data_),
-                boost::bind(&session::handle_read,
+            {       
+                    socket_.async_read_some(asio::buffer(data_),
+                    boost::bind(&session::handle_read,
                     shared_from_this(),
-                    boost::asio::placeholders::error,
-                    boost::asio::placeholders::bytes_transferred));
+                    asio::placeholders::error,
+                    asio::placeholders::bytes_transferred));
             }
         }
 };
 
 class server{
     public:
-        server(boost::asio::io_service& io_service, io::local::stream_protocol::endpoint ep)
+        server(asio::io_service& io_service, asio::local::stream_protocol::endpoint ep)
             :   io_service_(io_service), 
                 acceptor_(io_service, ep)
         {
             std::shared_ptr<session> new_session = std::make_shared<session>(io_service_);
             acceptor_.async_accept(new_session->socket(),
                 boost::bind(&server::handle_accept, this, new_session,
-                boost::asio::placeholders::error));
+                asio::placeholders::error));
         }
 
-        void handle_accept(std::shared_ptr<session> new_session, const boost::system::error_code& error)
-        {
+        void handle_accept(std::shared_ptr<session> new_session, const boost::system::error_code& error){
             if (!error)
-            {
-            new_session->start();
+            { 
+                new_session->start(); 
             }
-
+            
             new_session.reset(new session(io_service_));
             acceptor_.async_accept(new_session->socket(),
                 boost::bind(&server::handle_accept, this, new_session,
-                boost::asio::placeholders::error));
+                asio::placeholders::error));
         }
 
     private:
-        boost::asio::io_service& io_service_;
+        asio::io_service& io_service_;
         stream_protocol::acceptor acceptor_;
 };
 
@@ -107,9 +105,9 @@ int main(int argc, char* argv[])
 {
   try
   {
-    boost::asio::io_service io_service;
+    asio::io_service io_service;
     ::unlink("/tmp/encloned"); // remove previous binding
-    io::local::stream_protocol::endpoint ep("/tmp/encloned");
+    asio::local::stream_protocol::endpoint ep("/tmp/encloned");
     server s(io_service, ep);
     io_service.run();
   }

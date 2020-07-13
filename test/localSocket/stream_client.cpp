@@ -18,8 +18,8 @@
 
 #if defined(BOOST_ASIO_HAS_LOCAL_SOCKETS)
 
+namespace asio = boost::asio;
 using boost::asio::local::stream_protocol;
-namespace io = boost::asio;
 
 enum { max_length = 1024 };
 

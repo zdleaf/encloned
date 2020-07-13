@@ -3,14 +3,20 @@
 
 #include <iostream>
 #include <boost/asio.hpp> // unix domain local sockets
+#include <boost/bind.hpp>
 
 #if defined(BOOST_ASIO_HAS_LOCAL_SOCKETS)
 
-namespace io = boost::asio;
+namespace asio = boost::asio;
+using boost::asio::local::stream_protocol;
+
+class Session;
+class Server;
 
 class Socket {
     private:
-        io::io_context io_context;
+        //io::io_context io_context;
+        asio::io_service io_service;
 
         // concurrency/multi-threading
         std::mutex mtx;
@@ -28,6 +34,33 @@ class Socket {
 
         void openSocket();
         void closeSocket();
+};
+
+class Session: public std::enable_shared_from_this<Session>{
+    private:
+        stream_protocol::socket socket_;    // socket used to communicate with the client
+        std::array<char, 1024> data_;     // buffer used to store data received from the client
+        
+    public:
+        Session(asio::io_service& io_service);
+
+        stream_protocol::socket& socket();
+
+        void start();
+
+        void handle_read(const boost::system::error_code& error, size_t bytes_transferred);
+        void handle_write(const boost::system::error_code& error);
+};
+
+class Server{
+    private:
+        asio::io_service& io_service_;
+        stream_protocol::acceptor acceptor_;
+
+    public:
+        Server(asio::io_service& io_service, asio::local::stream_protocol::endpoint ep);
+
+        void handle_accept(std::shared_ptr<Session> newSession, const boost::system::error_code& error);
 };
 
 #else // defined(BOOST_ASIO_HAS_LOCAL_SOCKETS)

@@ -4,7 +4,12 @@
 #include <iostream>
 #include <boost/asio.hpp> // unix domain local sockets
 
+namespace asio = boost::asio;
+using boost::asio::local::stream_protocol;
+
 #if defined(BOOST_ASIO_HAS_LOCAL_SOCKETS)
+
+enum { max_length = 1024 };
 
 class enclone{
     private:
