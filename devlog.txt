@@ -157,6 +157,8 @@ Fri 3/7/2020
         - libraries:
             - PicoSHA2 - unknown implementation with STL, header only include
             - OpenSSL - known implementation, well tested
+    - SHA-3 - ? SHA-2 attacks are becoming more practical - possible future proof with SHA-3 but potentially slower than SHA-2
+        - todo: update code to implement SHA-3
     - Possible attack vector is compute large rainbow table of possible/known paths/filenames or files, and compare hashes 
         - therefore a random salt should be generated and hashed with the filename or binary file database
             - if we are using the same hash for file integrity we need to store the salt to later compare - can do so by storing hash in index as std::pair<hash, salt>
@@ -222,6 +224,19 @@ Sun 12/7/2020
 Mon 13/7/2020
 - Integrated local socket test code in encloned and enclone, split into header/implementation
 - Tested concurrent socket connections - works correctly
+- Set permissions of IPC socket (/tmp/encloned) to owner only (+0700 rwx------) to restrict access to other users - only same user that is running daemon can control
 - todo: 1. devise a messaging system/function caller
-        2. cmd line arguments
-        3. security concerns - can any user connect to the daemon - what auth, if any, is required
+        2. cmd line arguments       
+- Starting to research file encryption possibilities
+    - Comparison of libraries - https://en.wikipedia.org/wiki/Comparison_of_cryptography_libraries
+    - OpenSSL library (libcrypto - already included in project)
+        - FIPS 140 and 140-2 validated - approved by US government
+        - https://wiki.openssl.org/index.php/EVP
+        - see EVP.h for list of supported ciphers - copied to openSSL-supported-ciphers.txt
+        - https://wiki.openssl.org/index.php/EVP_Authenticated_Encryption_and_Decryption
+            - we also want to authenticate data - "Such Authenticated-Encryption with Associated-Data (AEAD) schemes provide confidentiality by encrypting the data, and also provide authenticity assurances by creating a MAC tag over the encrypted data. The MAC tag will ensure the data is not accidentally altered or maliciously tampered during transmission and storage. "
+            - currently only AES is supported in modes EAX, CCM and GCM
+    - Crypto++
+        - supported ciphers - https://www.cryptopp.com/
+        - benchmarks https://www.cryptopp.com/benchmarks.html
+        - more stream cipher options (typically faster than block ciphers - but less secure?)
