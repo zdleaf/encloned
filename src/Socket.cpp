@@ -63,10 +63,18 @@ void Session::start(){
 void Session::handle_read(const boost::system::error_code& error, size_t bytes_transferred){
     if (!error)
     {
-        
-        std::string path(std::begin(data_), data_.begin()+bytes_transferred);
-        // input handling here
-        string response = watch->addWatch(path, false) + ";";
+        string response;
+
+        std::string request(std::begin(data_), data_.begin()+bytes_transferred);
+        std::string cmd = request.substr(0, 5); cout << "Command is: " << cmd << endl; // use substring or a delimiter token e.g. < or { or |
+        std::string path = request.substr(6); cout << "Path is: " << path << endl;
+
+        // input handling here - need a parser
+        if(cmd == "add-x"){
+            response = watch->addWatch(path, false) + ";";
+        } else if (cmd == "add-r"){
+            response = watch->addWatch(path, true) + ";";
+        }
 
         cout << "Socket: Sending response to socket: \"" << response.substr(0, 20) << "...\"" << endl;
 

@@ -6,6 +6,8 @@
 #include <filesystem>
 #include <stdexcept>
 #include <iterator>
+#include <vector>
+//#include <fstream>
 #include <boost/asio.hpp> // unix domain local sockets
 #include <boost/program_options.hpp> // CLI arguments parsing
 
@@ -30,7 +32,7 @@ class enclone{
         enclone(string cmd, string path, bool recursive=false);
         ~enclone();
 
-        bool connect();
+        bool sendRequest(string request);
 
 };
 
