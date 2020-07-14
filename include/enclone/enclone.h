@@ -4,10 +4,13 @@
 #include <iostream>
 #include <string>
 #include <filesystem>
+//#include <exception>
 #include <boost/asio.hpp> // unix domain local sockets
+#include <boost/program_options.hpp> // CLI arguments parsing
 
 namespace fs = std::filesystem;
 namespace asio = boost::asio;
+namespace po = boost::program_options;
 using boost::asio::local::stream_protocol;
 using std::string;
 using std::cout;
@@ -23,7 +26,7 @@ class enclone{
         bool addWatch(string path, bool recursive);
         
     public:
-        enclone(string cmd, string path);
+        enclone(string cmd, string path, bool recursive=false);
         ~enclone();
 
         bool connect();
