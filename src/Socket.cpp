@@ -63,8 +63,9 @@ void Session::start(){
 void Session::handle_read(const boost::system::error_code& error, size_t bytes_transferred){
     if (!error)
     {
-        // input handling here
+        
         std::string path(std::begin(data_), data_.begin()+bytes_transferred);
+        // input handling here
         watch->addWatch(path, false);
 
         asio::async_write(

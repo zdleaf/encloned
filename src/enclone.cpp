@@ -1,32 +1,21 @@
 #include <enclone/enclone.h>
 
+void conflicting_options(const po::variables_map& vm, const char* opt1, const char* opt2){
+    if (vm.count(opt1) && !vm[opt1].defaulted() 
+        && vm.count(opt2) && !vm[opt2].defaulted())
+        throw std::logic_error(string("Conflicting options '") 
+                          + opt1 + "' and '" + opt2);
+}
+
 int main(int argc, char* argv[]){
     try {
-/*     enum style_t { allow_long = = 1, allow_short = = allow_long << 1, 
-            allow_dash_for_short = = allow_short << 1, 
-            allow_slash_for_short = = allow_dash_for_short << 1, 
-            long_allow_adjacent = = allow_slash_for_short << 1, 
-            long_allow_next = = long_allow_adjacent << 1, 
-            short_allow_adjacent = = long_allow_next << 1, 
-            short_allow_next = = short_allow_adjacent << 1, 
-            allow_sticky = = short_allow_next << 1, 
-            allow_guessing = = allow_sticky << 1, 
-            long_case_insensitive = = allow_guessing << 1, 
-            short_case_insensitive = = long_case_insensitive << 1, 
-            case_insensitive = = (long_case_insensitive | short_case_insensitive), 
-            allow_long_disguise = = short_case_insensitive << 1, 
-            unix_style = = (allow_short | short_allow_adjacent | short_allow_next
-                    | allow_long | long_allow_adjacent | long_allow_next
-                    | allow_sticky | allow_guessing 
-                    | allow_dash_for_short), 
-            default_style = = unix_style }; */
-
         // CLI arguments
         po::options_description desc("Allowed options");
         desc.add_options()
         ("help,h", "produce help message")
-        ("add,a", po::value<string>(), "add a watch to a given file or directory")
-        ("recursive,r", "specify watched directory should be watched recursively");
+        ("add-watch,a", po::value<string>(), "add a watch to a given file or directory")
+        ("recursive,r", "specify watched directory should be watched recursively")
+        ("del-watch,d", po::value<string>(), "add a watch to a given file or directory");
     
         // store/parse arguments
         po::variables_map vm;        
@@ -42,19 +31,21 @@ int main(int argc, char* argv[]){
                 po::command_line_style::allow_long_disguise
                 ), vm);
 
-        po::notify(vm);    
+        po::notify(vm);
+
+        conflicting_options(vm, "remove", "add");
 
         if (vm.count("help") || (argc == 1)) {
             cout << desc << endl;
             return 0;
         }
 
-        if (vm.count("add") && vm.count("recursive")) {
-            cout << "Adding watch to path: " << vm["add"].as<string>() << endl;
-            enclone e("add", vm["add"].as<string>(), true);
-        } else if (vm.count("add")) {
-            cout << "Adding watch to path: " << vm["add"].as<string>() << endl;
-            enclone e("add", vm["add"].as<string>(), false);
+        if (vm.count("add-watch") && vm.count("recursive")) {
+            cout << "Adding watch to path: " << vm["add-watch"].as<string>() << endl;
+            enclone e("add", vm["add-watch"].as<string>(), true);
+        } else if (vm.count("add-watch")) {
+            cout << "Adding watch to path: " << vm["add-watch"].as<string>() << endl;
+            enclone e("add", vm["add-watch"].as<string>(), false);
         }
 
     } 
@@ -69,10 +60,10 @@ int main(int argc, char* argv[]){
 }
 
 enclone::enclone(string cmd, string path, bool recursive){ // recursive=false by default
-    if (!fs::exists(path)){
+/*     if (!fs::exists(path)){
         std::cerr << "path: " << path << " does not exist\n";
         return;
-    }
+    } */
     if (cmd == "add" && recursive){
         addWatch(path, true);
     } else if (cmd == "add" && !recursive){
@@ -101,7 +92,7 @@ bool enclone::addWatch(string path, bool recursive){
         size_t reply_length = asio::read(localSocket, asio::buffer(reply, request_length));
         std::cout << "Reply is: ";
         std::cout.write(reply, reply_length);
-        std::cout << "\n";
+        std::cout << endl;
         return true;
     }
     catch (std::exception& e)

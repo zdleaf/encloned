@@ -4,7 +4,7 @@
 #include <iostream>
 #include <string>
 #include <filesystem>
-//#include <exception>
+#include <stdexcept>
 #include <boost/asio.hpp> // unix domain local sockets
 #include <boost/program_options.hpp> // CLI arguments parsing
 
