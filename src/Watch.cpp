@@ -37,49 +37,56 @@ std::unordered_map<string, std::vector<FileVersion>>* Watch::getFileIndex(){
     return &fileIndex;
 }
 
-void Watch::addWatch(string path, bool recursive){
+string Watch::addWatch(string path, bool recursive){
     std::lock_guard<std::mutex> guard(mtx);
+    std::stringstream response;
     fs::file_status s = fs::status(path);
     if(!fs::exists(s)){                 // file/directory does not exist
-        std::cout << "Watch: " << path << " does not exist" << endl;
+        response << "Watch: " << path << " does not exist";
     } else if(fs::is_directory(s)){     // adding a directory to watch
-        addDirWatch(path, recursive);
+        return addDirWatch(path, recursive);
     } else if(fs::is_regular_file(s)){  // adding a regular file to watch
-        addFileWatch(path);
+        return addFileWatch(path);
     } else {                            // any other file type, e.g. IPC pipe
-        std::cout << "Watch: " << path << " is not a valid directory/file" << endl;
+        response << "Watch: " << path << " does not exist";
     }
+    std::cout << response.str() << endl;
+    return response.str();
 }
 
-void Watch::addDirWatch(string path, bool recursive){
+string Watch::addDirWatch(string path, bool recursive){
     auto result = dirIndex.insert({path, recursive});
+    std::stringstream response;
     if(result.second){ // check if insertion was successful i.e. result.second = true (false when already exists in map)
-        cout << "Watch: "<< "Added watch to directory: " << path << endl;
+        response << "Watch: "<< "Added watch to directory: " << path;
         sqlQueue << "INSERT or IGNORE INTO dirIndex (PATH, RECURSIVE) VALUES ('" << path << "'," << (recursive ? "TRUE" : "FALSE") << ");"; // queue SQL insert
         for (const auto & entry : fs::directory_iterator(path)){ // iterate through all directory entries
             fs::file_status s = fs::status(entry);
             if(fs::is_directory(s) && recursive) { // check recursive flag before adding directories recursively
                 //cout << "Recursively adding: " << entry.path() << endl;
-                addWatch(entry.path().string(), true); 
+                response << addWatch(entry.path().string(), true); 
             } else if(fs::is_regular_file(s)){
-                addFileWatch(entry.path().string());
+                response << addFileWatch(entry.path().string());
             } else if(!fs::is_directory(s)){ 
                 cout << "Watch: " << "Unknown file encountered: " << entry.path().string() << endl; 
             }
         }
     } else { // duplicate - directory was not added
-        cout << "Watch: " << "Watch to directory already exists: " << path << endl;
+        response << "Watch: " << "Watch to directory already exists: " << path << endl;
     }
+    std::cout << response.str() << endl;
+    return response.str();
 }
 
-void Watch::addFileWatch(string path){
-
+string Watch::addFileWatch(string path){
+    
     // temporary extension exclusions - ignore .swp files
     if(fs::path(path).extension() == ".swp"){
-        return;
+        return "ignored .swp file";
     }
 
     auto result = fileIndex.insert({path, std::vector<FileVersion>()});
+    std::stringstream response;
 
     if(result.second){ // check if insertion was successful i.e. result.second = true (false when already exists in map)
         cout << "Watch: " << "Added watch to file: " << path << endl;
@@ -87,6 +94,8 @@ void Watch::addFileWatch(string path){
     } else { // duplicate
         cout << "Watch: " << "Watch to file already exists: " << path << endl;
     }
+
+    return response.str();
 }
 
 void Watch::addFileVersion(std::string path){

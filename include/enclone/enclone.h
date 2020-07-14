@@ -5,6 +5,7 @@
 #include <string>
 #include <filesystem>
 #include <stdexcept>
+#include <iterator>
 #include <boost/asio.hpp> // unix domain local sockets
 #include <boost/program_options.hpp> // CLI arguments parsing
 
@@ -18,7 +19,7 @@ using std::endl;
 
 #if defined(BOOST_ASIO_HAS_LOCAL_SOCKETS)
 
-enum { max_length = 1024 };
+enum { max_length = 2048 };
 
 class enclone{
     private:

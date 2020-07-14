@@ -66,11 +66,13 @@ void Session::handle_read(const boost::system::error_code& error, size_t bytes_t
         
         std::string path(std::begin(data_), data_.begin()+bytes_transferred);
         // input handling here
-        watch->addWatch(path, false);
+        string response = watch->addWatch(path, false) + ";";
+
+        cout << "Sending response to socket: " << response << endl;
 
         asio::async_write(
             socket_,
-            asio::buffer(data_, bytes_transferred),
+            asio::buffer(response.c_str(), response.length()),
             boost::bind(&Session::handle_write,
             shared_from_this(),
             asio::placeholders::error)

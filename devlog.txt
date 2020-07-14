@@ -247,8 +247,9 @@ Mon 13/7/2020
 
 Tue 14/7/2020
 - Added basic CLI argument functionality with boost::program_options
-    - todo: 
-        - add multiple paths for one add argument - may need to raise buffer size to accept long arguments
-        - add remove argument - need to do generic function from Socket to call specialised
-        - how to pass back string responses to enclone
-        - make generic connect to daemon and pass cmd method - connect(string to pass)
+- Included functionality to pipe a response to a command from daemon (encloned) back to client that made the request
+    - methods return a response string, this is passed back to client which reads until the ";" delimiter, indicating end of reply
+- todo: 
+    - add multiple paths for one add argument - may need to raise buffer size to accept long arguments
+    - add remove argument - need to do generic function from Socket to call specialised
+    - make generic connect to daemon and pass cmd method - connect(string to pass)

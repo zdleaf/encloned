@@ -54,7 +54,7 @@ class Watch {
 
         std::unordered_map<string, std::vector<FileVersion>>* getFileIndex();
 
-        void addWatch(string path, bool recursive);
+        string addWatch(string path, bool recursive);
         void scanFileChange();
         void execQueuedSQL();
 
@@ -76,8 +76,8 @@ class Watch {
         std::mutex mtx;
         std::atomic_bool *runThreads; // ptr to flag indicating if execThread should loop or close down
 
-        void addDirWatch(string path, bool recursive);
-        void addFileWatch(string path);
+        string addDirWatch(string path, bool recursive);
+        string addFileWatch(string path);
         void addFileVersion(std::string path);
         std::time_t getLastModTime(std::string path);
 

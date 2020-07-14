@@ -49,7 +49,7 @@ class Socket {
 class Session: public std::enable_shared_from_this<Session>{
     private:
         stream_protocol::socket socket_;    // socket used to communicate with the client
-        std::array<char, 1024> data_;     // buffer used to store data received from the client
+        std::array<char, 2048> data_;     // buffer used to store data received from the client
 
         std::shared_ptr<Watch> watch; // pointer to watch handler
         

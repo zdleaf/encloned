@@ -78,21 +78,25 @@ enclone::~enclone(){
 bool enclone::addWatch(string path, bool recursive){
     try
     {
+        // init socket connection
         asio::io_service io_service;
         stream_protocol::socket localSocket(io_service);
         asio::local::stream_protocol::endpoint ep("/tmp/encloned");
         localSocket.connect(ep);
 
+        // send request
         char request[path.length()];
         strcpy(request, path.c_str());
         size_t request_length = std::strlen(request);
         asio::write(localSocket, asio::buffer(request, request_length));
 
-        char reply[max_length];
-        size_t reply_length = asio::read(localSocket, asio::buffer(reply, request_length));
-        std::cout << "Reply is: ";
-        std::cout.write(reply, reply_length);
-        std::cout << endl;
+        // read response
+        boost::asio::streambuf response; // read_until requires a dynamic buffer to read into
+        asio::read_until(localSocket, response, ";"); // all responses are suffixed with ";" - read until this delimiter
+        
+        std::string reply{buffers_begin(response.data()), buffers_end(response.data())-1}; // get string response from buffer, remove delimiter
+        cout << reply << endl;
+
         return true;
     }
     catch (std::exception& e)
