@@ -42,15 +42,15 @@ string Watch::addWatch(string path, bool recursive){
     std::stringstream response;
     fs::file_status s = fs::status(path);
     if(!fs::exists(s)){                 // file/directory does not exist
-        response << "Watch: " << path << " does not exist";
+        response << "Watch: " << path << " does not exist" << endl;
     } else if(fs::is_directory(s)){     // adding a directory to watch
-        return addDirWatch(path, recursive);
+        response << addDirWatch(path, recursive);
     } else if(fs::is_regular_file(s)){  // adding a regular file to watch
-        return addFileWatch(path);
+        response << addFileWatch(path);
     } else {                            // any other file type, e.g. IPC pipe
-        response << "Watch: " << path << " does not exist";
+        response << "Watch: " << path << " does not exist" << endl;
     }
-    std::cout << response.str() << endl;
+    std::cout << response.str(); cout.flush();
     return response.str();
 }
 
@@ -58,7 +58,7 @@ string Watch::addDirWatch(string path, bool recursive){
     auto result = dirIndex.insert({path, recursive});
     std::stringstream response;
     if(result.second){ // check if insertion was successful i.e. result.second = true (false when already exists in map)
-        response << "Watch: "<< "Added watch to directory: " << path;
+        response << "Watch: "<< "Added watch to directory: " << path << endl;
         sqlQueue << "INSERT or IGNORE INTO dirIndex (PATH, RECURSIVE) VALUES ('" << path << "'," << (recursive ? "TRUE" : "FALSE") << ");"; // queue SQL insert
         for (const auto & entry : fs::directory_iterator(path)){ // iterate through all directory entries
             fs::file_status s = fs::status(entry);
@@ -74,7 +74,6 @@ string Watch::addDirWatch(string path, bool recursive){
     } else { // duplicate - directory was not added
         response << "Watch: " << "Watch to directory already exists: " << path << endl;
     }
-    std::cout << response.str() << endl;
     return response.str();
 }
 
@@ -89,12 +88,11 @@ string Watch::addFileWatch(string path){
     std::stringstream response;
 
     if(result.second){ // check if insertion was successful i.e. result.second = true (false when already exists in map)
-        cout << "Watch: " << "Added watch to file: " << path << endl;
+        response << "Watch: " << "Added watch to file: " << path << endl;
         addFileVersion(path);
     } else { // duplicate
-        cout << "Watch: " << "Watch to file already exists: " << path << endl;
+        response << "Watch: " << "Watch to file already exists: " << path << endl;
     }
-
     return response.str();
 }
 
@@ -166,13 +164,13 @@ void Watch::scanFileChange(){
                 if(!dirIndex.count(entry.path())){   // check if directory already exists in watched map
                     std::lock_guard<std::mutex> guard(mtx);
                     cout << "Watch: " << "New directory found: " << elem.first << endl;
-                    addDirWatch(entry.path().string(), true);  // add new directory and any files contained within
+                    cout << addDirWatch(entry.path().string(), true);  // add new directory and any files contained within and print response
                 }
             } else if(fs::is_regular_file(s)){
                 if(!fileIndex.count(entry.path())){  // check if each file already exists
                     std::lock_guard<std::mutex> guard(mtx);
                     cout << "Watch: " << "New file found: " << entry.path() << endl;
-                    addFileWatch(entry.path().string());
+                    cout << addFileWatch(entry.path().string());
                 }
             }
         }

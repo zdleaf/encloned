@@ -95,7 +95,7 @@ bool enclone::addWatch(string path, bool recursive){
         asio::read_until(localSocket, response, ";"); // all responses are suffixed with ";" - read until this delimiter
         
         std::string reply{buffers_begin(response.data()), buffers_end(response.data())-1}; // get string response from buffer, remove delimiter
-        cout << reply << endl;
+        cout << reply;
 
         return true;
     }
