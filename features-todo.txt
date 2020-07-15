@@ -3,3 +3,4 @@ Feature list
 - config file
 - output logs to named files, each thread has own log file - can watch live in console with "tail -f file.log"
 - add proper exclusions, e.g. ".swp" temporary files
+- unstructured db such as mongodb would be better at storing fileIndex as a tree like structure - easy to pull entire contents of a directory for example

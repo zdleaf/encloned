@@ -13,12 +13,15 @@ int main(int argc, char* argv[]){
         std::vector<string> addWatch{}; // paths to watch
         std::vector<string> recAdd{};   // recursive directories to watch
 
-        std::vector<string> delWatch{}; // paths to delete
+        std::vector<string> delWatch{}; // paths to delete watches to
 
         // CLI arguments
         po::options_description desc("Allowed options");
         desc.add_options()
         ("help,h", "display this help message")
+        ("list,l", po::value<string>(), "show currently tracked/available files\n"
+            "   local: \tshow all tracked local files\n"
+            "   remote: \tshow all available remote files\n")
         ("add-watch,a", po::value<std::vector<string>>(&addWatch)->composing(), "add a watch to a given path (file or directory)")
         ("recursive-add,A", po::value<std::vector<string>>(&recAdd)->composing(), "recursively add a watch to a directory")
         //("recursive,r", "specify watched directory should be watched or deleted recursively")
@@ -45,6 +48,17 @@ int main(int argc, char* argv[]){
         if (vm.count("help") || (argc == 1)){
             cout << desc << endl;
             return 0;
+        }
+
+        if (vm.count("list")){
+            string arg = vm["list"].as<string>();
+            if(arg == "local"){
+                // show local
+            } else if (arg == "remote"){
+                // show remote
+            } else {
+                cout << "Incorrect argument to --list (-l) - enter either local or remote";
+            }
         }
 
         if (vm.count("add-watch")) {
@@ -87,14 +101,6 @@ enclone::~enclone(){
     
 }
 
-bool enclone::addWatch(string path, bool recursive){
-    string request = "add";
-    (recursive ? request += "-r " : request += "-x "); // add suffix to command to specify if recursive add or not
-    request += path;
-
-    return sendRequest(request);
-}
-
 bool enclone::sendRequest(string request){
     try
     {
@@ -122,4 +128,18 @@ bool enclone::sendRequest(string request){
         return false;
     }
     return true;
+}
+
+bool enclone::addWatch(string path, bool recursive){
+    string request = "add";
+    (recursive ? request += "-r|" : request += "-x|"); // add suffix to command to specify if recursive add or not
+    request += path;
+
+    return sendRequest(request);
+}
+
+bool enclone::listLocal(){
+    string request = "listLocal|";
+
+    return sendRequest(request);
 }

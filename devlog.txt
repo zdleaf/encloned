@@ -253,3 +253,8 @@ Tue 14/7/2020
     - add multiple paths for one add argument - may need to raise buffer size to accept long arguments
     - add remove argument - need to do generic function from Socket to call specialised
     - make generic connect to daemon and pass cmd method - connect(string to pass)
+    - show method - show all tracked on local, show all versions, show all available on remote
+    - restore - restore specific directory or single file, needs
+
+Wed 15/7/2020
+- Adding "--show" 

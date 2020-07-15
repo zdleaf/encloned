@@ -27,6 +27,8 @@ class enclone{
     private:
         asio::io_service io_service;
         bool addWatch(string path, bool recursive);
+        bool listLocal();
+        bool listRemote();
         
     public:
         enclone(string cmd, string path, bool recursive=false);
