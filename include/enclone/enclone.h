@@ -24,17 +24,26 @@ using std::endl;
 enum { max_length = 2048 };
 
 class enclone{
+    public:
+        enclone(const int& argc, char** const argv);
+        ~enclone();
+
     private:
         asio::io_service io_service;
+        
+        int showOptions(const int& argc, char** const argv);
+
+        bool sendRequest(string request);
+
         bool addWatch(string path, bool recursive);
         bool listLocal();
         bool listRemote();
-        
-    public:
-        enclone(string cmd, string path, bool recursive=false);
-        ~enclone();
 
-        bool sendRequest(string request);
+        std::vector<string> toAdd{}; // paths to watch
+        std::vector<string> toRecAdd{};   // recursive directories to watch
+        std::vector<string> toDel{}; // paths to delete watches to
+        
+
 
 };
 

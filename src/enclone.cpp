@@ -8,12 +8,19 @@ void conflicting_options(const po::variables_map& vm, const char* opt1, const ch
 }
 
 int main(int argc, char* argv[]){
+    enclone enc(argc, argv);
+}
+
+enclone::enclone(const int& argc, char** const argv){
+    showOptions(argc, argv);
+}
+
+enclone::~enclone(){
+    
+}
+
+int enclone::showOptions(const int& argc, char** const argv){ 
     try {
-
-        std::vector<string> addWatch{}; // paths to watch
-        std::vector<string> recAdd{};   // recursive directories to watch
-
-        std::vector<string> delWatch{}; // paths to delete watches to
 
         // CLI arguments
         po::options_description desc("Allowed options");
@@ -22,11 +29,11 @@ int main(int argc, char* argv[]){
         ("list,l", po::value<string>(), "show currently tracked/available files\n"
             "   local: \tshow all tracked local files\n"
             "   remote: \tshow all available remote files\n")
-        ("add-watch,a", po::value<std::vector<string>>(&addWatch)->composing(), "add a watch to a given path (file or directory)")
-        ("recursive-add,A", po::value<std::vector<string>>(&recAdd)->composing(), "recursively add a watch to a directory")
+        ("add-watch,a", po::value<std::vector<string>>(&toAdd)->composing(), "add a watch to a given path (file or directory)")
+        ("recursive-add,A", po::value<std::vector<string>>(&toRecAdd)->composing(), "recursively add a watch to a directory")
         //("recursive,r", "specify watched directory should be watched or deleted recursively")
-        ("del-watch,d", po::value<std::vector<string>>(&delWatch)->composing(), "delete a watch from a given path (file or directory)")
-        ("recursive-del,D", po::value<std::vector<string>>(&delWatch)->composing(), "recursively delete all watches in a directory");
+        ("del-watch,d", po::value<std::vector<string>>(&toDel)->composing(), "delete a watch from a given path (file or directory)")
+        ("recursive-del,D", po::value<std::vector<string>>(&toDel)->composing(), "recursively delete all watches in a directory");
     
         // store/parse arguments
         po::variables_map vm;        
@@ -62,22 +69,22 @@ int main(int argc, char* argv[]){
         }
 
         if (vm.count("add-watch")) {
-            for(string path: addWatch){
+            for(string path: toAdd){
                 cout << "Adding watch to path: " << path << endl;
-                enclone e("add", path, false);
+                addWatch(path, false);
             }
         }
 
         if (vm.count("recursive-add")){
-            for(string path: recAdd){
+            for(string path: toRecAdd){
                 cout << "Adding recursive watch to path: " << path << endl;
-                enclone e("add", path, true);
+                addWatch(path, true);
             }
         }
 
         if (vm.count("del-watch")){
             cout << "Deleting watch to path: " << vm["del-watch"].as<string>() << endl;
-            enclone e("add", vm["add-watch"].as<string>(), true);
+            //enclone e("add", vm["add-watch"].as<string>(), true);
         }
 
     } 
@@ -89,16 +96,6 @@ int main(int argc, char* argv[]){
         std::cerr << "Exception of unknown type!\n";
     }
     return 0;
-}
-
-enclone::enclone(string cmd, string path, bool recursive){ // recursive=false by default
-    if (cmd == "add"){
-        (recursive ? addWatch(path, true) : addWatch(path, false));
-    } 
-}
-
-enclone::~enclone(){
-    
 }
 
 bool enclone::sendRequest(string request){
