@@ -64,7 +64,7 @@ string Watch::addDirWatch(string path, bool recursive){
             fs::file_status s = fs::status(entry);
             if(fs::is_directory(s) && recursive) { // check recursive flag before adding directories recursively
                 //cout << "Recursively adding: " << entry.path() << endl;
-                response << addWatch(entry.path().string(), true); 
+                response << addDirWatch(entry.path().string(), true); 
             } else if(fs::is_regular_file(s)){
                 response << addFileWatch(entry.path().string());
             } else if(!fs::is_directory(s)){ 

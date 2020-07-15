@@ -32,6 +32,7 @@ class enclone{
         asio::io_service io_service;
         
         int showOptions(const int& argc, char** const argv);
+        void conflictingOptions(const po::variables_map& vm, const char* opt1, const char* opt2);
 
         bool sendRequest(string request);
 

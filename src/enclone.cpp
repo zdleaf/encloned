@@ -1,12 +1,5 @@
 #include <enclone/enclone.h>
 
-void conflicting_options(const po::variables_map& vm, const char* opt1, const char* opt2){
-    if (vm.count(opt1) && !vm[opt1].defaulted() 
-        && vm.count(opt2) && !vm[opt2].defaulted())
-        throw std::logic_error(string("Conflicting options '") 
-                          + opt1 + "' and '" + opt2);
-}
-
 int main(int argc, char* argv[]){
     enclone enc(argc, argv);
 }
@@ -21,7 +14,6 @@ enclone::~enclone(){
 
 int enclone::showOptions(const int& argc, char** const argv){ 
     try {
-
         // CLI arguments
         po::options_description desc("Allowed options");
         desc.add_options()
@@ -50,7 +42,7 @@ int enclone::showOptions(const int& argc, char** const argv){
 
         po::notify(vm);
 
-        conflicting_options(vm, "remove", "add");
+        conflictingOptions(vm, "add-watch", "help"); // <--- change this, example of how to disallow certain options in conjuction
 
         if (vm.count("help") || (argc == 1)){
             cout << desc << endl;
@@ -98,6 +90,13 @@ int enclone::showOptions(const int& argc, char** const argv){
     return 0;
 }
 
+void enclone::conflictingOptions(const po::variables_map& vm, const char* opt1, const char* opt2){
+    if (vm.count(opt1) && !vm[opt1].defaulted() 
+        && vm.count(opt2) && !vm[opt2].defaulted())
+        throw std::logic_error(string("Conflicting options '") 
+                          + opt1 + "' and '" + opt2);
+}
+
 bool enclone::sendRequest(string request){
     try
     {
@@ -128,8 +127,8 @@ bool enclone::sendRequest(string request){
 }
 
 bool enclone::addWatch(string path, bool recursive){
-    string request = "add";
-    (recursive ? request += "-r|" : request += "-x|"); // add suffix to command to specify if recursive add or not
+    string request;
+    (recursive) ? request = "addr|" : request = "add|"; 
     request += path;
 
     return sendRequest(request);

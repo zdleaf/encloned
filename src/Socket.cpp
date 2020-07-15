@@ -64,15 +64,17 @@ void Session::handle_read(const boost::system::error_code& error, size_t bytes_t
     if (!error)
     {
         string response;
+        string delimiter = "|";
 
         std::string request(std::begin(data_), data_.begin()+bytes_transferred);
-        std::string cmd = request.substr(0, 5); cout << "Command is: " << cmd << endl; // use substring or a delimiter token e.g. < or { or |
-        std::string path = request.substr(6); cout << "Path is: " << path << endl;
+        auto delimiterPosition = request.find(delimiter);
+        std::string cmd = request.substr(0, delimiterPosition); cout << "Command is: \"" << cmd << "\"" << endl; // get command that appears before delimter
+        std::string path = request.substr(delimiterPosition+1); cout << "Path is: \"" << path << "\"" << endl;
 
         // input handling here - need a parser
-        if(cmd == "add-x"){
+        if(cmd == "add"){
             response = watch->addWatch(path, false) + ";";
-        } else if (cmd == "add-r"){
+        } else if (cmd == "addr"){
             response = watch->addWatch(path, true) + ";";
         }
 
