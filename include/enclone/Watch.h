@@ -61,6 +61,10 @@ class Watch {
         void displayWatchDirs();
         void displayWatchFiles();
 
+        string listLocal();
+        string listWatchDirs();
+        string listWatchFiles();
+
         void uploadSuccess(std::string path, std::string objectName, int remoteID);
 
     private:

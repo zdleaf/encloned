@@ -17,7 +17,7 @@ void Watch::execThread(){
     restoreDB();
 
     //addWatch("/home/zach/enclone/notexist", true); // check non existent file
-    addWatch("/home/zach/enclone/tmp2", true); // recursive add
+    //addWatch("/home/zach/enclone/tmp2", true); // recursive add
     //addWatch("/home/zach/enclone/tmp/subdir", false); // check dir already added
     //addWatch("/home/zach/enclone/tmp/file1", false); // check file already added
 
@@ -204,6 +204,30 @@ void Watch::displayWatchFiles(){
     }
 }
 
+string Watch::listLocal(){
+    return listWatchDirs() + listWatchFiles();
+}
+
+string Watch::listWatchDirs(){
+    std::ostringstream ss;
+    ss << "Watched directories: " << endl;
+    for(auto elem: dirIndex){
+        ss << "    " << elem.first << " recursive: " << elem.second << endl;
+    }
+    //cout << ss.str();
+    return ss.str();
+}
+
+string Watch::listWatchFiles(){
+    std::ostringstream ss;
+    ss << "Watched files: " << endl;
+    for(auto elem: fileIndex){
+        ss << "    " << elem.first << " last modtime: " << displayTime(elem.second.back().modtime) << ", # of versions: " << elem.second.size() << ", exists locally: " << elem.second.back().localExists << ", exists remotely: " << elem.second.back().remoteExists << endl;
+    }
+    //cout << ss.str();
+    return ss.str();
+}
+
 string Watch::displayTime(std::time_t modtime) const{
     string time = std::asctime(std::localtime(&modtime));
     time.pop_back(); // asctime returns a '\n' on the end of the string - use str.pop_back to remove this
@@ -245,10 +269,10 @@ void Watch::restoreDB(){
     std::lock_guard<std::mutex> guard(mtx);
     cout << "Restoring file index from DB..." << endl;
     restoreFileIdx();
-    displayWatchFiles();
+    cout << listWatchFiles();
     cout << "Restoring directory index from DB..." << endl;
     restoreDirIdx();
-    displayWatchDirs();
+    cout << listWatchDirs();
 }
 
 void Watch::restoreFileIdx(){

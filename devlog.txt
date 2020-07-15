@@ -247,14 +247,14 @@ Mon 13/7/2020
 
 Tue 14/7/2020
 - Added basic CLI argument functionality with boost::program_options
-- Included functionality to pipe a response to a command from daemon (encloned) back to client that made the request
+- Included functionality to pipe a response to a command from daemon (encloned) back to client (enlcone) that made the request
     - methods return a response string, this is passed back to client which reads until the ";" delimiter, indicating end of reply
-- todo: 
-    - add multiple paths for one add argument - may need to raise buffer size to accept long arguments
-    - add remove argument - need to do generic function from Socket to call specialised
-    - make generic connect to daemon and pass cmd method - connect(string to pass)
-    - show method - show all tracked on local, show all versions, show all available on remote
-    - restore - restore specific directory or single file, needs
+- CLI can now accept multiple arguments at once, e.g. multiple files to watch
 
 Wed 15/7/2020
-- Adding "--show" 
+- Moved program options from main() into enclone class
+- Changed daemon request to follow format of "command|args" with a "|" as delimiter - allows for better daemon side parsing
+- Adding "--list" CLI option - enables showing available files both locally and on remote
+    - todo: show remote, and show all versions of a given file
+    - add remove argument - need to do generic function from Socket to call specialised
+    - restore - restore specific directory or single file, needs some kind of recursion

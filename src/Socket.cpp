@@ -68,14 +68,18 @@ void Session::handle_read(const boost::system::error_code& error, size_t bytes_t
 
         std::string request(std::begin(data_), data_.begin()+bytes_transferred);
         auto delimiterPosition = request.find(delimiter);
+
+        // DEBUGGING
         std::string cmd = request.substr(0, delimiterPosition); cout << "Command is: \"" << cmd << "\"" << endl; // get command that appears before delimter
-        std::string path = request.substr(delimiterPosition+1); cout << "Path is: \"" << path << "\"" << endl;
+        std::string path = request.substr(delimiterPosition+1); cout << "Args are: \"" << path << "\"" << endl;
 
         // input handling here - need a parser
         if(cmd == "add"){
             response = watch->addWatch(path, false) + ";";
         } else if (cmd == "addr"){
             response = watch->addWatch(path, true) + ";";
+        } else if (cmd == "listLocal"){
+            response = watch->listLocal() + ";";
         }
 
         cout << "Socket: Sending response to socket: \"" << response.substr(0, 20) << "...\"" << endl;

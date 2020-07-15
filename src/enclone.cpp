@@ -52,7 +52,7 @@ int enclone::showOptions(const int& argc, char** const argv){
         if (vm.count("list")){
             string arg = vm["list"].as<string>();
             if(arg == "local"){
-                // show local
+                listLocal();
             } else if (arg == "remote"){
                 // show remote
             } else {
