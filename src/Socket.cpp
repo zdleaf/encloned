@@ -12,6 +12,10 @@ void Socket::setPtr(std::shared_ptr<Watch> watch){
     this->watch = watch;
 }
 
+void Socket::setPtr(std::shared_ptr<Remote> remote){
+    this->remote = remote;
+}
+
 void Socket::execThread(){
     openSocket();
 }
@@ -80,6 +84,8 @@ void Session::handle_read(const boost::system::error_code& error, size_t bytes_t
             response = watch->addWatch(path, true) + ";";
         } else if (cmd == "listLocal"){
             response = watch->listLocal() + ";";
+        } else if (cmd == "listRemote"){
+            response = remote->listObjects() + ";";
         }
 
         cout << "Socket: Sending response to socket: \"" << response.substr(0, 20) << "...\"" << endl;

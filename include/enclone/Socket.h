@@ -24,7 +24,8 @@ class Socket {
         //io::io_context io_context;
         asio::io_service io_service;
 
-        std::shared_ptr<Watch> watch; // pointer to watch handler
+        std::shared_ptr<Watch> watch; // pointer to Watch handler
+        std::shared_ptr<Remote> remote; // pointer to Remote handler
 
         // concurrency/multi-threading
         std::mutex mtx;
@@ -35,6 +36,7 @@ class Socket {
         ~Socket();
 
         void setPtr(std::shared_ptr<Watch> watch);
+        void setPtr(std::shared_ptr<Remote> remote);
 
         // delete copy constructors - this class should not be copied
         Socket(const Socket&) = delete;
@@ -51,7 +53,8 @@ class Session: public std::enable_shared_from_this<Session>{
         stream_protocol::socket socket_;    // socket used to communicate with the client
         std::array<char, 2048> data_;     // buffer used to store data received from the client
 
-        std::shared_ptr<Watch> watch; // pointer to watch handler
+        std::shared_ptr<Watch> watch; // pointer to Watch handler
+        std::shared_ptr<Remote> remote; // pointer to Remote handler
         
     public:
         Session(asio::io_service& io_service, std::shared_ptr<Watch> watch);
@@ -70,7 +73,8 @@ class Server{
         asio::io_service& io_service_;
         stream_protocol::acceptor acceptor_;
 
-        std::shared_ptr<Watch> watch; // pointer to watch handler
+        std::shared_ptr<Watch> watch; // pointer to Ratch handler
+        std::shared_ptr<Remote> remote; // pointer to Remote handler
 
     public:
         Server(asio::io_service& io_service, asio::local::stream_protocol::endpoint ep, std::shared_ptr<Watch> watch);

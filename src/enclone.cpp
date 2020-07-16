@@ -54,7 +54,7 @@ int enclone::showOptions(const int& argc, char** const argv){
             if(arg == "local"){
                 listLocal();
             } else if (arg == "remote"){
-                // show remote
+                listRemote();
             } else {
                 cout << "Incorrect argument to --list (-l) - enter either local or remote";
             }
@@ -136,6 +136,12 @@ bool enclone::addWatch(string path, bool recursive){
 
 bool enclone::listLocal(){
     string request = "listLocal|";
+
+    return sendRequest(request);
+}
+
+bool enclone::listRemote(){
+    string request = "listRemote|";
 
     return sendRequest(request);
 }

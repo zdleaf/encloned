@@ -258,3 +258,5 @@ Wed 15/7/2020
     - todo: show remote, and show all versions of a given file
     - add remove argument - need to do generic function from Socket to call specialised
     - restore - restore specific directory or single file, needs some kind of recursion
+
+    - problem is calling S3 from Remote listObjects() from Socket - doesn't work - seg fault

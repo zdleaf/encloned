@@ -20,7 +20,7 @@ void Remote::execThread(){
 
 void Remote::callRemotes(){
     std::lock_guard<std::mutex> guard(mtx);
-    s3->callAPI();
+    s3->callAPI("listObjects"); // change to transfer
 }
 
 bool Remote::queueForUpload(std::string path, std::string objectName){
@@ -43,4 +43,10 @@ bool Remote::queueForDelete(std::string objectName){
 
 void Remote::uploadSuccess(std::string path, std::string objectName, int remoteID){ // update fileIndex if upload to remote is succesfull
     watch->uploadSuccess(path, objectName, remoteID);
+}
+
+string Remote::listObjects(){
+    //s3->callAPI("listObjects");
+    //cout << s3->test2() << endl;
+    return "test 1 worked";
 }

@@ -38,6 +38,8 @@ class Remote{
         bool queueForUpload(std::string path, std::string objectName);
         bool queueForDownload(std::string path, std::string objectName);
         bool queueForDelete(std::string objectName);
+
+        string listObjects();
 };
 
 #endif
