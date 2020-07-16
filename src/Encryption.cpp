@@ -29,6 +29,6 @@ string Encryption::randomString(std::size_t length)
 }
 
 string Encryption::hashPath(const string path){
-    const string saltedPath = path + randomString(24);
+    const string saltedPath = path + randomString(128);
     return sha256(saltedPath);
 }
