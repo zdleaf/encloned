@@ -172,6 +172,9 @@ Mon 6/7/2020
     - Included OpenSSL library, linked library within CMAKE
     - hashPath() - simple hash of filename and random salt with SHA-256, stored in index and DB and uploaded to S3 with this hash instead of full path
         - random salt ensures that identical paths hash to different digests to avoid filename analysis with rainbow tables as above (how secure is this - need to add more random characters for more entropy?)
+            - adding one random character from the pool of 62 adds 62 bits of entropy. for each filename in rainbow table, would have to add 62 different versions.
+            - adding two random characters adds 62C2 = 1891 different bit of entropy = 1891 different versions for each potential path in rainbow table.
+            - adding 128 random characters = ??????? - how long would it take to generate a rainbow table for one specific path? test this as part of paper
 - Restore fileIndex and dirIndex from index.db on startup
 - todo - possible feature, we can also hash files with modtime and save X amount of versions? use a multi-map to store multiple versions of the same file in index
 
@@ -255,8 +258,11 @@ Wed 15/7/2020
 - Moved program options from main() into enclone class
 - Changed daemon request to follow format of "command|args" with a "|" as delimiter - allows for better daemon side parsing
 - Adding "--list" CLI option - enables showing available files both locally and on remote
-    - todo: show remote, and show all versions of a given file
+    - todo: show all versions of a given file - "--list versions" CLI cmd
     - add remove argument - need to do generic function from Socket to call specialised
-    - restore - restore specific directory or single file, needs some kind of recursion
+    - restore - restore specific directory or single file, needs some kind of recursion - "restore" CLI cmd
 
-    - problem is calling S3 from Remote listObjects() from Socket - doesn't work - seg fault
+Thur 16/7/2020
+- Implement "--list remote" CLI argument
+    - Made S3::callAPI() more generic to be able to make a listObjects call from outside, e.g. from CLI argument
+    - Each API call is encapsulated with the AWS initAPI and shutdownAPI commands - can we instead have persistant s3_client and transferMgr?

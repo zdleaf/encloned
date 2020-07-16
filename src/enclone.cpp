@@ -20,12 +20,14 @@ int enclone::showOptions(const int& argc, char** const argv){
         ("help,h", "display this help message")
         ("list,l", po::value<string>(), "show currently tracked/available files\n"
             "   local: \tshow all tracked local files\n"
-            "   remote: \tshow all available remote files\n")
+            "   remote: \tshow all available remote files\n"
+            "   versions: \tshow all available versions of all files on remote\n")
         ("add-watch,a", po::value<std::vector<string>>(&toAdd)->composing(), "add a watch to a given path (file or directory)")
         ("recursive-add,A", po::value<std::vector<string>>(&toRecAdd)->composing(), "recursively add a watch to a directory")
         //("recursive,r", "specify watched directory should be watched or deleted recursively")
         ("del-watch,d", po::value<std::vector<string>>(&toDel)->composing(), "delete a watch from a given path (file or directory)")
-        ("recursive-del,D", po::value<std::vector<string>>(&toDel)->composing(), "recursively delete all watches in a directory");
+        ("recursive-del,D", po::value<std::vector<string>>(&toDel)->composing(), "recursively delete all watches in a directory")
+        ("restore,r", po::value<std::vector<string>>(&toAdd)->composing(), "restore either \"all\" files on remote, or a specific file version");
     
         // store/parse arguments
         po::variables_map vm;        
