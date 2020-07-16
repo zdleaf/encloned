@@ -36,7 +36,7 @@ void S3::callAPI(){
         auto transferManager = Aws::Transfer::TransferManager::Create(transferConfig);
 
         //listBuckets(s3_client);
-        listObjects(s3_client);
+        //listObjects(s3_client);
         uploadQueue(transferManager);
         downloadQueue(transferManager);
         deleteQueue(s3_client);
