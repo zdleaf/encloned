@@ -25,11 +25,15 @@ void S3::execThread(){
     }
 }
 
-string S3::test2(){
-    return "test 2 worked";
+void S3::test2(){
+    cout << "test 2 worked" << endl;
 }
 
 string S3::callAPI(string arg){
+    if(arg == "transfer" && uploadEmpty() && downloadEmpty()){ // no need to connect to API if there is nothing to upload/download
+        cout << "S3: uploadQueue and downloadQueue are empty" << endl;
+        return "";
+    }
     string response;
     Aws::InitAPI(options);
     {
@@ -62,7 +66,7 @@ void S3::uploadQueue(std::shared_ptr<Aws::Transfer::TransferManager> transferMan
     while(dequeueUpload(returnValuePtr)){ // returns true until queue is empty
         uploadObject(transferManager, BUCKET_NAME, returnValuePtr->first, returnValuePtr->second);
     }
-    cout << "S3: uploadQueue is empty" << endl;
+    cout << "S3: uploadQueue is empty" << endl; cout.flush();
 }
 
 void S3::downloadQueue(std::shared_ptr<Aws::Transfer::TransferManager> transferManager){
@@ -72,7 +76,7 @@ void S3::downloadQueue(std::shared_ptr<Aws::Transfer::TransferManager> transferM
     while(dequeueDownload(returnValuePtr)){ // returns true until queue is empty
         downloadObject(transferManager, BUCKET_NAME, returnValuePtr->first, returnValuePtr->second);
     }
-    cout << "S3: downloadQueue is empty" << endl;
+    cout << "S3: downloadQueue is empty" << endl; cout.flush();
 }
 
 void S3::deleteQueue(){

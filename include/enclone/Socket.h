@@ -57,7 +57,7 @@ class Session: public std::enable_shared_from_this<Session>{
         std::shared_ptr<Remote> remote; // pointer to Remote handler
         
     public:
-        Session(asio::io_service& io_service, std::shared_ptr<Watch> watch);
+        Session(asio::io_service& io_service, std::shared_ptr<Watch> watch, std::shared_ptr<Remote> remote);
         ~Session();
 
         stream_protocol::socket& socket();
@@ -77,7 +77,7 @@ class Server{
         std::shared_ptr<Remote> remote; // pointer to Remote handler
 
     public:
-        Server(asio::io_service& io_service, asio::local::stream_protocol::endpoint ep, std::shared_ptr<Watch> watch);
+        Server(asio::io_service& io_service, asio::local::stream_protocol::endpoint ep, std::shared_ptr<Watch> watch, std::shared_ptr<Remote> remote);
 
         void handle_accept(std::shared_ptr<Session> newSession, const boost::system::error_code& error);
 };

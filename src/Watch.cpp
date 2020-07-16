@@ -21,9 +21,10 @@ void Watch::execThread(){
     //addWatch("/home/zach/enclone/tmp/subdir", false); // check dir already added
     //addWatch("/home/zach/enclone/tmp/file1", false); // check file already added
 
+/*     // download test
     for(auto elem: fileIndex){
         remote->queueForDownload(elem.first, elem.second.back().pathhash);
-    }
+    } */
 
     while(*runThreads){
         cout << "Watch: Scanning for file changes..." << endl; cout.flush(); 

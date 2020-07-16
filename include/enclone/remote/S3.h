@@ -75,7 +75,7 @@ class S3: public Queue {
         string callAPI(string arg);
         void execThread();
 
-        string test2();
+        void test2();
 };
 
 #endif
