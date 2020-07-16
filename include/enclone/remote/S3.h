@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <sstream>
 
 // concurrency/multi-threading
 #include <thread>
@@ -42,25 +43,27 @@ class S3: public Queue {
 
         Aws::SDKOptions options;
         const Aws::String BUCKET_NAME = "enclone";
+        std::shared_ptr<Aws::S3::S3Client> s3_client;
+        std::shared_ptr<Aws::Transfer::TransferManager> transferManager;
         
         // concurrency/multi-threading
         std::mutex mtx;
         std::atomic_bool *runThreads; // ptr to flag indicating if execThread should loop or close down
 
         // S3 specific
-        void uploadQueue(std::shared_ptr<Aws::Transfer::TransferManager> transferManager);
-        void downloadQueue(std::shared_ptr<Aws::Transfer::TransferManager> transferManager);
-        void deleteQueue(std::shared_ptr<Aws::S3::S3Client> s3_client);
+        void uploadQueue();
+        void downloadQueue();
+        void deleteQueue();
 
-        bool listBuckets(std::shared_ptr<Aws::S3::S3Client> s3_client);
-        bool listObjects(std::shared_ptr<Aws::S3::S3Client> s3_client);
+        bool uploadObject(const Aws::String& bucketName, const std::string& path, const std::string& objectName);
+        bool downloadObject(const Aws::String& bucketName, const std::string& writeToPath, const std::string& objectName);
+        bool deleteObject(const Aws::String& objectName, const Aws::String& fromBucket);
 
-        bool uploadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferManager, const Aws::String& bucketName, const std::string& path, const std::string& objectName);
-        bool downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferManager, const Aws::String& bucketName, const std::string& writeToPath, const std::string& objectName);
-        bool deleteObject(std::shared_ptr<Aws::S3::S3Client> s3_client, const Aws::String& objectName, const Aws::String& fromBucket);
+        string listBuckets();
+        string listObjects();
         
-        bool put_s3_object(std::shared_ptr<Aws::S3::S3Client> s3_client, const Aws::String& s3_bucket_name, const std::string& path, const Aws::String& s3_object_name);
-        bool get_s3_object(Aws::S3::S3Client s3_client, const Aws::String& objectName, const Aws::String& fromBucket);
+        bool put_s3_object(const Aws::String& s3_bucket_name, const std::string& path, const Aws::String& s3_object_name);
+        bool get_s3_object(const Aws::String& objectName, const Aws::String& fromBucket);
 
     public:
         S3(std::atomic_bool *runThreads, Remote *remote);
@@ -72,7 +75,11 @@ class S3: public Queue {
         S3(const S3&) = delete;
         S3& operator=(const S3&) = delete;
 
+        void initAPI();
+        void closeAPI();
+
         void callAPI();
+        string callAPI(string arg);
         void execThread();
 };
 

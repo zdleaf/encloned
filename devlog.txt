@@ -255,6 +255,8 @@ Wed 15/7/2020
 - Moved program options from main() into enclone class
 - Changed daemon request to follow format of "command|args" with a "|" as delimiter - allows for better daemon side parsing
 - Adding "--list" CLI option - enables showing available files both locally and on remote
-    - todo: show remote, and show all versions of a given file
+    - todo: show remote, and show all versions of a given file - need to resolve hashed filenames
+        - download queue now broken
+        - upload queue is broken - not uploading
     - add remove argument - need to do generic function from Socket to call specialised
     - restore - restore specific directory or single file, needs some kind of recursion

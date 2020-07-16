@@ -5,11 +5,11 @@
 S3::S3(std::atomic_bool *runThreads, Remote *remote)
 {
     this->remote = remote;
-    this->runThreads = runThreads;       
+    this->runThreads = runThreads;      
 
     // S3 logging options
     options.loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Info; // turn logging on using the default logger
-    options.loggingOptions.defaultLogPrefix = "log/aws_sdk_";
+    options.loggingOptions.defaultLogPrefix = "log/aws_sdk_"; 
 }
 
 S3::~S3()
@@ -17,88 +17,110 @@ S3::~S3()
 
 }
 
-void S3::execThread(){
+void S3::execThread(){ // not used - not running S3 in separate thread at the moment
+    initAPI();
     while(*runThreads){
         cout << "S3: Calling S3 API..." << endl; cout.flush();
         callAPI();
         std::this_thread::sleep_for(std::chrono::seconds(30));
     }
+    closeAPI();
 }
 
-void S3::callAPI(){
+void S3::initAPI(){
     Aws::InitAPI(options);
-    {
-        //Aws::S3::S3Client s3_client;
-        auto s3_client = Aws::MakeShared<Aws::S3::S3Client>("S3Client");
+    {   
+        s3_client = Aws::MakeShared<Aws::S3::S3Client>("S3Client");
         auto executor = Aws::MakeShared<Aws::Utils::Threading::PooledThreadExecutor>("executor", 25);
         Aws::Transfer::TransferManagerConfiguration transferConfig(executor.get());
         transferConfig.s3Client = s3_client;
-        auto transferManager = Aws::Transfer::TransferManager::Create(transferConfig);
-
-        //listBuckets(s3_client);
-        listObjects(s3_client);
-        uploadQueue(transferManager);
-        downloadQueue(transferManager);
-        deleteQueue(s3_client);
+        transferManager = Aws::Transfer::TransferManager::Create(transferConfig);
+        cout << "S3: Configured API..." << endl;
     }
+}
+
+void S3::closeAPI(){
+    cout << "S3: Closed API..." << endl;
     Aws::ShutdownAPI(options);
 }
 
-void S3::uploadQueue(std::shared_ptr<Aws::Transfer::TransferManager> transferManager){
+void S3::callAPI(){
+    initAPI();
+    //listBuckets();
+    //listObjects();
+    uploadQueue();
+    downloadQueue();
+    //deleteQueue();
+    closeAPI();
+}
+
+string S3::callAPI(string arg){
+    initAPI();
+    string response;
+    if(arg == "listObjects"){
+        response = listObjects();
+    } else if(arg == "listBuckets"){
+        response = listBuckets();
+    }
+    closeAPI();
+    return response;
+}
+
+void S3::uploadQueue(){
     std::lock_guard<std::mutex> guard(mtx);
     std::pair<string, string> returnValue;
     std::pair<string, string> *returnValuePtr = &returnValue;
     while(dequeueUpload(returnValuePtr)){ // returns true until queue is empty
-        uploadObject(transferManager, BUCKET_NAME, returnValuePtr->first, returnValuePtr->second);
+        uploadObject(BUCKET_NAME, returnValuePtr->first, returnValuePtr->second);
     }
     cout << "S3: uploadQueue is empty" << endl;
 }
 
-void S3::downloadQueue(std::shared_ptr<Aws::Transfer::TransferManager> transferManager){
+void S3::downloadQueue(){
     std::lock_guard<std::mutex> guard(mtx);
     std::pair<string, string> returnValue;
     std::pair<string, string> *returnValuePtr = &returnValue;
     while(dequeueDownload(returnValuePtr)){ // returns true until queue is empty
-        downloadObject(transferManager, BUCKET_NAME, returnValuePtr->first, returnValuePtr->second);
+        downloadObject(BUCKET_NAME, returnValuePtr->first, returnValuePtr->second);
     }
     cout << "S3: downloadQueue is empty" << endl;
 }
 
-void S3::deleteQueue(std::shared_ptr<Aws::S3::S3Client> s3_client){
+void S3::deleteQueue(){
     std::lock_guard<std::mutex> guard(mtx);
     std::string returnValue;
     std::string* returnValuePtr = &returnValue;
     while(dequeueDelete(returnValuePtr)){ // returns true until queue is empty
         Aws::String objectName(*returnValuePtr);
-        bool result = deleteObject(s3_client, objectName, BUCKET_NAME);
+        bool result = deleteObject(objectName, BUCKET_NAME);
     }
     cout << "S3: deleteQueue is empty" << endl;
 }
 
-bool S3::listBuckets(std::shared_ptr<Aws::S3::S3Client> s3_client){
+string S3::listBuckets(){
+    std::ostringstream ss;
     auto outcome = s3_client->ListBuckets();
     if (outcome.IsSuccess())
     {
-        std::cout << "S3: List of available buckets:" << std::endl;
+        ss << "S3: List of available buckets:" << std::endl;
 
         Aws::Vector<Aws::S3::Model::Bucket> bucket_list = outcome.GetResult().GetBuckets();
 
         for (auto const &bucket : bucket_list)
         {
-            std::cout << bucket.GetName() << std::endl;
+            ss << bucket.GetName() << std::endl;
         }
-
-        std::cout << std::endl;
-        return true;
     } else {
-        std::cout << "S3: ListBuckets error: "
+        ss << "S3: ListBuckets error: "
                   << outcome.GetError().GetExceptionName() << std::endl
                   << outcome.GetError().GetMessage() << std::endl;
-        return false;
     }
+    cout << ss.str();
+    return ss.str();
 }
 
-bool S3::listObjects(std::shared_ptr<Aws::S3::S3Client> s3_client){
+string S3::listObjects(){
+    std::ostringstream ss;
     Aws::S3::Model::ListObjectsRequest objects_request;
     objects_request.WithBucket(BUCKET_NAME);
 
@@ -107,26 +129,27 @@ bool S3::listObjects(std::shared_ptr<Aws::S3::S3Client> s3_client){
     if (list_objects_outcome.IsSuccess()) {
         Aws::Vector<Aws::S3::Model::Object> object_list =
             list_objects_outcome.GetResult().GetContents();
-        std::cout << "S3: Files on S3 bucket " << BUCKET_NAME << std::endl;
+        ss << "S3: Files on S3 bucket " << BUCKET_NAME << std::endl;
         for (auto const &s3_object : object_list)
         {
             auto modtime = s3_object.GetLastModified().ToGmtString(Aws::Utils::DateFormat::ISO_8601);
-            std::cout << "* " << s3_object.GetKey() << " modtime: " << modtime << std::endl;
+            ss << "* " << s3_object.GetKey() << " modtime: " << modtime << std::endl;
             remoteObjects.push_back(s3_object.GetKey().c_str());
         }
-        return true;
     } else {
-        std::cout << "S3: ListObjects error: " <<
+        ss << "S3: ListObjects error: " <<
             list_objects_outcome.GetError().GetExceptionName() << " " <<
             list_objects_outcome.GetError().GetMessage() << std::endl;
-        return false;
     }
+    cout << ss.str();
+    return ss.str();
 }
 
-bool S3::uploadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferManager, const Aws::String& bucketName, const std::string& path, const std::string& objectName){
+bool S3::uploadObject(const Aws::String& bucketName, const std::string& path, const std::string& objectName){
     Aws::String awsPath(path);
     Aws::String awsObjectName(objectName);
 
+    cout << "S3: attempting to upload " << path << " as " << objectName << endl;
     auto uploadHandle = transferManager->UploadFile(awsPath, bucketName, awsObjectName, "", Aws::Map<Aws::String, Aws::String>());
     uploadHandle->WaitUntilFinished();
     if(uploadHandle->GetStatus() == Aws::Transfer::TransferStatus::COMPLETED){
@@ -140,7 +163,7 @@ bool S3::uploadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferMa
     return false;
 }
 
-bool S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferManager, const Aws::String& bucketName, const std::string& writeToPath, const std::string& objectName){
+bool S3::downloadObject(const Aws::String& bucketName, const std::string& writeToPath, const std::string& objectName){
     // the directory we want to download to
     string downloadDir = "/home/zach/enclone/dl"; 
 
@@ -189,8 +212,7 @@ bool S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transfer
 
 // legacy upload/delete/download below - not using TransferManager
 
-bool S3::put_s3_object( std::shared_ptr<Aws::S3::S3Client> s3_client,
-                        const Aws::String& s3_bucketName, 
+bool S3::put_s3_object( const Aws::String& s3_bucketName, 
                         const std::string& path,
                         const Aws::String& s3_objectName)
 {
@@ -223,7 +245,7 @@ bool S3::put_s3_object( std::shared_ptr<Aws::S3::S3Client> s3_client,
     return true;
 }
 
-bool S3::deleteObject(std::shared_ptr<Aws::S3::S3Client> s3_client, const Aws::String& objectName, const Aws::String& fromBucket){
+bool S3::deleteObject(const Aws::String& objectName, const Aws::String& fromBucket){
     Aws::S3::Model::DeleteObjectRequest request;
 
     request.WithKey(objectName).WithBucket(fromBucket);
@@ -242,7 +264,7 @@ bool S3::deleteObject(std::shared_ptr<Aws::S3::S3Client> s3_client, const Aws::S
     return true;
 }
 
-bool S3::get_s3_object(Aws::S3::S3Client s3_client, const Aws::String& objectName, const Aws::String& fromBucket)
+bool S3::get_s3_object(const Aws::String& objectName, const Aws::String& fromBucket)
 {
     // s3_client.getObject(new GetObjectRequest(bucket,key),file)
 
@@ -250,7 +272,7 @@ bool S3::get_s3_object(Aws::S3::S3Client s3_client, const Aws::String& objectNam
     objectRequest.SetBucket(fromBucket);
     objectRequest.SetKey(objectName);
 
-    Aws::S3::Model::GetObjectOutcome getObjectOutcome = s3_client.GetObject(objectRequest);
+    Aws::S3::Model::GetObjectOutcome getObjectOutcome = s3_client->GetObject(objectRequest);
 
     if (getObjectOutcome.IsSuccess())
     {

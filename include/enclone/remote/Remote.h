@@ -15,6 +15,21 @@ class S3;
 class Watch;
 
 class Remote{
+    public:
+        Remote(std::atomic_bool *runThreads);
+        void setPtr(std::shared_ptr<Watch> watch);
+
+        void execThread();
+        
+
+        void uploadSuccess(std::string path, std::string objectName, int remoteID); // update fileIndex if upload to remote is succesfull, returns the remoteID it was succesfully uploaded to
+
+        bool queueForUpload(std::string path, std::string objectName);
+        bool queueForDownload(std::string path, std::string objectName);
+        bool queueForDelete(std::string objectName);
+
+        string listObjects();
+
     private:
         // object pointers
         std::shared_ptr<Watch> watch; 
@@ -26,18 +41,8 @@ class Remote{
         std::mutex mtx;
         std::atomic_bool *runThreads; // ptr to flag indicating if execThread should loop or close down
 
-    public:
-        Remote(std::atomic_bool *runThreads);
-        void setPtr(std::shared_ptr<Watch> watch);
-
-        void execThread();
+        void initRemotes();
         void callRemotes();
-
-        void uploadSuccess(std::string path, std::string objectName, int remoteID); // update fileIndex if upload to remote is succesfull, returns the remoteID it was succesfully uploaded to
-
-        bool queueForUpload(std::string path, std::string objectName);
-        bool queueForDownload(std::string path, std::string objectName);
-        bool queueForDelete(std::string objectName);
 };
 
 #endif

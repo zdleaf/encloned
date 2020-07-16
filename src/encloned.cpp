@@ -14,6 +14,7 @@ encloned::encloned(){ // constructor
     remote->setPtr(watch);
     watch->setPtr(remote);
     socket->setPtr(watch);
+    socket->setPtr(remote);
 }
 
 encloned::~encloned(){ // destructor
@@ -21,15 +22,15 @@ encloned::~encloned(){ // destructor
 }
 
 int encloned::execLoop(){
-    cout << "Starting Watch thread..." << endl;
+    cout << "Starting Watch thread..." << endl; cout.flush();
     std::thread watchThread{&Watch::execThread, watch}; // start a thread scanning for filesystem changes
     watchThread.detach();                               // detach thread, we not want to wait for it to finish before continuing. execThread() loops until runThreads == false;
 
-/*     cout << "Starting Remote thread..." << endl;
+    cout << "Starting Remote thread..." << endl; cout.flush();
     std::thread remoteThread{&Remote::execThread, remote}; // start a thread scanning for filesystem changes
-    remoteThread.detach();                               // detach thread, we not want to wait for it to finish before continuing. execThread() loops until runThreads == false; */
+    remoteThread.detach();                               // detach thread, we not want to wait for it to finish before continuing. execThread() loops until runThreads == false;
 
-    cout << "Starting socket thread..." << endl;
+    cout << "Starting Socket thread..." << endl; cout.flush();
     std::thread socketThread{&Socket::execThread, socket}; // start a thread scanning for filesystem changes
     socketThread.detach();                               // detach thread, we not want to wait for it to finish before continuing. execThread() loops until runThreads == false;
 

@@ -18,6 +18,10 @@ void Remote::execThread(){
     }
 }
 
+void Remote::initRemotes(){
+    s3->initAPI();
+}
+
 void Remote::callRemotes(){
     std::lock_guard<std::mutex> guard(mtx);
     s3->callAPI();
@@ -43,4 +47,8 @@ bool Remote::queueForDelete(std::string objectName){
 
 void Remote::uploadSuccess(std::string path, std::string objectName, int remoteID){ // update fileIndex if upload to remote is succesfull
     watch->uploadSuccess(path, objectName, remoteID);
+}
+
+string Remote::listObjects(){ // list objects on remote storage (will need to be amended with argument for multiple backend remote types)
+    return s3->callAPI("listObjects");
 }

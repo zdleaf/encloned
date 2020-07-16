@@ -267,10 +267,10 @@ void Watch::fileAttributes(const fs::path& path){
 
 void Watch::restoreDB(){
     std::lock_guard<std::mutex> guard(mtx);
-    cout << "Restoring file index from DB..." << endl;
+    cout << "Restoring file index from DB..." << endl; cout.flush();
     restoreFileIdx();
     cout << listWatchFiles();
-    cout << "Restoring directory index from DB..." << endl;
+    cout << "Restoring directory index from DB..." << endl; cout.flush();
     restoreDirIdx();
     cout << listWatchDirs();
 }
