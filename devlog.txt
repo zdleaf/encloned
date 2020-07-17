@@ -276,7 +276,10 @@ Fri 17/7/2020
 - Error handling/exceptions added for listObjects call to callAPI - returns error to both CLI and daemon
 - Error handling for uploadQueue - if upload fails, do not remove from queue until successful - upload will retry until successful
     - Improved handling of queue from S3 - simple loop through queue items, only dequeueing when upload is successful, otherwise printing full error message from S3 API
+- Error handing for resolvePathHash() where hash/object exists on S3, but index does not have a corresponding file path
+    - todo: Need a clean-up option to clear these items from S3
 - When adding to uploadQueue, we also include modtime and check this modtime is the same before uploading file with a particular hash
     - Ensures we do not upload a different version of the file that requested with the wrong hash
     - The file version that no longer exists locally is removed from upload queue but still exists in index - this will need to be cleaned up later (where !remoteExists)
 - todo: if uploadQueue fails e.g. invalid credentials, need to save this information to be able to restore it in event of program crash? can get this from fileIndex with !remoteExists, and that path with that modtime still exists
+- todo: if files are deleted from S3 from outside, need to handle this - check for this - REMOTEEXISTS needs to be set false

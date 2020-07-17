@@ -56,8 +56,12 @@ string Remote::listObjects(){
     mtx.unlock();
     std::ostringstream ss;
     for(string pathHash: objects){
-        auto pair = watch->resolvePathHash(pathHash);
-        ss << pair.first << ":" << watch->displayTime(pair.second) << endl;
+        try {
+            auto pair = watch->resolvePathHash(pathHash);
+            ss << pair.first << ":" << watch->displayTime(pair.second) << endl;
+        } catch (std::out_of_range &error){ // unable to resolve
+            continue;
+        }
     }
     return ss.str();
 }

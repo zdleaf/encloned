@@ -250,9 +250,9 @@ std::pair<string, std::time_t> Watch::resolvePathHash(string pathHash){
     std::pair<string, std::time_t> result;
     try {
         result = pathHashIndex.at(pathHash);
-    } catch (std::out_of_range outofrange){
-        result.first = "Watch: Error: Unable to find path associated to hash " + pathHash;
-        cout << result.first << endl;
+    } catch (std::out_of_range &error){
+        cout << "Watch: Error: Unable to find path associated to hash " + pathHash << endl;
+        throw;
     }
     return result;
 }

@@ -27,7 +27,8 @@ int enclone::showOptions(const int& argc, char** const argv){
         //("recursive,r", "specify watched directory should be watched or deleted recursively")
         ("del-watch,d", po::value<std::vector<string>>(&toDel)->composing(), "delete a watch from a given path (file or directory)")
         ("recursive-del,D", po::value<std::vector<string>>(&toDel)->composing(), "recursively delete all watches in a directory")
-        ("restore,r", po::value<std::vector<string>>(&toAdd)->composing(), "restore either \"all\" files on remote, or a specific file version");
+        ("restore,r", po::value<std::vector<string>>(&toAdd)->composing(), "restore either \"all\" files on remote, or a specific file version")
+        ("clean-up,c", "remove items from remote S3 which do not have a corresponding entry in fileIndex");
     
         // store/parse arguments
         po::variables_map vm;        
