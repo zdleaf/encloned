@@ -15,8 +15,8 @@ using std::endl;
 
 class Queue{
     protected:
-        std::shared_ptr<std::deque<std::tuple<string, string, std::time_t>>> uploadQueue; // pair<string path, string objectName>
-        std::shared_ptr<std::deque<std::pair<string, string>>> downloadQueue; // pair<string path, string objectName>
+        std::deque<std::tuple<string, string, std::time_t>> uploadQueue; // pair<string path, string objectName>
+        std::deque<std::pair<string, string>> downloadQueue; // pair<string path, string objectName>
         std::deque<string> deleteQueue;
         // download queue
 

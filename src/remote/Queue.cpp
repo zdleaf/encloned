@@ -1,8 +1,7 @@
 #include <enclone/remote/Queue.h>
 
 Queue::Queue(){
-    uploadQueue = std::make_shared<std::deque<std::tuple<string, string, std::time_t>>>();
-    downloadQueue = std::make_shared<std::deque<std::pair<string, string>>>();
+
 }
 
 bool Queue::enqueueUpload(std::string path, std::string objectName, std::time_t modtime){
@@ -13,15 +12,15 @@ bool Queue::enqueueUpload(std::string path, std::string objectName, std::time_t 
     }
     // check if object already exists on remote
     item = std::make_tuple(path, objectName, modtime);
-    uploadQueue->push_back(item);
+    uploadQueue.push_back(item);
     return true;
 }
 
 bool Queue::dequeueUpload(){
-    if(uploadQueue->empty()){ 
+    if(uploadQueue.empty()){ 
         return false; 
-    } else if(!uploadQueue->empty()){
-        uploadQueue->pop_front(); // delete element once we've returned
+    } else if(!uploadQueue.empty()){
+        uploadQueue.pop_front(); // delete element once we've returned
     }
     return true;
 }
@@ -29,16 +28,16 @@ bool Queue::dequeueUpload(){
 bool Queue::enqueueDownload(std::string path, std::string objectName){
     std::pair<string, string> item;
     item = std::make_pair(path, objectName);
-    downloadQueue->push_back(item);
+    downloadQueue.push_back(item);
     return true;
 }
 
 bool Queue::dequeueDownload(std::pair<string, string> *returnValue){
-    if(downloadQueue->empty()){ 
+    if(downloadQueue.empty()){ 
         return false; 
-    } else if(!downloadQueue->empty()){
-        *returnValue = downloadQueue->front();
-        downloadQueue->pop_front(); // delete element once we've returned
+    } else if(!downloadQueue.empty()){
+        *returnValue = downloadQueue.front();
+        downloadQueue.pop_front(); // delete element once we've returned
     }
     return true;
 }

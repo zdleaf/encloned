@@ -26,7 +26,7 @@ void S3::execThread(){
 }
 
 string S3::callAPI(string arg){
-    if(arg == "transfer" && uploadQueue->empty() && downloadQueue->empty()) { // no need to connect to API if there is nothing to upload/download
+    if(arg == "transfer" && uploadQueue.empty() && downloadQueue.empty()) { // no need to connect to API if there is nothing to upload/download
         //cout << "S3: uploadQueue and downloadQueue are empty" << endl;
         return "";
     }
@@ -61,8 +61,8 @@ string S3::callAPI(string arg){
 
 void S3::uploadFromQueue(std::shared_ptr<Aws::Transfer::TransferManager> transferManager){
     std::lock_guard<std::mutex> guard(mtx);
-    if(uploadQueue->empty()){ return; } 
-    for(auto item: *uploadQueue){ 
+    if(uploadQueue.empty()){ return; } 
+    for(auto item: uploadQueue){ 
         auto [path, pathHash, modtime] = item; // get values out of the tuple
         
         // check that modtime for path is still valid - file may have changed since added to uploadQueue
@@ -88,7 +88,7 @@ void S3::uploadFromQueue(std::shared_ptr<Aws::Transfer::TransferManager> transfe
 
 void S3::downloadFromQueue(std::shared_ptr<Aws::Transfer::TransferManager> transferManager){
     std::lock_guard<std::mutex> guard(mtx);
-    if(downloadQueue->empty()){ return; }
+    if(downloadQueue.empty()){ return; }
     std::pair<string, string> returnValue;
     std::pair<string, string> *returnValuePtr = &returnValue;
     while(dequeueDownload(returnValuePtr)){ // returns true until queue is empty
