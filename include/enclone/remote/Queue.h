@@ -23,8 +23,9 @@ class Queue{
     public:
         Queue();
 
+        bool getFrontUpload(std::pair<string, string>* returnValue);
         bool enqueueUpload(std::string path, std::string objectName);
-        bool dequeueUpload(std::pair<string, string>* returnValue);
+        bool dequeueUpload();
         bool uploadEmpty();
 
         bool enqueueDownload(std::string path, std::string objectName);

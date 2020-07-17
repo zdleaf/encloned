@@ -40,8 +40,12 @@ string S3::callAPI(string arg){
         auto transferManager = Aws::Transfer::TransferManager::Create(transferConfig);
 
         if(arg == "transfer"){
-            uploadQueue(transferManager);
-            downloadQueue(transferManager);
+            try {
+                uploadQueue(transferManager);
+                downloadQueue(transferManager);
+            } catch(const std::exception& e){ // listObjects may fail due invalid credentials etc
+                // add handling here for failed upload/download - need to retry
+            }
         } else if (arg == "listObjects"){
             try {
                 response = listObjects(s3_client);
@@ -63,8 +67,13 @@ void S3::uploadQueue(std::shared_ptr<Aws::Transfer::TransferManager> transferMan
     std::lock_guard<std::mutex> guard(mtx);
     std::pair<string, string> returnValue;
     std::pair<string, string> *returnValuePtr = &returnValue;
-    while(dequeueUpload(returnValuePtr)){ // returns true until queue is empty
-        uploadObject(transferManager, BUCKET_NAME, returnValuePtr->first, returnValuePtr->second);
+    while(getFrontUpload(returnValuePtr)){ // returns true until queue is empty
+        try {
+            uploadObject(transferManager, BUCKET_NAME, returnValuePtr->first, returnValuePtr->second);
+        } catch(const std::exception& e){ // listObjects may fail due invalid credentials etc
+            throw; // throw an exception, but do not remove from queue
+        }
+        dequeueUpload(); // if success, pop the object from the front of the queue
     }
     cout << "S3: uploadQueue is empty" << endl; cout.flush();
 }
@@ -159,7 +168,10 @@ bool S3::uploadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferMa
         remote->uploadSuccess(path, objectName, remoteID);
         return true;
     } else {
-        cout << "S3: Upload of " << path << " as " << objectName << " failed with status: " << uploadHandle->GetStatus() << endl;
+        std::ostringstream error;
+        error << "S3: Upload of " << path << " as " << objectName << " failed with status: " << uploadHandle->GetStatus() << endl;
+        cout << error.str();
+        throw std::runtime_error(error.str());
     }
     return false;
 }

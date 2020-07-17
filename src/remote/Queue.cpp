@@ -16,11 +16,19 @@ bool Queue::enqueueUpload(std::string path, std::string objectName){
     return true;
 }
 
-bool Queue::dequeueUpload(std::pair<string, string> *returnValue){
+bool Queue::getFrontUpload(std::pair<string, string>* returnValue){
     if(uploadQueue.empty()){ 
         return false; 
     } else if(!uploadQueue.empty()){
         *returnValue = uploadQueue.front();
+    }
+    return true;
+}
+
+bool Queue::dequeueUpload(){
+    if(uploadQueue.empty()){ 
+        return false; 
+    } else if(!uploadQueue.empty()){
         uploadQueue.pop_front(); // delete element once we've returned
     }
     return true;

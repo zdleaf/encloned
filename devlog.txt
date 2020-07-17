@@ -273,5 +273,7 @@ Fri 17/7/2020
     - reduce computation time when looking up a fileHash - avoids looping through entire fileIndex and values to find a match
     - add hash to map when created, no additional information required to be stored in DB, we can create from existing information
 - Resolve "--list remote" pathHashes obtained from S3 into a list of local paths and mod time
-- Error handling/exceptions added for listObjects call to callAPI
-    - todo: exceptions for other types of calls
+- Error handling/exceptions added for listObjects call to callAPI - returns error to both CLI and daemon
+- Error handling for uploadQueue - if upload fails, do not remove from queue until successful - upload will retry untill successful
+- todo:
+    - if uploadQueue fails e.g. invalid credentials, need to save this information to be able to restore it in event of program crash?
