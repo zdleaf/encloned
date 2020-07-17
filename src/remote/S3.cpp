@@ -65,15 +65,28 @@ void S3::uploadFromQueue(std::shared_ptr<Aws::Transfer::TransferManager> transfe
     for(auto item: uploadQueue){ 
         auto [path, pathHash, modtime] = item; // get values out of the tuple
         
-        // check that modtime for path is still valid - file may have changed since added to uploadQueue
-        auto fstime = fs::last_write_time(path); // get modtime from file
-        std::time_t currentModtime = decltype(fstime)::clock::to_time_t(fstime);
-        if(modtime != currentModtime){
+        // check file still exists
+        if(!fs::exists(path)){
             std::stringstream error;
-            error << "S3: Error: File " << path << " has changed - unable to upload version with hash " << pathHash << endl;
+            error << "S3: Error: File " << path << " no longer exists" << endl;
             cout << error.str();
             dequeueUpload(); // remove from queue
             continue; // go to the next item
+        }
+
+        // check that modtime for path is still valid - file may have changed since added to uploadQueue, or no longer exist
+        try {
+            auto fstime = fs::last_write_time(path); // get modtime from file
+            std::time_t currentModtime = decltype(fstime)::clock::to_time_t(fstime);
+            if(modtime != currentModtime){
+                std::stringstream error;
+                error << "S3: Error: File " << path << " has changed - unable to upload version with hash " << pathHash << endl;
+                cout << error.str();
+                dequeueUpload(); // remove from queue
+                continue; // go to the next item
+            }
+        } catch (const std::exception& ex){
+            cout << ex.what() << endl;
         }
 
         try {
