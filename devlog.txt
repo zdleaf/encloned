@@ -259,6 +259,7 @@ Wed 15/7/2020
 - Changed daemon request to follow format of "command|args" with a "|" as delimiter - allows for better daemon side parsing
 - Adding "--list" CLI option - enables showing available files both locally and on remote
     - todo: show all versions of a given file - "--list versions" CLI cmd
+    - list remote - need to resolve hashes
     - add remove argument - need to do generic function from Socket to call specialised
     - restore - restore specific directory or single file, needs some kind of recursion - "restore" CLI cmd
 
@@ -266,3 +267,6 @@ Thur 16/7/2020
 - Implement "--list remote" CLI argument
     - Made S3::callAPI() more generic to be able to make a listObjects call from outside, e.g. from CLI argument
     - Each API call is encapsulated with the AWS initAPI and shutdownAPI commands - can we instead have persistant s3_client and transferMgr?
+
+Fri 17/7/2020
+- 

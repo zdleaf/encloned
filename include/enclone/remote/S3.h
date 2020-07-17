@@ -66,16 +66,12 @@ class S3: public Queue {
         S3(std::atomic_bool *runThreads, Remote *remote);
         ~S3();
 
-        //void setPtr(std::shared_ptr<Remote> remote);
-
         // delete copy constructors - this class should not be copied
         S3(const S3&) = delete;
         S3& operator=(const S3&) = delete;
 
-        string callAPI(string arg);
         void execThread();
-
-        void test2();
+        string callAPI(string arg);
 };
 
 #endif
