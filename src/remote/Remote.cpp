@@ -13,7 +13,7 @@ void Remote::setPtr(std::shared_ptr<Watch> watch){
 void Remote::execThread(){
     while(*runThreads){
         std::this_thread::sleep_for(std::chrono::seconds(10));
-        cout << "Remote: Calling Remote cloud storage..." << endl; cout.flush();
+        //cout << "Remote: Calling Remote cloud storage..." << endl; cout.flush();
         callRemotes();
     }
 }

@@ -48,8 +48,8 @@ class S3: public Queue {
         std::atomic_bool *runThreads; // ptr to flag indicating if execThread should loop or close down
 
         // S3 specific
-        void uploadQueue(std::shared_ptr<Aws::Transfer::TransferManager> transferManager);
-        void downloadQueue(std::shared_ptr<Aws::Transfer::TransferManager> transferManager);
+        void uploadFromQueue(std::shared_ptr<Aws::Transfer::TransferManager> transferManager);
+        void downloadFromQueue(std::shared_ptr<Aws::Transfer::TransferManager> transferManager);
         void deleteQueue();
 
         bool listBuckets(std::shared_ptr<Aws::S3::S3Client> s3_client);

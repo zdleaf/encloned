@@ -266,16 +266,16 @@ Wed 15/7/2020
 Thur 16/7/2020
 - Implement "--list remote" CLI argument
     - Made S3::callAPI() more generic to be able to make a listObjects call from outside, e.g. from CLI argument
-    - Each API call is encapsulated with the AWS initAPI and shutdownAPI commands - can we instead have persistant s3_client and transferMgr?
+    - Each API call is encapsulated with the AWS initAPI and shutdownAPI commands - can we instead have persistant s3_client and transferMgr? transferMgr did not appear to work last time this was attempted (possibly executor related)
 
 Fri 17/7/2020
 - fileHashIndex as a map of fileHash (key) and path (value) for easy lookup/resolution of hashes to paths
-    - reduce computation time when looking up a fileHash - avoids looping through entire fileIndex and values to find a match
-    - add hash to map when created, no additional information required to be stored in DB, we can create from existing information
+    - reduce computation time when looking up a fileHash - avoids looping through entire fileIndex and values multiple times to find a match
+    - add hash to map when created, no additional information required to be stored in DB, we can restore from existing information
 - Resolve "--list remote" pathHashes obtained from S3 into a list of local paths and mod time
 - Error handling/exceptions added for listObjects call to callAPI - returns error to both CLI and daemon
-- Error handling for uploadQueue - if upload fails, do not remove from queue until successful - upload will retry untill successful
+- Error handling for uploadQueue - if upload fails, do not remove from queue until successful - upload will retry until successful
 - When adding to uploadQueue, we also include modtime and check this modtime is the same before uploading file with a particular hash
     - Ensures we do not upload a different version of the file that requested with the wrong hash
     - The file version that no longer exists locally is removed from upload queue but still exists in index - this will need to be cleaned up later (where !remoteExists)
-- todo: if uploadQueue fails e.g. invalid credentials, need to save this information to be able to restore it in event of program crash?
+- todo: if uploadQueue fails e.g. invalid credentials, need to save this information to be able to restore it in event of program crash? can get this from fileIndex with !remoteExists, and that path with that modtime still exists

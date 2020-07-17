@@ -26,8 +26,8 @@ void S3::execThread(){
 }
 
 string S3::callAPI(string arg){
-    if(arg == "transfer" && uploadEmpty() && downloadEmpty()){ // no need to connect to API if there is nothing to upload/download
-        cout << "S3: uploadQueue and downloadQueue are empty" << endl;
+    if(arg == "transfer" && uploadQueue->empty() && downloadQueue->empty()) { // no need to connect to API if there is nothing to upload/download
+        //cout << "S3: uploadQueue and downloadQueue are empty" << endl;
         return "";
     }
     string response;
@@ -40,13 +40,8 @@ string S3::callAPI(string arg){
         auto transferManager = Aws::Transfer::TransferManager::Create(transferConfig);
 
         if(arg == "transfer"){
-            try {
-                uploadQueue(transferManager);
-                downloadQueue(transferManager);
-            } catch(const std::exception& e){ // listObjects may fail due invalid credentials etc
-                // add handling here for failed upload/download - need to retry
-                cout << e.what();
-            }
+            uploadFromQueue(transferManager);
+            downloadFromQueue(transferManager);
         } else if (arg == "listObjects"){
             try {
                 response = listObjects(s3_client);
@@ -64,12 +59,11 @@ string S3::callAPI(string arg){
     return response;
 }
 
-void S3::uploadQueue(std::shared_ptr<Aws::Transfer::TransferManager> transferManager){
+void S3::uploadFromQueue(std::shared_ptr<Aws::Transfer::TransferManager> transferManager){
     std::lock_guard<std::mutex> guard(mtx);
-    std::tuple<string, string, std::time_t> returnValue;
-    std::tuple<string, string, std::time_t>* returnValuePtr = &returnValue;
-    while(getFrontUpload(returnValuePtr)){ // returns true until queue is empty
-        auto [path, pathHash, modtime] = *returnValuePtr; // get values out of the tuple
+    if(uploadQueue->empty()){ return; } 
+    for(auto item: *uploadQueue){ 
+        auto [path, pathHash, modtime] = item; // get values out of the tuple
         
         // check that modtime for path is still valid - file may have changed since added to uploadQueue
         auto fstime = fs::last_write_time(path); // get modtime from file
@@ -85,15 +79,16 @@ void S3::uploadQueue(std::shared_ptr<Aws::Transfer::TransferManager> transferMan
         try {
             uploadObject(transferManager, BUCKET_NAME, path, pathHash);
         } catch(const std::exception& e){ // listObjects may fail due invalid credentials etc
-            throw; // throw an exception, but do not remove from queue
+            continue; // go to the next item, but do not remove failed item from queue
         }
         dequeueUpload(); // if success, pop the object from the front of the queue
     }
-    cout << "S3: uploadQueue is empty" << endl; cout.flush();
+    //cout << "S3: uploadQueue is empty" << endl; cout.flush();
 }
 
-void S3::downloadQueue(std::shared_ptr<Aws::Transfer::TransferManager> transferManager){
+void S3::downloadFromQueue(std::shared_ptr<Aws::Transfer::TransferManager> transferManager){
     std::lock_guard<std::mutex> guard(mtx);
+    if(downloadQueue->empty()){ return; }
     std::pair<string, string> returnValue;
     std::pair<string, string> *returnValuePtr = &returnValue;
     while(dequeueDownload(returnValuePtr)){ // returns true until queue is empty
@@ -184,7 +179,7 @@ bool S3::uploadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferMa
         return true;
     } else {
         std::ostringstream error;
-        error << "S3: Upload of " << path << " as " << objectName << " failed with status: " << uploadHandle->GetStatus() << endl;
+        error << "S3: Upload of " << path << " as " << objectName << " failed with status: " << uploadHandle->GetStatus() << "(" << uploadHandle->GetLastError().GetMessage() << ")" << endl;
         cout << error.str();
         throw std::runtime_error(error.str());
     }
