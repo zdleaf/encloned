@@ -127,6 +127,7 @@ void Watch::scanFileChange(){
             cout << "Watch: " << "File no longer exists: " << path << endl;
             
             fileIndex[path].back().localExists = false;
+            sqlQueue << "UPDATE fileIndex SET LOCALEXISTS = FALSE WHERE PATH ='" << path << "';"; // queue SQL update  
             
             // delete from fileIndex if ALL versions do not exist remotely - if file doesn't exist locally or remotely in any form, it is lost
 /*             if(ALL VERSIONS !remoteExist){
