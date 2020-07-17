@@ -35,7 +35,7 @@ class Remote{
 
         void uploadSuccess(std::string path, std::string objectName, int remoteID); // update fileIndex if upload to remote is succesfull, returns the remoteID it was succesfully uploaded to
 
-        bool queueForUpload(std::string path, std::string objectName);
+        bool queueForUpload(std::string path, std::string objectName, std::time_t modtime);
         bool queueForDownload(std::string path, std::string objectName);
         bool queueForDelete(std::string objectName);
 

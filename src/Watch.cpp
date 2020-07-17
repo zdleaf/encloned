@@ -110,7 +110,7 @@ void Watch::addFileVersion(std::string path){
 
     // queue for upload on remote and insertion into DB
     sqlQueue << "INSERT or IGNORE INTO fileIndex (PATH, MODTIME, PATHHASH, LOCALEXISTS) VALUES ('" << path << "'," << modtime << ",'" << pathHash << "',TRUE" << ");"; // if successful, queue an SQL insert into DB
-    remote->queueForUpload(path, pathHash); 
+    remote->queueForUpload(path, pathHash, modtime); 
 }
 
 void Watch::scanFileChange(){

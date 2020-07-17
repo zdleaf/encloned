@@ -4,19 +4,19 @@ Queue::Queue(){
     
 }
 
-bool Queue::enqueueUpload(std::string path, std::string objectName){
-    std::pair<string, string> item;
+bool Queue::enqueueUpload(std::string path, std::string objectName, std::time_t modtime){
+    std::tuple<string, string, std::time_t> item;
     if (!fs::exists(path)) {
         std::cout << "Queue: Error: file does not exist - unable to add " << path << std::endl;
         return false;
     }
     // check if object already exists on remote
-    item = std::make_pair(path, objectName);
+    item = std::make_tuple(path, objectName, modtime);
     uploadQueue.push_back(item);
     return true;
 }
 
-bool Queue::getFrontUpload(std::pair<string, string>* returnValue){
+bool Queue::getFrontUpload(std::tuple<string, string, std::time_t>* returnValue){
     if(uploadQueue.empty()){ 
         return false; 
     } else if(!uploadQueue.empty()){

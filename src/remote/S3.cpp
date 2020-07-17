@@ -45,6 +45,7 @@ string S3::callAPI(string arg){
                 downloadQueue(transferManager);
             } catch(const std::exception& e){ // listObjects may fail due invalid credentials etc
                 // add handling here for failed upload/download - need to retry
+                cout << e.what();
             }
         } else if (arg == "listObjects"){
             try {
@@ -65,11 +66,24 @@ string S3::callAPI(string arg){
 
 void S3::uploadQueue(std::shared_ptr<Aws::Transfer::TransferManager> transferManager){
     std::lock_guard<std::mutex> guard(mtx);
-    std::pair<string, string> returnValue;
-    std::pair<string, string> *returnValuePtr = &returnValue;
+    std::tuple<string, string, std::time_t> returnValue;
+    std::tuple<string, string, std::time_t>* returnValuePtr = &returnValue;
     while(getFrontUpload(returnValuePtr)){ // returns true until queue is empty
+        auto [path, pathHash, modtime] = *returnValuePtr; // get values out of the tuple
+        
+        // check that modtime for path is still valid - file may have changed since added to uploadQueue
+        auto fstime = fs::last_write_time(path); // get modtime from file
+        std::time_t currentModtime = decltype(fstime)::clock::to_time_t(fstime);
+        if(modtime != currentModtime){
+            std::stringstream error;
+            error << "S3: Error: File " << path << " has changed - unable to upload version with hash " << pathHash << endl;
+            cout << error.str();
+            dequeueUpload(); // remove from queue
+            continue; // go to the next item
+        }
+
         try {
-            uploadObject(transferManager, BUCKET_NAME, returnValuePtr->first, returnValuePtr->second);
+            uploadObject(transferManager, BUCKET_NAME, path, pathHash);
         } catch(const std::exception& e){ // listObjects may fail due invalid credentials etc
             throw; // throw an exception, but do not remove from queue
         }
@@ -128,6 +142,7 @@ string S3::listObjects(std::shared_ptr<Aws::S3::S3Client> s3_client){
     auto list_objects_outcome = s3_client->ListObjects(objects_request);
 
     if (list_objects_outcome.IsSuccess()) {
+        remoteObjects.clear(); // erase old remoteObjects vector
         Aws::Vector<Aws::S3::Model::Object> object_list =
             list_objects_outcome.GetResult().GetContents();
         response << "S3: Files on S3 bucket " << BUCKET_NAME << ":" << std::endl;

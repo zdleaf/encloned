@@ -275,5 +275,7 @@ Fri 17/7/2020
 - Resolve "--list remote" pathHashes obtained from S3 into a list of local paths and mod time
 - Error handling/exceptions added for listObjects call to callAPI - returns error to both CLI and daemon
 - Error handling for uploadQueue - if upload fails, do not remove from queue until successful - upload will retry untill successful
-- todo:
-    - if uploadQueue fails e.g. invalid credentials, need to save this information to be able to restore it in event of program crash?
+- When adding to uploadQueue, we also include modtime and check this modtime is the same before uploading file with a particular hash
+    - Ensures we do not upload a different version of the file that requested with the wrong hash
+    - The file version that no longer exists locally is removed from upload queue but still exists in index - this will need to be cleaned up later (where !remoteExists)
+- todo: if uploadQueue fails e.g. invalid credentials, need to save this information to be able to restore it in event of program crash?

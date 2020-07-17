@@ -15,7 +15,7 @@ using std::endl;
 
 class Queue{
     private:
-        std::deque<std::pair<string, string>> uploadQueue; // pair<string path, string objectName>
+        std::deque<std::tuple<string, string, std::time_t>> uploadQueue; // pair<string path, string objectName>
         std::deque<std::pair<string, string>> downloadQueue; // pair<string path, string objectName>
         std::deque<string> deleteQueue;
         // download queue
@@ -23,8 +23,8 @@ class Queue{
     public:
         Queue();
 
-        bool getFrontUpload(std::pair<string, string>* returnValue);
-        bool enqueueUpload(std::string path, std::string objectName);
+        bool getFrontUpload(std::tuple<string, string, std::time_t>* returnValue);
+        bool enqueueUpload(std::string path, std::string objectName, std::time_t modtime);
         bool dequeueUpload();
         bool uploadEmpty();
 
