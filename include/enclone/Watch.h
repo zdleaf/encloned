@@ -57,19 +57,23 @@ class Watch {
         string addWatch(string path, bool recursive);
         void scanFileChange();
         void execQueuedSQL();
-
+        
         void displayWatchDirs();
         void displayWatchFiles();
+
+        string displayTime(std::time_t modtime) const;
 
         string listLocal();
         string listWatchDirs();
         string listWatchFiles();
+        std::pair<string, std::time_t> resolvePathHash(string pathHash);
 
         void uploadSuccess(std::string path, std::string objectName, int remoteID);
 
     private:
         std::unordered_map<string, bool> dirIndex;                  // index of watched directories with bool recursive flag
         std::unordered_map<string, std::vector<FileVersion>> fileIndex;   // index of watched files, key = path, with a vector of different available file versions
+        std::unordered_map<string, std::pair<string, std::time_t>> pathHashIndex; // easily resolve pathHash to path and modtime
 
         std::shared_ptr<Remote> remote; // pointer to Remote handler
         std::shared_ptr<DB> db;         // database handle
@@ -88,8 +92,6 @@ class Watch {
         void restoreDB();
         void restoreFileIdx();
         void restoreDirIdx();
-
-        string displayTime(std::time_t modtime) const;
 
         void listDir(string path);
         void fileAttributes(const fs::path& path);

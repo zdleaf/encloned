@@ -46,6 +46,18 @@ void Remote::uploadSuccess(std::string path, std::string objectName, int remoteI
 }
 
 string Remote::listObjects(){
-    std::lock_guard<std::mutex> guard(mtx);
-    return s3->callAPI("listObjects");
+    mtx.lock();
+    std::vector<string> objects;
+    try {
+        objects = s3->getObjects();
+    } catch(const std::exception& e){ // listObjects may fail due invalid credentials etc
+        return e.what();
+    }
+    mtx.unlock();
+    std::ostringstream ss;
+    for(string pathHash: objects){
+        auto pair = watch->resolvePathHash(pathHash);
+        ss << pair.first << ":" << watch->displayTime(pair.second) << endl;
+    }
+    return ss.str();
 }

@@ -27,7 +27,7 @@ void Watch::execThread(){
     } */
 
     while(*runThreads){
-        cout << "Watch: Scanning for file changes..." << endl; cout.flush(); 
+        //cout << "Watch: Scanning for file changes..." << endl; cout.flush(); 
         scanFileChange();
         execQueuedSQL();
         std::this_thread::sleep_for(std::chrono::seconds(5));
@@ -103,6 +103,9 @@ void Watch::addFileVersion(std::string path){
     std::time_t modtime = decltype(fstime)::clock::to_time_t(fstime);
     string pathHash = Encryption::hashPath(path); // compute unique filename hash for file
     fileVector->push_back(FileVersion{modtime, pathHash}); // create new FileVersion struct object and push to back of vector
+    
+    pathHashIndex.insert(std::make_pair(pathHash, std::make_pair(path, modtime))); // hash file path
+    
     cout << "Watch: " << "Added file version: " << path << " with hash: " << pathHash.substr(0,10) << "..." << " modtime: " << modtime << endl;
 
     // queue for upload on remote and insertion into DB
@@ -242,6 +245,17 @@ void Watch::listDir(string path){
     }
 }
 
+std::pair<string, std::time_t> Watch::resolvePathHash(string pathHash){
+    std::pair<string, std::time_t> result;
+    try {
+        result = pathHashIndex.at(pathHash);
+    } catch (std::out_of_range outofrange){
+        result.first = "Watch: Error: Unable to find path associated to hash " + pathHash;
+        cout << result.first << endl;
+    }
+    return result;
+}
+
 void Watch::fileAttributes(const fs::path& path){
     fs::file_status s = fs::status(path);
     // alternative: switch(s.type()) { case fs::file_type::regular: ...}
@@ -312,6 +326,9 @@ void Watch::restoreFileIdx(){
             fileVector->push_back(FileVersion{modtime, pathHash, ""}); // push a FileVersion struct to the back of the vector
             // this should retain the correct ordering in the vector of oldest = first in vector, most recent = last in vector
         }
+
+        pathHashIndex.insert(std::make_pair(pathHash, std::make_pair(path, modtime))); // also insert into reverse lookup table
+
         rc = sqlite3_step(stmt);
     }
 

@@ -72,6 +72,8 @@ class S3: public Queue {
 
         void execThread();
         string callAPI(string arg);
+
+        std::vector<string> getObjects();
 };
 
 #endif

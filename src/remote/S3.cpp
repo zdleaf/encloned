@@ -43,7 +43,11 @@ string S3::callAPI(string arg){
             uploadQueue(transferManager);
             downloadQueue(transferManager);
         } else if (arg == "listObjects"){
-            response = listObjects(s3_client);
+            try {
+                response = listObjects(s3_client);
+            } catch(const std::exception& e){ // listObjects may fail due invalid credentials etc
+                throw;
+            }
         } else if (arg == "delete"){
             deleteQueue();
         } else if (arg == "listBuckets"){
@@ -100,7 +104,7 @@ bool S3::listBuckets(std::shared_ptr<Aws::S3::S3Client> s3_client){
         }
         return true;
     } else {
-        std::cout << "S3: ListBuckets error: "
+        std::cout << "S3: listBuckets error: "
                   << outcome.GetError().GetExceptionName() << std::endl
                   << outcome.GetError().GetMessage() << std::endl;
         return false;
@@ -121,16 +125,26 @@ string S3::listObjects(std::shared_ptr<Aws::S3::S3Client> s3_client){
         for (auto const &s3_object : object_list)
         {
             auto modtime = s3_object.GetLastModified().ToGmtString(Aws::Utils::DateFormat::ISO_8601);
-            response << s3_object.GetKey() << ":" << modtime << std::endl;
+            response << s3_object.GetKey() << " : " << modtime << std::endl;
             remoteObjects.push_back(s3_object.GetKey().c_str());
         }
     } else {
-        response << "S3: ListObjects error: " <<
+        response << "S3: listObjects error: " <<
             list_objects_outcome.GetError().GetExceptionName() << " " <<
             list_objects_outcome.GetError().GetMessage() << std::endl;
+        throw std::runtime_error("S3: listObjects error - unable to get objects from S3, check ~/.aws/credentials are valid\n");
     }
     cout << response.str();
     return response.str();
+}
+
+std::vector<string> S3::getObjects(){
+    try {
+        callAPI("listObjects"); // populate remoteObjects vector by calling listObjects via API
+    } catch(const std::exception& e){ // listObjects may fail due invalid credentials etc
+        throw;
+    }
+    return remoteObjects;
 }
 
 bool S3::uploadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferManager, const Aws::String& bucketName, const std::string& path, const std::string& objectName){
