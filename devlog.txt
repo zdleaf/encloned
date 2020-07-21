@@ -231,24 +231,7 @@ Mon 13/7/2020
 - todo: 1. devise a messaging system/function caller
         2. cmd line arguments       
 - Starting to research file encryption possibilities
-    - Comparison of libraries - https://en.wikipedia.org/wiki/Comparison_of_cryptography_libraries
-    - OpenSSL library (libcrypto - already included in project)
-        - FIPS 140 and 140-2 validated - approved by US government
-        - https://wiki.openssl.org/index.php/EVP
-        - see EVP.h for list of supported ciphers - copied to openSSL-supported-ciphers.txt
-        - https://wiki.openssl.org/index.php/EVP_Authenticated_Encryption_and_Decryption
-            - we also want to authenticate data - "Such Authenticated-Encryption with Associated-Data (AEAD) schemes provide confidentiality by encrypting the data, and also provide authenticity assurances by creating a MAC tag over the encrypted data. The MAC tag will ensure the data is not accidentally altered or maliciously tampered during transmission and storage. "
-            - currently only AES is supported in modes EAX, CCM and GCM
-                - GCM is faster than CCM
-            - see https://en.wikipedia.org/wiki/Authenticated_encryption
-            - see https://crypto.stackexchange.com/questions/12178/why-should-i-use-authenticated-encryption-instead-of-just-encryption
-            - see https://www.cs.ucdavis.edu/~rogaway/papers/modes.pdf
-            - see https://blog.cryptographyengineering.com/2012/05/19/how-to-choose-authenticated-encryption/
-    - Crypto++
-        - supported ciphers - https://www.cryptopp.com/
-        - benchmarks https://www.cryptopp.com/benchmarks.html
-        - more stream cipher options (typically faster than block ciphers - but less secure?)
-        - Authenticated Encryption schemes available - GCM, CCM, EAX, ChaCha20Poly1305, XChaCha20Poly1305
+    - see encryption.txt
 - Looked into command line argument parsing options
     - boost::program_options vs hand written
         - boost allows easy parsing, extension for config files, clear syntax and error handling, easy capture of multiple files given as arguments and multiple flags
@@ -297,9 +280,5 @@ Tue 21/7/2020
     - preserves original modtime on filesystem when downloading files
         - modtime of directories is NOT currently preserved as this information is not saved
     - now CLI is fairly complete allows for easier testing of upload/download of encrypted files
-- todo: research which OpenSSL encryption algo to implement - see above previous notes on Encryption 13/7/2020
-    - OpenSSL, AEAD - AES in GCM mode (faster than CCM)
-        - as per https://blog.cryptographyengineering.com/2012/05/19/how-to-choose-authenticated-encryption/
-        - http://www.zedwood.com/article/cpp-openssl-aes-gcm-code-sample
-    - Crypto++ - GCM, CCM, EAX, ChaCha20Poly1305, XChaCha20Poly1305
-        - https://www.cryptopp.com/wiki/GCM_Mode example code
+- Further research on encryption algos - see encryption.txt
+    - Built example OpenSSL AES CBC code
