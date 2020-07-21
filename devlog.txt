@@ -239,10 +239,16 @@ Mon 13/7/2020
         - https://wiki.openssl.org/index.php/EVP_Authenticated_Encryption_and_Decryption
             - we also want to authenticate data - "Such Authenticated-Encryption with Associated-Data (AEAD) schemes provide confidentiality by encrypting the data, and also provide authenticity assurances by creating a MAC tag over the encrypted data. The MAC tag will ensure the data is not accidentally altered or maliciously tampered during transmission and storage. "
             - currently only AES is supported in modes EAX, CCM and GCM
+                - GCM is faster than CCM
+            - see https://en.wikipedia.org/wiki/Authenticated_encryption
+            - see https://crypto.stackexchange.com/questions/12178/why-should-i-use-authenticated-encryption-instead-of-just-encryption
+            - see https://www.cs.ucdavis.edu/~rogaway/papers/modes.pdf
+            - see https://blog.cryptographyengineering.com/2012/05/19/how-to-choose-authenticated-encryption/
     - Crypto++
         - supported ciphers - https://www.cryptopp.com/
         - benchmarks https://www.cryptopp.com/benchmarks.html
         - more stream cipher options (typically faster than block ciphers - but less secure?)
+        - Authenticated Encryption schemes available - GCM, CCM, EAX, ChaCha20Poly1305, XChaCha20Poly1305
 - Looked into command line argument parsing options
     - boost::program_options vs hand written
         - boost allows easy parsing, extension for config files, clear syntax and error handling, easy capture of multiple files given as arguments and multiple flags
@@ -259,7 +265,6 @@ Wed 15/7/2020
 - Changed daemon request to follow format of "command|args" with a "|" as delimiter - allows for better daemon side parsing
 - Adding "--list" CLI option - enables showing available files both locally and on remote
     - todo: show all versions of a given file - "--list versions" CLI cmd
-    - list remote - need to resolve hashes
     - add remove argument - need to do generic function from Socket to call specialised
     - restore - restore specific directory or single file, needs some kind of recursion - "restore" CLI cmd
 
@@ -289,6 +294,12 @@ Tue 21/7/2020
 - Error handling/return message for empty local index on --list local
 - Fix remoteExists flag bug on successful upload - this was not being updated due to copy of vector being made, rather than use a pointer to access reference directly
 - Implemented --restore CLI flag, currently downloads all files on S3 to /enclone/dl directory
-    - preserves original modtime on filesystem when downloading
+    - preserves original modtime on filesystem when downloading files
+        - modtime of directories is NOT currently preserved as this information is not saved
     - now CLI is fairly complete allows for easier testing of upload/download of encrypted files
-- todo: research which OpenSSL encryption algo to implement
+- todo: research which OpenSSL encryption algo to implement - see above previous notes on Encryption 13/7/2020
+    - OpenSSL, AEAD - AES in GCM mode (faster than CCM)
+        - as per https://blog.cryptographyengineering.com/2012/05/19/how-to-choose-authenticated-encryption/
+        - http://www.zedwood.com/article/cpp-openssl-aes-gcm-code-sample
+    - Crypto++ - GCM, CCM, EAX, ChaCha20Poly1305, XChaCha20Poly1305
+        - https://www.cryptopp.com/wiki/GCM_Mode example code
