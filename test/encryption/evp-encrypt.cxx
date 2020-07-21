@@ -7,6 +7,8 @@
 #include <openssl/evp.h>
 #include <openssl/rand.h>
 
+// g++ evp-encrypt.cxx -fexceptions -std=c++11 -lcrypto -o evpcpp
+
 static const unsigned int KEY_SIZE = 32;
 static const unsigned int BLOCK_SIZE = 16;
 
