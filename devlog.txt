@@ -286,3 +286,4 @@ Fri 17/7/2020
 
 Tue 21/7/2020
 - Error handling/return message for empty S3 bucket on --list remote
+- Error handling/return message for empty local index on --list local

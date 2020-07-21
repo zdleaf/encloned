@@ -216,8 +216,11 @@ string Watch::listLocal(){
 string Watch::listWatchDirs(){
     std::ostringstream ss;
     ss << "Watched directories: " << endl;
-    for(auto elem: dirIndex){
-        ss << "    " << elem.first << " recursive: " << elem.second << endl;
+    if(dirIndex.empty()){ ss << "none" << endl; }
+    else{
+        for(auto elem: dirIndex){
+            ss << "    " << elem.first << " recursive: " << elem.second << endl;
+        }
     }
     //cout << ss.str();
     return ss.str();
@@ -226,8 +229,11 @@ string Watch::listWatchDirs(){
 string Watch::listWatchFiles(){
     std::ostringstream ss;
     ss << "Watched files: " << endl;
-    for(auto elem: fileIndex){
-        ss << "    " << elem.first << " last modtime: " << displayTime(elem.second.back().modtime) << ", # of versions: " << elem.second.size() << ", exists locally: " << elem.second.back().localExists << ", exists remotely: " << elem.second.back().remoteExists << endl;
+    if(fileIndex.empty()){ ss << "none" << endl; }
+    else {
+        for(auto elem: fileIndex){
+            ss << "    " << elem.first << " last modtime: " << displayTime(elem.second.back().modtime) << ", # of versions: " << elem.second.size() << ", exists locally: " << elem.second.back().localExists << ", exists remotely: " << elem.second.back().remoteExists << endl;
+        }   
     }
     //cout << ss.str();
     return ss.str();
