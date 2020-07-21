@@ -39,10 +39,13 @@ class enclone{
         bool addWatch(string path, bool recursive);
         bool listLocal();
         bool listRemote();
+        bool restoreAll();
 
         std::vector<string> toAdd{}; // paths to watch
         std::vector<string> toRecAdd{};   // recursive directories to watch
         std::vector<string> toDel{}; // paths to delete watches to
+
+        std::vector<string> toRestore{}; // paths to restore
         
 
 

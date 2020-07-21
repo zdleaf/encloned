@@ -31,7 +31,8 @@ class Remote{
         void setPtr(std::shared_ptr<Watch> watch);
 
         void execThread();
-        void callRemotes();
+        void uploadRemotes();
+        string downloadRemotes();
 
         void uploadSuccess(std::string path, std::string objectName, int remoteID); // update fileIndex if upload to remote is succesfull, returns the remoteID it was succesfully uploaded to
 

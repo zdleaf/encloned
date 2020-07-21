@@ -235,7 +235,7 @@ string Watch::listWatchFiles(){
             ss << "    " << elem.first << " last modtime: " << displayTime(elem.second.back().modtime) << ", # of versions: " << elem.second.size() << ", exists locally: " << elem.second.back().localExists << ", exists remotely: " << elem.second.back().remoteExists << endl;
         }   
     }
-    cout << ss.str();
+    //cout << ss.str();
     return ss.str();
 }
 
@@ -261,6 +261,13 @@ std::pair<string, std::time_t> Watch::resolvePathHash(string pathHash){
         throw;
     }
     return result;
+}
+
+string Watch::downloadAll(){
+    for(auto elem: fileIndex){
+        remote->queueForDownload(elem.first, elem.second.back().pathhash);
+    }
+    return remote->downloadRemotes();
 }
 
 void Watch::fileAttributes(const fs::path& path){
@@ -372,8 +379,6 @@ void Watch::uploadSuccess(std::string path, std::string objectName, int remoteID
     for(auto it = fileVersionVector->rbegin(); it != fileVersionVector->rend(); ++it){ // iterate in reverse, most likely the last entry is the one we're looking for
         if(it->pathhash == objectName){ 
             it->remoteExists = true;
-            cout << "Updated fileIndex remoteExists" << endl;
-            cout << it->remoteExists << endl;
             // also add remoteID to list of remotes it's been uploaded to e.g. remoteLocation
         }
     }

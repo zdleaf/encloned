@@ -87,6 +87,8 @@ void Session::handle_read(const boost::system::error_code& error, size_t bytes_t
             response = watch->listLocal() + ";";
         } else if (cmd == "listRemote"){
             response = remote->listObjects() + ";";
+        } else if (cmd == "restoreAll"){
+            response = watch->downloadAll() + ";";
         }
 
         cout << "Socket: Sending response to socket: \"" << response.substr(0, 20) << "...\"" << endl;

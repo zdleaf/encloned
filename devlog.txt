@@ -288,3 +288,6 @@ Tue 21/7/2020
 - Error handling/return message for empty S3 bucket on --list remote
 - Error handling/return message for empty local index on --list local
 - Fix remoteExists flag bug on successful upload - this was not being updated due to copy of vector being made, rather than use a pointer to access reference directly
+- Implemented --restore CLI flag, currently downloads all files on S3 to /enclone/dl directory
+    - now CLI is fairly complete allows for easier testing of upload/download of encrypted files
+- todo: research which OpenSSL encryption algo to implement

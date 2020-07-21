@@ -26,7 +26,11 @@ void S3::execThread(){
 }
 
 string S3::callAPI(string arg){
-    if(arg == "transfer" && uploadQueue.empty() && downloadQueue.empty()) { // no need to connect to API if there is nothing to upload/download
+    if(arg == "upload" && uploadQueue.empty()) { // no need to connect to API if there is nothing to upload/download
+        //cout << "S3: uploadQueue and downloadQueue are empty" << endl;
+        return "";
+    }
+    if(arg == "download" && downloadQueue.empty()) { // no need to connect to API if there is nothing to upload/download
         //cout << "S3: uploadQueue and downloadQueue are empty" << endl;
         return "";
     }
@@ -39,9 +43,10 @@ string S3::callAPI(string arg){
         transferConfig.s3Client = s3_client;
         auto transferManager = Aws::Transfer::TransferManager::Create(transferConfig);
 
-        if(arg == "transfer"){
+        if(arg == "upload"){
             uploadFromQueue(transferManager);
-            downloadFromQueue(transferManager);
+        } else if (arg == "download"){
+            response = downloadFromQueue(transferManager);
         } else if (arg == "listObjects"){
             try {
                 response = listObjects(s3_client);
@@ -53,7 +58,6 @@ string S3::callAPI(string arg){
         } else if (arg == "listBuckets"){
             response = listBuckets(s3_client);
         } 
-
     }
     Aws::ShutdownAPI(options);
     return response;
@@ -99,15 +103,18 @@ void S3::uploadFromQueue(std::shared_ptr<Aws::Transfer::TransferManager> transfe
     //cout << "S3: uploadQueue is empty" << endl; cout.flush();
 }
 
-void S3::downloadFromQueue(std::shared_ptr<Aws::Transfer::TransferManager> transferManager){
+string S3::downloadFromQueue(std::shared_ptr<Aws::Transfer::TransferManager> transferManager){
+    std::ostringstream ss;
     std::lock_guard<std::mutex> guard(mtx);
-    if(downloadQueue.empty()){ return; }
-    std::pair<string, string> returnValue;
-    std::pair<string, string> *returnValuePtr = &returnValue;
-    while(dequeueDownload(returnValuePtr)){ // returns true until queue is empty
-        downloadObject(transferManager, BUCKET_NAME, returnValuePtr->first, returnValuePtr->second);
-    }
-    cout << "S3: downloadQueue is empty" << endl; cout.flush();
+    if(!downloadQueue.empty()){ 
+        std::pair<string, string> returnValue;
+        std::pair<string, string> *returnValuePtr = &returnValue;
+        while(dequeueDownload(returnValuePtr)){ // returns true until queue is empty
+            ss << downloadObject(transferManager, BUCKET_NAME, returnValuePtr->first, returnValuePtr->second);
+        }
+        cout << "S3: downloadFromQueue complete" << endl; cout.flush();
+    } else { ss << "S3: downloadQueue is empty" << endl; cout.flush(); }
+    return ss.str();
 }
 
 void S3::deleteQueue(){
@@ -203,9 +210,10 @@ bool S3::uploadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferMa
     return false;
 }
 
-bool S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferManager, const Aws::String& bucketName, const std::string& writeToPath, const std::string& objectName){
+string S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferManager, const Aws::String& bucketName, const std::string& writeToPath, const std::string& objectName){
+    std::ostringstream ss;
     // the directory we want to download to
-    string downloadDir = "/home/zach/enclone/dl"; 
+    string downloadDir = "/home/zach/enclone/dl/"; 
 
     // split path into directory path and filename
     std::size_t found = writeToPath.find_last_of("/");
@@ -229,13 +237,14 @@ bool S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transfer
     downloadHandle->WaitUntilFinished();
     if(downloadHandle->GetStatus() == Aws::Transfer::TransferStatus::COMPLETED){
         if (downloadHandle->GetBytesTotalSize() == downloadHandle->GetBytesTransferred()) {
-            cout << "S3: Download of " << objectName << " to " << awsWriteToFile << " successful" << endl;
-            return true;
+            ss << "S3: Download of " << objectName << " to " << awsWriteToFile << " successful" << endl;
+            cout << ss.str();
+            return ss.str();
         } else {
-            cout << "S3: Bytes downloaded did not equal requested number of bytes: " << downloadHandle->GetBytesTotalSize() << downloadHandle->GetBytesTransferred() << std::endl;
+            ss << "S3: Bytes downloaded did not equal requested number of bytes: " << downloadHandle->GetBytesTotalSize() << downloadHandle->GetBytesTransferred() << std::endl;
         }
     } else {
-        cout << "S3: Download of " << objectName << " to " << awsWriteToFile << " failed with message: " << downloadHandle->GetStatus() << endl;
+        ss << "S3: Download of " << objectName << " to " << awsWriteToFile << " failed with message: " << downloadHandle->GetStatus() << endl;
     }
 
     size_t retries = 0; // retry download if failed (up to 5 times)
@@ -246,8 +255,9 @@ bool S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transfer
         downloadHandle->WaitUntilFinished();
     }
 
-    std::cout << "S3: Download of " << objectName << " to " << awsWriteToFile << " failed after maximum retry attempts" << std::endl;
-    return false;
+    ss << "S3: Download of " << objectName << " to " << awsWriteToFile << " failed after maximum retry attempts" << std::endl;
+    cout << ss.str();
+    return ss.str();
 }
 
 // legacy upload/delete/download below - not using TransferManager

@@ -27,7 +27,7 @@ int enclone::showOptions(const int& argc, char** const argv){
         //("recursive,r", "specify watched directory should be watched or deleted recursively")
         ("del-watch,d", po::value<std::vector<string>>(&toDel)->composing(), "delete a watch from a given path (file or directory)")
         ("recursive-del,D", po::value<std::vector<string>>(&toDel)->composing(), "recursively delete all watches in a directory")
-        ("restore,r", po::value<std::vector<string>>(&toAdd)->composing(), "restore either \"all\" files on remote, or a specific file version")
+        ("restore,r", "restore all files from remote")
         ("clean-up,c", "remove items from remote S3 which do not have a corresponding entry in fileIndex");
     
         // store/parse arguments
@@ -40,7 +40,8 @@ int enclone::showOptions(const int& argc, char** const argv){
                 po::command_line_style::long_allow_next |
                 po::command_line_style::short_allow_adjacent |
                 po::command_line_style::short_allow_next |
-                po::command_line_style::allow_long_disguise
+                po::command_line_style::allow_long_disguise |
+                po::command_line_style::allow_sticky
                 ), vm);
 
         po::notify(vm);
@@ -79,7 +80,10 @@ int enclone::showOptions(const int& argc, char** const argv){
 
         if (vm.count("del-watch")){
             cout << "Deleting watch to path: " << vm["del-watch"].as<string>() << endl;
-            //enclone e("add", vm["add-watch"].as<string>(), true);
+        }
+
+        if (vm.count("restore")){
+            restoreAll();
         }
 
     } 
@@ -139,12 +143,15 @@ bool enclone::addWatch(string path, bool recursive){
 
 bool enclone::listLocal(){
     string request = "listLocal|";
-
     return sendRequest(request);
 }
 
 bool enclone::listRemote(){
     string request = "listRemote|";
+    return sendRequest(request);
+}
 
+bool enclone::restoreAll(){
+    string request = "restoreAll|";
     return sendRequest(request);
 }

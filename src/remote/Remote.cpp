@@ -14,13 +14,18 @@ void Remote::execThread(){
     while(*runThreads){
         std::this_thread::sleep_for(std::chrono::seconds(10));
         //cout << "Remote: Calling Remote cloud storage..." << endl; cout.flush();
-        callRemotes();
+        uploadRemotes();
     }
 }
 
-void Remote::callRemotes(){
+void Remote::uploadRemotes(){
     std::lock_guard<std::mutex> guard(mtx);
-    s3->callAPI("transfer"); // change to transfer
+    s3->callAPI("upload");
+}
+
+string Remote::downloadRemotes(){
+    std::lock_guard<std::mutex> guard(mtx);
+    return s3->callAPI("download"); 
 }
 
 bool Remote::queueForUpload(std::string path, std::string objectName, std::time_t modtime){
