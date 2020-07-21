@@ -34,10 +34,10 @@ bool Remote::queueForUpload(std::string path, std::string objectName, std::time_
     return s3->enqueueUpload(path, objectName, modtime);
 }
 
-bool Remote::queueForDownload(std::string path, std::string objectName){
+bool Remote::queueForDownload(std::string path, std::string objectName, std::time_t modtime){
     std::lock_guard<std::mutex> guard(mtx);
     // call remotes
-    return s3->enqueueDownload(path, objectName);
+    return s3->enqueueDownload(path, objectName, modtime);
 }
 
 bool Remote::queueForDelete(std::string objectName){

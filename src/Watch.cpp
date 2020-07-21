@@ -265,7 +265,7 @@ std::pair<string, std::time_t> Watch::resolvePathHash(string pathHash){
 
 string Watch::downloadAll(){
     for(auto elem: fileIndex){
-        remote->queueForDownload(elem.first, elem.second.back().pathhash);
+        remote->queueForDownload(elem.first, elem.second.back().pathhash, elem.second.back().modtime);
     }
     return remote->downloadRemotes();
 }

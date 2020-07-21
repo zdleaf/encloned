@@ -107,10 +107,10 @@ string S3::downloadFromQueue(std::shared_ptr<Aws::Transfer::TransferManager> tra
     std::ostringstream ss;
     std::lock_guard<std::mutex> guard(mtx);
     if(!downloadQueue.empty()){ 
-        std::pair<string, string> returnValue;
-        std::pair<string, string> *returnValuePtr = &returnValue;
+        std::tuple<string, string, std::time_t> returnValue;
+        std::tuple<string, string, std::time_t> *returnValuePtr = &returnValue;
         while(dequeueDownload(returnValuePtr)){ // returns true until queue is empty
-            ss << downloadObject(transferManager, BUCKET_NAME, returnValuePtr->first, returnValuePtr->second);
+            ss << downloadObject(transferManager, BUCKET_NAME, std::get<0>(*returnValuePtr), std::get<1>(*returnValuePtr), std::get<2>(*returnValuePtr));
         }
         cout << "S3: downloadFromQueue complete" << endl; cout.flush();
     } else { ss << "S3: downloadQueue is empty" << endl; cout.flush(); }
@@ -210,7 +210,7 @@ bool S3::uploadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferMa
     return false;
 }
 
-string S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferManager, const Aws::String& bucketName, const std::string& writeToPath, const std::string& objectName){
+string S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferManager, const Aws::String& bucketName, const std::string& writeToPath, const std::string& objectName, std::time_t& originalModTime){
     std::ostringstream ss;
     // the directory we want to download to
     string downloadDir = "/home/zach/enclone/dl/"; 
@@ -238,6 +238,12 @@ string S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transf
     if(downloadHandle->GetStatus() == Aws::Transfer::TransferStatus::COMPLETED){
         if (downloadHandle->GetBytesTotalSize() == downloadHandle->GetBytesTransferred()) {
             ss << "S3: Download of " << objectName << " to " << awsWriteToFile << " successful" << endl;
+
+            // set the modtime back to the original value
+            fs::path fsPath = awsWriteToFile.c_str();
+            std::filesystem::file_time_type fsModtime = std::chrono::system_clock::from_time_t(originalModTime);
+            fs::last_write_time(fsPath, fsModtime); 
+
             cout << ss.str();
             return ss.str();
         } else {
