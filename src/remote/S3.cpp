@@ -153,12 +153,16 @@ string S3::listObjects(std::shared_ptr<Aws::S3::S3Client> s3_client){
         remoteObjects.clear(); // erase old remoteObjects vector
         Aws::Vector<Aws::S3::Model::Object> object_list =
             list_objects_outcome.GetResult().GetContents();
-        response << "S3: Files on S3 bucket " << BUCKET_NAME << ":" << std::endl;
-        for (auto const &s3_object : object_list)
-        {
-            auto modtime = s3_object.GetLastModified().ToGmtString(Aws::Utils::DateFormat::ISO_8601);
-            response << s3_object.GetKey() << " : " << modtime << std::endl;
-            remoteObjects.push_back(s3_object.GetKey().c_str());
+        if(object_list.empty()){
+            response << "S3: bucket " << BUCKET_NAME << " is empty" << std::endl;
+        } else {
+            response << "S3: Files on S3 bucket " << BUCKET_NAME << ":" << std::endl;
+            for (auto const &s3_object : object_list)
+            {
+                auto modtime = s3_object.GetLastModified().ToGmtString(Aws::Utils::DateFormat::ISO_8601);
+                response << s3_object.GetKey() << " : " << modtime << std::endl;
+                remoteObjects.push_back(s3_object.GetKey().c_str());
+            }
         }
     } else {
         response << "S3: listObjects error: " <<

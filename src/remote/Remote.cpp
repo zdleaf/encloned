@@ -50,6 +50,9 @@ string Remote::listObjects(){
     std::vector<string> objects;
     try {
         objects = s3->getObjects();
+        if(objects.empty()){
+            return "S3: no files on remote S3 bucket\n";
+        }
     } catch(const std::exception& e){ // listObjects may fail due invalid credentials etc
         return e.what();
     }

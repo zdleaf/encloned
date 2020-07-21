@@ -283,3 +283,6 @@ Fri 17/7/2020
     - The file version that no longer exists locally is removed from upload queue but still exists in index - this will need to be cleaned up later (where !remoteExists)
 - todo: if uploadQueue fails e.g. invalid credentials, need to save this information to be able to restore it in event of program crash? can get this from fileIndex with !remoteExists, and that path with that modtime still exists
 - todo: if files are deleted from S3 from outside, need to handle this - check for this - REMOTEEXISTS needs to be set false
+
+Tue 21/7/2020
+- Error handling/return message for empty S3 bucket on --list remote
