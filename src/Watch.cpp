@@ -235,7 +235,7 @@ string Watch::listWatchFiles(){
             ss << "    " << elem.first << " last modtime: " << displayTime(elem.second.back().modtime) << ", # of versions: " << elem.second.size() << ", exists locally: " << elem.second.back().localExists << ", exists remotely: " << elem.second.back().remoteExists << endl;
         }   
     }
-    //cout << ss.str();
+    cout << ss.str();
     return ss.str();
 }
 
@@ -367,11 +367,13 @@ void Watch::restoreDirIdx(){
 }
 
 void Watch::uploadSuccess(std::string path, std::string objectName, int remoteID){
-    auto fileVersionVector = fileIndex.at(path);
+    auto fileVersionVector = &fileIndex.at(path);
     // set the remoteExists flag for correct entry in fileIndex
-    for(auto it = fileVersionVector.rbegin(); it != fileVersionVector.rend(); ++it){ // iterate in reverse, most likely the last entry is the one we're looking for
+    for(auto it = fileVersionVector->rbegin(); it != fileVersionVector->rend(); ++it){ // iterate in reverse, most likely the last entry is the one we're looking for
         if(it->pathhash == objectName){ 
             it->remoteExists = true;
+            cout << "Updated fileIndex remoteExists" << endl;
+            cout << it->remoteExists << endl;
             // also add remoteID to list of remotes it's been uploaded to e.g. remoteLocation
         }
     }
