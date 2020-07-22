@@ -281,4 +281,16 @@ Tue 21/7/2020
         - modtime of directories is NOT currently preserved as this information is not saved
     - now CLI is fairly complete allows for easier testing of upload/download of encrypted files
 - Further research on encryption algos - see encryption.txt
-    - Built example OpenSSL AES CBC code
+    - Built example OpenSSL AES CBC code with string values
+
+Wed 22/7/2020
+- Further research on file encryption - see encryption.txt
+    - Authentication is required, but some types like AES-GCM cannot be used without loading entire files to memory - this is unfeasible for large files
+        - Potentially this can be fixed by splitting files into chunks
+    - Possible solution is XChaCha20-Poly1305 from Crypto++
+        - todo: build and test code with Crypto++ library
+    - Another solution is use a backend like age to handle encryption/auth
+- Built and tested various openSSL demos
+    - openssl-evp-demo - file encryption in C
+    - evp-encrypt.cxx - C++ implementation but encrypting strings not files
+    - gcmcrypt - GCM file encryption in C

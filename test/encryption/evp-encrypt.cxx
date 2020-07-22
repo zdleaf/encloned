@@ -77,7 +77,7 @@ void gen_params(byte key[KEY_SIZE], byte iv[BLOCK_SIZE]);
 void aes_encrypt(const byte key[KEY_SIZE], const byte iv[BLOCK_SIZE], const secure_string& ptext, secure_string& ctext);
 void aes_decrypt(const byte key[KEY_SIZE], const byte iv[BLOCK_SIZE], const secure_string& ctext, secure_string& rtext);
 
-// g++ -Wall -std=c++11 evp-encrypt.cxx -o evp-encrypt.exe -lcrypto
+// g++ -Wall -std=c++11 evp-encrypt.cxx -o evpcpp -lcrypto
 int main(int argc, char* argv[])
 {
     // Load the necessary cipher
@@ -89,6 +89,8 @@ int main(int argc, char* argv[])
 
     byte key[KEY_SIZE], iv[BLOCK_SIZE];
     gen_params(key, iv);
+    std::cout << "Key:\n" << key << std::endl;
+    std::cout << "IV:\n" << iv << std::endl;
   
     aes_encrypt(key, iv, ptext, ctext);
     aes_decrypt(key, iv, ctext, rtext);
