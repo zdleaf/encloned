@@ -286,10 +286,8 @@ Tue 21/7/2020
 Wed 22/7/2020
 - Further research on file encryption - see encryption.txt
     - Authentication is required, but some types like AES-GCM cannot be used without loading entire files to memory - this is unfeasible for large files
-        - Potentially this can be fixed by splitting files into chunks
-    - Possible solution is XChaCha20-Poly1305 from Crypto++
-        - todo: build and test code with Crypto++ library
-    - Another solution is use a backend like age to handle encryption/auth
+        - Potentially this can be fixed by splitting files into chun    - Possible solution is XChaCha20-Poly1305 from Crypto++ or Libsodium
+    - Another solution is use a backend like age to handle encryption/auth, although age has authentication concerns
 - Built and tested various openSSL demos
     - openssl-evp-demo - file encryption in C
     - evp-encrypt.cxx - C++ implementation but encrypting strings not files
@@ -302,3 +300,7 @@ Thurs 23/7/2020
 
 Fri 24/7/2020
 - Further research/reading on file encryption
+- Build and install Libsodium encryption library (NaCL)
+- Tested NaCL xchacha20poly1305 streaming encrypt/decrypt in /test/NaCL
+- started to integrate streaming encryption in enclone
+- todo: replace OpenSSL hash functions with NaCL to reduce 3rd party includes

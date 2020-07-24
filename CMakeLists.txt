@@ -18,7 +18,7 @@ find_package(OpenSSL REQUIRED)
 find_package(Boost COMPONENTS program_options REQUIRED)
 
 # flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lboost_system -lboost_thread -std=c++17 -lstdc++fs -lsqlite3 -pthread -lcrypto -lboost_program_options")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lboost_system -lboost_thread -std=c++17 -lstdc++fs -lsqlite3 -pthread -lcrypto -lboost_program_options -lsodium")
 
 # include files
 include_directories( include src ${Boost_INCLUDE_DIR})

@@ -15,10 +15,16 @@ encloned::encloned(){ // constructor
     watch->setPtr(remote);
     socket->setPtr(watch);
     socket->setPtr(remote);
+    Encryption::initSodium();
 }
 
 encloned::~encloned(){ // destructor
     // delete objects
+}
+
+void encloned::generateKey(){
+    crypto_secretstream_xchacha20poly1305_keygen(key);
+    cout << "Encryption: Generated encryption key" << endl;
 }
 
 int encloned::execLoop(){

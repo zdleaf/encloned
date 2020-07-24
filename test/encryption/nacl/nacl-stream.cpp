@@ -1,16 +1,14 @@
-#include <enclone/Encryption.h>
+#include <stdio.h>
+#include <iostream>
+#include <sodium.h>
 
-void Encryption::initSodium(){
-    if (sodium_init() != 0) {
-        cout << "Encryption: Error initialising libsodium" << endl;
-    } else { 
-        cout << "Encryption: libsodium initialised" << endl; 
-    }
-}
+#define CHUNK_SIZE 4096 // libsodium file chunk size
 
-int Encryption::encryptFile(const char *target_file, 
-    const char *source_file, 
-    const unsigned char key[crypto_secretstream_xchacha20poly1305_KEYBYTES])
+// g++ -lsodium 
+
+static int
+encrypt(const char *target_file, const char *source_file,
+        const unsigned char key[crypto_secretstream_xchacha20poly1305_KEYBYTES])
 {
     unsigned char  buf_in[CHUNK_SIZE];
     unsigned char  buf_out[CHUNK_SIZE + crypto_secretstream_xchacha20poly1305_ABYTES];
@@ -39,9 +37,9 @@ int Encryption::encryptFile(const char *target_file,
     return 0;
 }
 
-int Encryption::decryptFile(const char *target_file, 
-    const char *source_file,
-    const unsigned char key[crypto_secretstream_xchacha20poly1305_KEYBYTES])
+static int
+decrypt(const char *target_file, const char *source_file,
+        const unsigned char key[crypto_secretstream_xchacha20poly1305_KEYBYTES])
 {
     unsigned char  buf_in[CHUNK_SIZE + crypto_secretstream_xchacha20poly1305_ABYTES];
     unsigned char  buf_out[CHUNK_SIZE];
@@ -80,35 +78,20 @@ ret:
     return ret;
 }
 
-string Encryption::sha256(const string str)
+int
+main(void)
 {
-    unsigned char hash[SHA256_DIGEST_LENGTH];
-    SHA256_CTX sha256;
-    SHA256_Init(&sha256);
-    SHA256_Update(&sha256, str.c_str(), str.size());
-    SHA256_Final(hash, &sha256);
-    std::stringstream ss;
-    for(int i = 0; i < SHA256_DIGEST_LENGTH; i++)
-    {
-        ss << std::hex << std::setw(2) << std::setfill('0') << (int)hash[i];
+    unsigned char key[crypto_secretstream_xchacha20poly1305_KEYBYTES];
+
+    if (sodium_init() != 0) {
+        return 1;
     }
-    return ss.str();
-}
-
-string Encryption::randomString(std::size_t length)
-{
-    const std::string CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-    std::random_device random_device;
-    std::mt19937 generator(random_device());
-    std::uniform_int_distribution<> distribution(0, CHARACTERS.size() - 1);
-
-    std::string randomString;
-    for (std::size_t i = 0; i < length; ++i) randomString += CHARACTERS[distribution(generator)];
-
-    return randomString;
-}
-
-string Encryption::hashPath(const string path){
-    const string saltedPath = path + randomString(128);
-    return sha256(saltedPath);
+    crypto_secretstream_xchacha20poly1305_keygen(key);
+    if (encrypt("/home/zach/enclone/test/encryption/nacl/encrypted", "/home/zach/enclone/test/encryption/nacl/file", key) != 0) {
+        return 1;
+    }
+    if (decrypt("/home/zach/enclone/test/encryption/nacl/decrypted", "/home/zach/enclone/test/encryption/nacl/encrypted", key) != 0) {
+        return 1;
+    }
+    return 0;
 }

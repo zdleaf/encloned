@@ -17,7 +17,8 @@
                 "-lboost_thread",
                 "-pthread",
                 "-lcrypto",
-                "-lboost_program_options"
+                "-lboost_program_options",
+                "-lsodium"
             ],
             "cStandard": "c18",
             "cppStandard": "c++17",
