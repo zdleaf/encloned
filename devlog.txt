@@ -294,3 +294,11 @@ Wed 22/7/2020
     - openssl-evp-demo - file encryption in C
     - evp-encrypt.cxx - C++ implementation but encrypting strings not files
     - gcmcrypt - GCM file encryption in C
+- todo:
+    - read some up to date papers on AEAD to see the latest developments/recommendations, especially in regards to chunking/streaming large files (seems to be an difficult/unsolved problem, particularly authenticating the ordering of chunks - although NaCL streaming implementation seems to resolve this)
+
+Thurs 23/7/2020
+- Reading/collecting various cloud storage papers on data security/encryption e.g. from ACM
+
+Fri 24/7/2020
+- Further research/reading on file encryption

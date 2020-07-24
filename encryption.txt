@@ -2,12 +2,20 @@
 
 Search "search-term site:crypto.stackexchange.com"
 
+https://dl.acm.org/action/doSearch?AllField=encryption&expand=all&SeriesKey=tops
+
+General AEAD - https://www.imperialviolet.org/2015/05/16/aeads.html
+
 Learn about oracle based attacks (re: authentication)
 
-Papers
+Papers - see folder in root directory for full downloaded pdfs
 - http://cseweb.ucsd.edu/~mihir/papers/oem.pdf
 - https://www.cs.ucdavis.edu/~rogaway/papers/modes.pdf
 - https://eprint.iacr.org/2015/189.pdf
+
+Algos
+- XChaCha20-Poly1305
+    - uses a 192-bit nonce - see https://www.imperialviolet.org/2015/05/16/aeads.html why this is preferable over 96-bit nonce of AES-GCM
 
 - AGE 
     - https://github.com/FiloSottile/age
@@ -34,6 +42,7 @@ Papers
         - http://www.zedwood.com/article/cpp-openssl-aes-gcm-code-sample
         - https://medium.com/@amit.kulkarni/encrypting-decrypting-a-file-using-openssl-evp-b26e0e4d28d4
             - https://github.com/kulkarniamit/openssl-evp-demo
+            - this chunk in 1024 bytes (BUFSIZE var)
         - https://github.com/sailorfred/gcmcrypt
             - Command line AES256-GCM file encryption with 96 bit IV and 128 bit authentication tag
         - https://github.com/akw0088/openssl/blob/master/aes_enc.cpp
@@ -46,17 +55,22 @@ Papers
         - https://www.cryptopp.com/wiki/GCM_Mode example code
         - AES-GCM-Test.zip
     - Use XChaCha20Poly1305 (ChaCha20Poly1305 hardened against nonce misuse)
+    - Can chunk files using FileSource - https://www.cryptopp.com/wiki/Pumping_Data#Encryption
 
 - Google Tink
     - https://github.com/google/tink
     - Tink is a multi-language, cross-platform, open source library that provides cryptographic APIs that are secure, easy to use correctly, and hard(er) to misuse. 
 
-- LibSodium
+- LibSodium (NaCL)
     - https://doc.libsodium.org/secret-key_cryptography/aead/aes-256-gcm
         - WARNING: Despite being the most popular AEAD construction due to its use in TLS, safely using AES-GCM in a different context is tricky.
         - No more than ~ 350 GB of input data should be encrypted with a given key. This is for ~ 16 KB messages -- Actual figures vary according to message sizes.
         - In addition, nonces are short and repeated nonces would totally destroy the security of this scheme. Nonces should thus come from atomic counters, which can be difficult to set up in a distributed environment.
     - Use XChaCha20-Poly1305
+    - Has a stream encryption high level API call - https://libsodium.gitbook.io/doc/secret-key_cryptography/secretstream
+        - this looks like the easiest implementation - split file into chunks and encrypt each chunk as per example code above
+
+
 
 
 https://github.com/openssl/openssl/pull/5048
