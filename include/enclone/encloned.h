@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory> // shared_ptr
 #include <chrono>
+#include <fstream>
 
 // concurrency/multi-threading
 #include <thread>
@@ -31,7 +32,7 @@ class encloned{
 
         // file encryption key
         unsigned char key[crypto_secretstream_xchacha20poly1305_KEYBYTES];
-        void generateKey();
+        int loadEncryptionKey();
         
     public:
         encloned();

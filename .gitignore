@@ -7,3 +7,4 @@ tmp/*
 tmp2/*
 dl/*
 test/encryption/nacl/files/*
+key

@@ -28,6 +28,7 @@ int enclone::showOptions(const int& argc, char** const argv){
         ("del-watch,d", po::value<std::vector<string>>(&toDel)->composing(), "delete a watch from a given path (file or directory)")
         ("recursive-del,D", po::value<std::vector<string>>(&toDel)->composing(), "recursively delete all watches in a directory")
         ("restore,r", "restore all files from remote")
+        ("generate-key,k", "generate an encryption key")
         ("clean-up,c", "remove items from remote S3 which do not have a corresponding entry in fileIndex");
     
         // store/parse arguments
@@ -84,6 +85,10 @@ int enclone::showOptions(const int& argc, char** const argv){
 
         if (vm.count("restore")){
             restoreAll();
+        }
+
+        if (vm.count("generate-key")){
+            generateKey();
         }
 
     } 
@@ -154,4 +159,33 @@ bool enclone::listRemote(){
 bool enclone::restoreAll(){
     string request = "restoreAll|";
     return sendRequest(request);
+}
+
+void enclone::generateKey(){
+    if (sodium_init() != 0) {
+        cout << "Error initialising libsodium" << endl;
+    }
+
+    if(fs::exists("key")){
+        cout << "Error: key already exists - please backup and remove old key before generating a new one" << endl;
+    } else {
+        std::ofstream output("key"); // create a blank file
+
+        // set correct permissions before writing key data to file
+        fs::permissions("key", fs::perms::owner_read | fs::perms::owner_write);
+
+        // generate key
+        unsigned char key[crypto_secretstream_xchacha20poly1305_KEYBYTES];
+        crypto_secretstream_xchacha20poly1305_keygen(key);
+
+        // write key to file
+        std::ofstream file;
+        file.open("key", std::ios::out | std::ios::trunc | std::ios::binary); 
+        if (file.is_open())
+        {
+            file.write((char*)key, crypto_secretstream_xchacha20poly1305_KEYBYTES);
+        }
+        file.close();
+        cout << "Generated encryption key and saved to this directory" << endl;
+    }
 }

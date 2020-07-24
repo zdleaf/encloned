@@ -3,13 +3,17 @@
 
 #include <iostream>
 #include <string>
-#include <filesystem>
 #include <stdexcept>
 #include <iterator>
 #include <vector>
-//#include <fstream>
+
+#include <filesystem>
+#include <fstream>
+
 #include <boost/asio.hpp> // unix domain local sockets
 #include <boost/program_options.hpp> // CLI arguments parsing
+
+#include <sodium.h>
 
 namespace fs = std::filesystem;
 namespace asio = boost::asio;
@@ -40,6 +44,8 @@ class enclone{
         bool listLocal();
         bool listRemote();
         bool restoreAll();
+
+        void generateKey(); // generate encryption key to file
 
         std::vector<string> toAdd{}; // paths to watch
         std::vector<string> toRecAdd{};   // recursive directories to watch

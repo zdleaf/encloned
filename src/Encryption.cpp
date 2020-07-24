@@ -6,6 +6,7 @@ void Encryption::initSodium(){
     } else { 
         cout << "Encryption: libsodium initialised" << endl; 
     }
+    
 }
 
 int Encryption::encryptFile(const char *target_file, 

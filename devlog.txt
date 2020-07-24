@@ -302,5 +302,11 @@ Fri 24/7/2020
 - Further research/reading on file encryption
 - Build and install Libsodium encryption library (NaCL)
 - Tested NaCL xchacha20poly1305 streaming encrypt/decrypt in /test/NaCL
-- started to integrate streaming encryption in enclone
+- Started to integrate NaCL streaming encryption methods in Encryption.h
+- Key management
+    - Created "--generate-key" option to enclone - generate and save random encryption key to file
+        - keyfile has owner+rw permissions set BEFORE key is written to file to protect key
+    - encloned loads encryption key from file, or exits with error is it does not exist
 - todo: replace OpenSSL hash functions with NaCL to reduce 3rd party includes
+- todo: fix file permissions of index.db - we do not want this readable by all - change to fs::permissions("index.db", fs::perms::owner_read | fs::perms::owner_write);
+- todo: move both index.db and key file to user home directory?
