@@ -7,16 +7,19 @@
 
 #include <enclone/remote/S3.h>
 #include <enclone/Watch.h>
+#include <enclone/encloned.h>
 
 // stub class - this will be the middle man for handling multiple remotes at one time, e.g. multiple upload to different locations
 // needs to store which remotes are available and turned on for upload
 
 class S3;
 class Watch;
+class encloned;
 
 class Remote{
     private:
         // object pointers
+        encloned* daemon; // ptr to main daemon class that spawned this
         std::shared_ptr<Watch> watch; 
 
         // available remotes
@@ -27,8 +30,9 @@ class Remote{
         std::atomic_bool *runThreads; // ptr to flag indicating if execThread should loop or close down
 
     public:
-        Remote(std::atomic_bool *runThreads);
+        Remote(std::atomic_bool* runThreads, encloned* daemon);
         void setPtr(std::shared_ptr<Watch> watch);
+        encloned* getDaemon();
 
         void execThread();
         void uploadRemotes();

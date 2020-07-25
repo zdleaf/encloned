@@ -310,3 +310,8 @@ Fri 24/7/2020
 - todo: replace OpenSSL hash functions with NaCL to reduce 3rd party includes
 - todo: fix file permissions of index.db - we do not want this readable by all - change to fs::permissions("index.db", fs::perms::owner_read | fs::perms::owner_write);
 - todo: move both index.db and key file to user home directory?
+
+Sat 25/7/2020
+- Encrypted file on upload to S3
+    - File is encrypted to temporary location created on start (/tmp/enclone/) and deleted once upload is confirmed
+- todo: decrypt file on download

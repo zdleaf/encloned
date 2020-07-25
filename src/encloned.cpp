@@ -11,14 +11,33 @@ int main(){
 
 encloned::encloned(){ // constructor
     runThreads = true;
+
     db = std::make_shared<DB>();
     socket = std::make_shared<Socket>(&runThreads);
-    remote = std::make_shared<Remote>(&runThreads);
+    remote = std::make_shared<Remote>(&runThreads, this);
     watch = std::make_shared<Watch>(db, &runThreads);
+
     remote->setPtr(watch);
     watch->setPtr(remote);
     socket->setPtr(watch);
     socket->setPtr(remote);
+
+    // set path to this executable
+    char result[PATH_MAX];
+    ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+    if (count != -1) {
+        daemonPath = dirname(result);
+    }
+
+    // make tmp directory for encrypted files before upload
+    try {
+        fs::create_directories("/tmp/enclone/");
+        cout << "Created directory /tmp/enclone/" << endl;
+    }
+    catch (std::exception& e) {
+        std::cout << e.what() << std::endl;
+    }
+
     Encryption::initSodium();
 }
 
@@ -49,6 +68,10 @@ int encloned::execLoop(){
     return 0;
 }
 
+unsigned char* encloned::getKey(){
+    return key;
+}
+
 void encloned::addWatch(string path, bool recursive){
     watch->addWatch(path, recursive);
 }
@@ -76,8 +99,6 @@ int encloned::loadEncryptionKey(){
 
         memcpy(key, memblock, sizeof memblock); // copy into the key member variable
         cout << "Successfully loaded encryption key from key file" << endl;
-
-        //delete[] memblock;
     }
     else { 
         cout << "Error loading encryption key - please check \"key\" and try again" << endl;

@@ -6,7 +6,7 @@ S3::S3(std::atomic_bool *runThreads, Remote *remote)
 {
     this->remote = remote;
     this->runThreads = runThreads;       
-
+    this->daemon = remote->getDaemon();
     // S3 logging options
     options.loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Info; // turn logging on using the default logger
     options.loggingOptions.defaultLogPrefix = "log/aws_sdk_";
@@ -191,7 +191,13 @@ std::vector<string> S3::getObjects(){
 }
 
 bool S3::uploadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferManager, const Aws::String& bucketName, const std::string& path, const std::string& objectName){
-    Aws::String awsPath(path);
+    
+    // encrypt file into temporary object
+    string localEncryptedPath = "/tmp/enclone/" + objectName;
+    //cout << "localEncryptedPath: " << localEncryptedPath << endl;
+    int result = Encryption::encryptFile(localEncryptedPath.c_str(), path.c_str(), daemon->getKey());
+
+    Aws::String awsPath(localEncryptedPath);
     Aws::String awsObjectName(objectName);
 
     auto uploadHandle = transferManager->UploadFile(awsPath, bucketName, awsObjectName, "", Aws::Map<Aws::String, Aws::String>());
@@ -199,7 +205,8 @@ bool S3::uploadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferMa
     if(uploadHandle->GetStatus() == Aws::Transfer::TransferStatus::COMPLETED){
         cout << "S3: Upload of " << path << " as " << objectName << " successful" << endl;
         assert(uploadHandle->GetBytesTotalSize() == uploadHandle->GetBytesTransferred()); // verify upload expected length of data
-        remote->uploadSuccess(path, objectName, remoteID);
+        remote->uploadSuccess(path, objectName, remoteID); // set remoteExists flag
+        fs::remove(localEncryptedPath); // remove temporary encrypted object on local fs
         return true;
     } else {
         std::ostringstream error;

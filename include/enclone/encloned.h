@@ -12,6 +12,11 @@
 #include <mutex>
 #include <atomic>
 
+// get path of this executable
+#include <libgen.h>         // dirname
+#include <unistd.h>         // readlink
+#include <linux/limits.h>   // PATH_MAX
+
 #include <enclone/DB.h>
 #include <enclone/Watch.h>
 #include <enclone/Socket.h>
@@ -20,6 +25,9 @@
 namespace io = boost::asio;
 
 class Watch;
+class Socket;
+class DB;
+class Remote;
 
 class encloned{
     private:
@@ -37,11 +45,14 @@ class encloned{
     public:
         encloned();
         ~encloned();
+        string daemonPath;
 
         int execLoop();
+        unsigned char* getKey();
 
         void addWatch(string path, bool recursive); // needs mutex support
         void displayWatches();
+
 };
 
 #endif

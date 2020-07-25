@@ -24,6 +24,7 @@
 
 #include <enclone/remote/Queue.h>
 #include <enclone/remote/Remote.h>
+#include <enclone/Encryption.h>
 
 namespace fs = std::filesystem;
 using std::string;
@@ -31,12 +32,14 @@ using std::cout;
 using std::endl;
 
 class Remote;
+class encloned;
 
 class S3: public Queue {
     private:
         int remoteID = 1; // each remote has a unique remoteID
 
         Remote *remote; // ptr to class instance of Remote that spawned this S3 instance
+        encloned *daemon;
         
         std::vector<string> remoteObjects;
 

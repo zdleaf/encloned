@@ -1,8 +1,9 @@
 #include <enclone/remote/Remote.h>
 
-Remote::Remote(std::atomic_bool *runThreads)
+Remote::Remote(std::atomic_bool *runThreads, encloned* daemon)
 {
     this->runThreads = runThreads;
+    this->daemon = daemon;
     s3 = std::make_shared<S3>(runThreads, this);
 }
 
@@ -16,6 +17,10 @@ void Remote::execThread(){
         //cout << "Remote: Calling Remote cloud storage..." << endl; cout.flush();
         uploadRemotes();
     }
+}
+
+encloned* Remote::getDaemon(){
+    return daemon;
 }
 
 void Remote::uploadRemotes(){
