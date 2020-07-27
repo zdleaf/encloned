@@ -27,11 +27,15 @@ void S3::execThread(){
 
 string S3::callAPI(string arg){
     if(arg == "upload" && uploadQueue.empty()) { // no need to connect to API if there is nothing to upload/download
-        //cout << "S3: uploadQueue and downloadQueue are empty" << endl;
+        //cout << "S3: uploadQueue is empty" << endl;
         return "";
     }
     if(arg == "download" && downloadQueue.empty()) { // no need to connect to API if there is nothing to upload/download
-        //cout << "S3: uploadQueue and downloadQueue are empty" << endl;
+        //cout << "S3: downloadQueue are empty" << endl;
+        return "";
+    }
+    if(arg == "delete" && deleteQueue.empty()) { // no need to connect to API if there is nothing to upload/download
+        //cout << "S3: deleteQueue is empty" << endl;
         return "";
     }
     string response;
@@ -54,7 +58,7 @@ string S3::callAPI(string arg){
                 throw;
             }
         } else if (arg == "delete"){
-            deleteQueue();
+            response = deleteFromQueue(s3_client);
         } else if (arg == "listBuckets"){
             response = listBuckets(s3_client);
         } 
@@ -117,15 +121,18 @@ string S3::downloadFromQueue(std::shared_ptr<Aws::Transfer::TransferManager> tra
     return ss.str();
 }
 
-void S3::deleteQueue(){
+string S3::deleteFromQueue(std::shared_ptr<Aws::S3::S3Client> s3_client){
+    std::ostringstream ss;
     std::lock_guard<std::mutex> guard(mtx);
     std::string returnValue;
     std::string* returnValuePtr = &returnValue;
     while(dequeueDelete(returnValuePtr)){ // returns true until queue is empty
         Aws::String objectName(*returnValuePtr);
-        //bool result = deleteObject(objectName, BUCKET_NAME);
+        ss << deleteObject(s3_client, objectName, BUCKET_NAME);
     }
+    cout << ss.str();
     cout << "S3: deleteQueue is empty" << endl;
+    return ss.str();
 }
 
 bool S3::listBuckets(std::shared_ptr<Aws::S3::S3Client> s3_client){
@@ -285,7 +292,28 @@ string S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transf
     return ss.str();
 }
 
-// legacy upload/delete/download below - not using TransferManager
+string S3::deleteObject(std::shared_ptr<Aws::S3::S3Client> s3_client, const Aws::String& objectName, const Aws::String& fromBucket){
+    std::ostringstream ss;
+    Aws::S3::Model::DeleteObjectRequest request;
+
+    request.WithKey(objectName).WithBucket(fromBucket);
+
+    Aws::S3::Model::DeleteObjectOutcome result = s3_client->DeleteObject(request);
+
+    if (!result.IsSuccess())
+    {
+        ss << "S3: Delete of " << objectName << " failed" << endl;
+        auto err = result.GetError();
+        ss << "Error: DeleteObject: " << err.GetExceptionName() << ": " << err.GetMessage() << std::endl;
+        return ss.str();
+    } else {
+        ss << "S3: Delete of " << objectName << " successful" << endl;
+    }
+    cout << ss.str();
+    return ss.str();
+}
+
+// legacy upload/download below - not using TransferManager
 
 /* bool S3::put_s3_object( const Aws::String& s3_bucketName, 
                         const std::string& path,
@@ -317,25 +345,6 @@ string S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transf
         return false;
     }
     cout << "S3: Upload of " << path << " as " << s3_objectName << " successful" << endl; 
-    return true;
-}
-
-bool S3::deleteObject(const Aws::String& objectName, const Aws::String& fromBucket){
-    Aws::S3::Model::DeleteObjectRequest request;
-
-    request.WithKey(objectName).WithBucket(fromBucket);
-
-    Aws::S3::Model::DeleteObjectOutcome result = s3_client->DeleteObject(request);
-
-    if (!result.IsSuccess())
-    {
-        cout << "S3: Delete of " << objectName << " failed" << endl;
-        auto err = result.GetError();
-        std::cout << "Error: DeleteObject: " <<
-            err.GetExceptionName() << ": " << err.GetMessage() << std::endl;
-        return false;
-    }
-    cout << "S3: Delete of " << objectName << " successful" << endl;
     return true;
 }
 

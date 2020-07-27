@@ -55,6 +55,7 @@ class Watch {
         std::unordered_map<string, std::vector<FileVersion>>* getFileIndex();
 
         string addWatch(string path, bool recursive);
+        string delWatch(string path, bool recursive);
         void scanFileChange();
         void execQueuedSQL();
         
@@ -88,14 +89,17 @@ class Watch {
         string addDirWatch(string path, bool recursive);
         string addFileWatch(string path);
         void addFileVersion(std::string path);
+
+        string delDirWatch(string path, bool recursive);
+        string delFileWatch(string path);
+
         std::time_t getLastModTime(std::string path);
+        void listDir(string path);
+        void fileAttributes(const fs::path& path);
 
         void restoreDB();
         void restoreFileIdx();
         void restoreDirIdx();
-
-        void listDir(string path);
-        void fileAttributes(const fs::path& path);
 };
 
 #endif

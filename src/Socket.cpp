@@ -83,6 +83,10 @@ void Session::handle_read(const boost::system::error_code& error, size_t bytes_t
             response = watch->addWatch(path, false) + ";";
         } else if (cmd == "addr"){
             response = watch->addWatch(path, true) + ";";
+        } else if(cmd == "del"){
+            response = watch->delWatch(path, false) + ";";
+        } else if (cmd == "delr"){
+            response = watch->delWatch(path, true) + ";";
         } else if (cmd == "listLocal"){
             response = watch->listLocal() + ";";
         } else if (cmd == "listRemote"){

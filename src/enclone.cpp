@@ -23,10 +23,10 @@ int enclone::showOptions(const int& argc, char** const argv){
             "   remote: \tshow all available remote files\n"
             "   versions: \tshow all available versions of all files on remote\n")
         ("add-watch,a", po::value<std::vector<string>>(&toAdd)->composing(), "add a watch to a given path (file or directory)")
-        ("recursive-add,A", po::value<std::vector<string>>(&toRecAdd)->composing(), "recursively add a watch to a directory")
+        ("add-recursive,A", po::value<std::vector<string>>(&toRecAdd)->composing(), "recursively add a watch to a directory")
         //("recursive,r", "specify watched directory should be watched or deleted recursively")
         ("del-watch,d", po::value<std::vector<string>>(&toDel)->composing(), "delete a watch from a given path (file or directory)")
-        ("recursive-del,D", po::value<std::vector<string>>(&toDel)->composing(), "recursively delete all watches in a directory")
+        ("del-recursive,D", po::value<std::vector<string>>(&toDel)->composing(), "recursively delete all watches in a directory")
         ("restore,r", "restore all files from remote")
         ("generate-key,k", "generate an encryption key")
         ("clean-up,c", "remove items from remote S3 which do not have a corresponding entry in fileIndex");
@@ -41,7 +41,6 @@ int enclone::showOptions(const int& argc, char** const argv){
                 po::command_line_style::long_allow_next |
                 po::command_line_style::short_allow_adjacent |
                 po::command_line_style::short_allow_next |
-                po::command_line_style::allow_long_disguise |
                 po::command_line_style::allow_sticky
                 ), vm);
 
@@ -72,15 +71,25 @@ int enclone::showOptions(const int& argc, char** const argv){
             }
         }
 
-        if (vm.count("recursive-add")){
+        if (vm.count("add-recursive")){
             for(string path: toRecAdd){
                 cout << "Adding recursive watch to path: " << path << endl;
                 addWatch(path, true);
             }
         }
 
-        if (vm.count("del-watch")){
-            cout << "Deleting watch to path: " << vm["del-watch"].as<string>() << endl;
+        if (vm.count("del-watch")) {
+            for(string path: toDel){
+                cout << "Deleting watch to path: " << path << endl;
+                delWatch(path, false);
+            }
+        }
+
+        if (vm.count("del-recursive")) {
+            for(string path: toDel){
+                cout << "Recursively deleting watch to path: " << path << endl;
+                delWatch(path, true);
+            }
         }
 
         if (vm.count("restore")){
@@ -141,6 +150,14 @@ bool enclone::sendRequest(string request){
 bool enclone::addWatch(string path, bool recursive){
     string request;
     (recursive) ? request = "addr|" : request = "add|"; 
+    request += path;
+
+    return sendRequest(request);
+}
+
+bool enclone::delWatch(string path, bool recursive){
+    string request;
+    (recursive) ? request = "delr|" : request = "del|"; 
     request += path;
 
     return sendRequest(request);

@@ -41,6 +41,7 @@ class enclone{
         bool sendRequest(string request);
 
         bool addWatch(string path, bool recursive);
+        bool delWatch(string path, bool recursive);
         bool listLocal();
         bool listRemote();
         bool restoreAll();

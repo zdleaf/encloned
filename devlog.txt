@@ -286,7 +286,8 @@ Tue 21/7/2020
 Wed 22/7/2020
 - Further research on file encryption - see encryption.txt
     - Authentication is required, but some types like AES-GCM cannot be used without loading entire files to memory - this is unfeasible for large files
-        - Potentially this can be fixed by splitting files into chun    - Possible solution is XChaCha20-Poly1305 from Crypto++ or Libsodium
+        - Potentially this can be fixed by splitting files into chunks
+        - Possible solution is XChaCha20-Poly1305 from Crypto++ or Libsodium
     - Another solution is use a backend like age to handle encryption/auth, although age has authentication concerns
 - Built and tested various openSSL demos
     - openssl-evp-demo - file encryption in C
@@ -308,6 +309,8 @@ Fri 24/7/2020
         - keyfile has owner+rw permissions set BEFORE key is written to file to protect key
     - encloned loads encryption key from file, or exits with error is it does not exist
 - todo: replace OpenSSL hash functions with NaCL to reduce 3rd party includes
+    - using generic hash with a password based on the encryption key, we can restore filenames if index.db is lost?
+        - if we lose file names then even with password we cannot recreate - so only would be useful where index is lost but not original filenames
 - todo: fix file permissions of index.db - we do not want this readable by all - change to fs::permissions("index.db", fs::perms::owner_read | fs::perms::owner_write);
 - todo: move both index.db and key file to user home directory?
 
@@ -323,3 +326,5 @@ Mon 27/7/2020
 - Decrypt file on download from S3
     - File is downloaded to temp location /tmp/enclone/ and deleted once decryption to dl directory confirmed
     - todo: move download/decrypt to separate threads? don't want to wait for decryption to finish before downloading next file - decrypt queue?
+- Added --del-watch and --del-recursive CLI arguments - delete watches/files, including removing from remote backends
+- todo: downloading multiple versions - no clobber - need to change filename to include modtime on older version and test this

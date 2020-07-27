@@ -37,6 +37,7 @@ class Remote{
         void execThread();
         void uploadRemotes();
         string downloadRemotes();
+        void deleteRemotes();
 
         void uploadSuccess(std::string path, std::string objectName, int remoteID); // update fileIndex if upload to remote is succesfull, returns the remoteID it was succesfully uploaded to
 

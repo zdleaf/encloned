@@ -16,16 +16,6 @@ void Watch::setPtr(std::shared_ptr<Remote> remote){
 void Watch::execThread(){
     restoreDB();
 
-    //addWatch("/home/zach/enclone/notexist", true); // check non existent file
-    //addWatch("/home/zach/enclone/tmp2", true); // recursive add
-    //addWatch("/home/zach/enclone/tmp/subdir", false); // check dir already added
-    //addWatch("/home/zach/enclone/tmp/file1", false); // check file already added
-
-/*     // download test
-    for(auto elem: fileIndex){
-        remote->queueForDownload(elem.first, elem.second.back().pathhash);
-    } */
-
     while(*runThreads){
         //cout << "Watch: Scanning for file changes..." << endl; cout.flush(); 
         scanFileChange();
@@ -68,7 +58,7 @@ string Watch::addDirWatch(string path, bool recursive){
                 response << addDirWatch(entry.path().string(), true); 
             } else if(fs::is_regular_file(s)){
                 response << addFileWatch(entry.path().string());
-            } else if(!fs::is_directory(s)){ 
+            } else { 
                 cout << "Watch: " << "Unknown file encountered: " << entry.path().string() << endl; 
             }
         }
@@ -111,6 +101,57 @@ void Watch::addFileVersion(std::string path){
     // queue for upload on remote and insertion into DB
     sqlQueue << "INSERT or IGNORE INTO fileIndex (PATH, MODTIME, PATHHASH, LOCALEXISTS) VALUES ('" << path << "'," << modtime << ",'" << pathHash << "',TRUE" << ");"; // if successful, queue an SQL insert into DB
     remote->queueForUpload(path, pathHash, modtime); 
+}
+
+string Watch::delWatch(string path, bool recursive){
+    std::lock_guard<std::mutex> guard(mtx);
+    std::stringstream response;
+    fs::file_status s = fs::status(path);
+    if(!fs::exists(s)){                 // file/directory does not exist
+        response << "Watch: " << path << " does not exist" << endl;
+    } else if(fs::is_directory(s)){     // adding a directory to watch
+        response << delDirWatch(path, recursive);
+    } else if(fs::is_regular_file(s)){  // adding a regular file to watch
+        response << delFileWatch(path);
+    } else {                            // any other file type, e.g. IPC pipe
+        response << "Watch: " << path << " does not exist" << endl;
+    }
+    std::cout << response.str(); cout.flush();
+    return response.str();
+}
+
+string Watch::delDirWatch(string path, bool recursive){
+    std::stringstream response;
+
+    for (const auto & entry : fs::directory_iterator(path)){ // iterate through all directory entries
+        fs::file_status s = fs::status(entry);
+        if(fs::is_directory(s) && recursive) { // check recursive flag before removing directories recursively
+            //cout << "Recursively adding: " << entry.path() << endl;
+            response << delDirWatch(entry.path().string(), true); 
+        } else if(fs::is_regular_file(s)){
+            response << delFileWatch(entry.path().string());
+        } else { 
+            cout << "Watch: " << "Unknown file encountered: " << entry.path().string() << endl; 
+        }
+    }
+
+    //auto elem = dirIndex.find(path);
+    dirIndex.erase(path);
+    sqlQueue << "DELETE FROM dirIndex WHERE PATH=\'" << path << "\';"; // queue SQL delete
+
+    return response.str();
+}
+
+string Watch::delFileWatch(string path){
+    std::stringstream response;
+    auto fileVersions = fileIndex[path];
+    for(auto elem: fileVersions){
+        remote->queueForDelete(elem.pathhash);
+    }
+    fileIndex.erase(path);
+    sqlQueue << "DELETE FROM fileIndex WHERE PATH=\'" << path << "\';"; // queue SQL delete
+    response << "Watch: Deleted watch from file " << path << ", this file has been queued for delete on remote backends" << endl;
+    return response.str();
 }
 
 void Watch::scanFileChange(){
