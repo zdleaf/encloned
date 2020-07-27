@@ -6,7 +6,7 @@ void Encryption::initSodium(){
     } else { 
         cout << "Encryption: libsodium initialised" << endl; 
     }
-    
+
 }
 
 int Encryption::encryptFile(const char *target_file, 
@@ -110,6 +110,6 @@ string Encryption::randomString(std::size_t length)
 }
 
 string Encryption::hashPath(const string path){
-    const string saltedPath = path + randomString(128);
+    const string saltedPath = path + randomString(HASH_SALT_LENGTH);
     return sha256(saltedPath);
 }
