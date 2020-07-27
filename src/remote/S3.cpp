@@ -227,6 +227,7 @@ string S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transf
     string dirPath = downloadDir + writeToPath.substr(0,found+1); // put 
     string fileName = writeToPath.substr(found+1);
     cout << "path is " << dirPath << ", fileName is " << fileName << endl;
+    string downloadPath = dirPath + fileName;
 
     // need to create the full directory structure at path if it's doesn't already exist, or download will say successful but not save to disk
     try {
@@ -236,18 +237,26 @@ string S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transf
     catch (std::exception& e) {
         std::cout << e.what() << std::endl;
     }
-
-    Aws::String awsWriteToFile(dirPath + fileName);
+    
     Aws::String awsObjectName(objectName);
+    // set temporary location
+    string localEncryptedPath = encloned::TEMP_FILE_LOCATION + fileName;
+    cout << "localEncryptedPath: " << localEncryptedPath << endl;
+    Aws::String awsWriteToFile(localEncryptedPath);
 
     auto downloadHandle = transferManager->DownloadFile(bucketName, awsObjectName, awsWriteToFile);
     downloadHandle->WaitUntilFinished();
     if(downloadHandle->GetStatus() == Aws::Transfer::TransferStatus::COMPLETED){
         if (downloadHandle->GetBytesTotalSize() == downloadHandle->GetBytesTransferred()) {
             ss << "S3: Download of " << objectName << " to " << awsWriteToFile << " successful" << endl;
+            
+            // decrypt temporary file to download location
+            int result = Encryption::decryptFile(downloadPath.c_str(), localEncryptedPath.c_str(), daemon->getKey());
+            ss << "S3: Decryption of " << objectName << " to " << downloadPath << " successful" << endl;
+            fs::remove(localEncryptedPath); // remove temporary object on local fs
 
             // set the modtime back to the original value
-            fs::path fsPath = awsWriteToFile.c_str();
+            fs::path fsPath = downloadPath.c_str();
             std::filesystem::file_time_type fsModtime = std::chrono::system_clock::from_time_t(originalModTime);
             fs::last_write_time(fsPath, fsModtime); 
 
