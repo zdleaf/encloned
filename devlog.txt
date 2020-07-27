@@ -315,9 +315,11 @@ Sat 25/7/2020
 - Encrypted file on upload to S3
     - File is encrypted to temporary location created on start (/tmp/enclone/) and deleted once upload is confirmed
 - todo: 
-    - decrypt file on download
     - hash check of files on download
     - write a test - upload files to S3, check they are encrypted, check they decrypt with hashes
+    - backup index to S3 (replace, not version)
 
 Mon 27/7/2020
-- Decrypt file on download
+- Decrypt file on download from S3
+    - File is downloaded to temp location /tmp/enclone/ and deleted once decryption to dl directory confirmed
+    - todo: move download/decrypt to separate threads? don't want to wait for decryption to finish before downloading next file - decrypt queue?

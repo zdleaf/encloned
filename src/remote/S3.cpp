@@ -251,10 +251,13 @@ string S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transf
             ss << "S3: Download of " << objectName << " to " << awsWriteToFile << " successful" << endl;
             
             // decrypt temporary file to download location
-            int result = Encryption::decryptFile(downloadPath.c_str(), localEncryptedPath.c_str(), daemon->getKey());
-            ss << "S3: Decryption of " << objectName << " to " << downloadPath << " successful" << endl;
-            fs::remove(localEncryptedPath); // remove temporary object on local fs
-
+            if(Encryption::decryptFile(downloadPath.c_str(), localEncryptedPath.c_str(), daemon->getKey()) == 0){
+                ss << "S3: Decryption of " << objectName << " to " << downloadPath << " successful" << endl;
+                fs::remove(localEncryptedPath); // remove temporary object on local fs
+            } else {
+                ss << "S3: Decryption of " << objectName << " to " << downloadPath << " failed" << endl;
+            }
+            
             // set the modtime back to the original value
             fs::path fsPath = downloadPath.c_str();
             std::filesystem::file_time_type fsModtime = std::chrono::system_clock::from_time_t(originalModTime);
