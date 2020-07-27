@@ -193,7 +193,7 @@ std::vector<string> S3::getObjects(){
 bool S3::uploadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferManager, const Aws::String& bucketName, const std::string& path, const std::string& objectName){
     
     // encrypt file into temporary object
-    string localEncryptedPath = "/tmp/enclone/" + objectName;
+    string localEncryptedPath = encloned::TEMP_FILE_LOCATION + objectName;
     //cout << "localEncryptedPath: " << localEncryptedPath << endl;
     int result = Encryption::encryptFile(localEncryptedPath.c_str(), path.c_str(), daemon->getKey());
 

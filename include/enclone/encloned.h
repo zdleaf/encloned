@@ -46,6 +46,7 @@ class encloned{
         encloned();
         ~encloned();
         string daemonPath;
+        static constexpr char TEMP_FILE_LOCATION[] = "/tmp/enclone/";
 
         int execLoop();
         unsigned char* getKey();

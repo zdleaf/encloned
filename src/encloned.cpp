@@ -31,8 +31,8 @@ encloned::encloned(){ // constructor
 
     // make tmp directory for encrypted files before upload
     try {
-        fs::create_directories("/tmp/enclone/");
-        cout << "Created directory /tmp/enclone/" << endl;
+        fs::create_directories(TEMP_FILE_LOCATION);
+        cout << "Created directory " << TEMP_FILE_LOCATION << endl;
     }
     catch (std::exception& e) {
         std::cout << e.what() << std::endl;
