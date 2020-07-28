@@ -312,11 +312,13 @@ string Watch::downloadFiles(string targetPath){ // download all files
 }
 
 string Watch::downloadFiles(string targetPath, string pathOrHash){
+    bool foundPathOrHash = false;
     // determine if 2nd parameter is a hash or a path - CLI argument does not distinguish between the two
     if(pathOrHash.length() == 64){ // hashes are 64 bytes long, although we can also have a path this long - first check if file with this hash exists, else treat as a path
         for(auto elem: fileIndex){ // unordered_map
             for(auto version: elem.second){ // vector<FileVersion>
                 if(version.pathhash == pathOrHash){ // found matching hash
+                    foundPathOrHash = true;
                     remote->queueForDownload(elem.first, version.pathhash, version.modtime, targetPath);
                 }
             }
@@ -324,11 +326,13 @@ string Watch::downloadFiles(string targetPath, string pathOrHash){
     } else {
         for(auto elem: fileIndex){
             if(pathOrHash == elem.first){ // found matching path
+                foundPathOrHash = true;
                 remote->queueForDownload(elem.first, elem.second.back().pathhash, elem.second.back().modtime, targetPath);
-            } else {
-                return "error: unable to find file with matching path or hash";
             }
         }
+    }
+    if(!foundPathOrHash){
+        return "error: unable to find file with matching path or hash\n";
     }
     return remote->downloadRemotes();
 }

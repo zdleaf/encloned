@@ -332,4 +332,6 @@ Mon 27/7/2020
 - todo: --target CLI option for dl location (should be required with --restore)
 
 Tue 28/7/2020
-- Various research on calculating filename hash security
+- Various research on filename hash security - calculation of how long it would take to brute force filenames
+- Added --target CLI argument to be used with --restore - specify the target directory to download files to
+- Added support for --restore "path" and --restore "pathhash" to restore a particular version of a file by giving the hash or the latest version by providing path
