@@ -72,27 +72,33 @@ void Session::handle_read(const boost::system::error_code& error, size_t bytes_t
         string delimiter = "|";
 
         std::string request(std::begin(data_), data_.begin()+bytes_transferred);
-        auto delimiterPosition = request.find(delimiter);
+        auto firstDelimiter = request.find(delimiter);
+        auto secondDelimiter = request.find(delimiter, firstDelimiter+1);
+        auto thirdDelimiter = request.find(delimiter, secondDelimiter+1);
+        std::string cmd = request.substr(0, firstDelimiter); 
+        std::string arg1 = request.substr(firstDelimiter+1, secondDelimiter);
+        std::string arg2 = request.substr(secondDelimiter+1);
 
         // DEBUGGING
-        std::string cmd = request.substr(0, delimiterPosition); cout << "Command is: \"" << cmd << "\"" << endl; // get command that appears before delimter
-        std::string path = request.substr(delimiterPosition+1); cout << "Args are: \"" << path << "\"" << endl;
+        cout << "Command is: \"" << cmd << "\"" << endl; // get command that appears before delimter
+        cout << "Arg1 is: \"" << arg1 << "\"" << endl;
+        cout << "Arg2 is: \"" << arg2 << "\"" << endl;
 
         // input handling here - need a parser
         if(cmd == "add"){
-            response = watch->addWatch(path, false) + ";";
+            response = watch->addWatch(arg1, false) + ";";
         } else if (cmd == "addr"){
-            response = watch->addWatch(path, true) + ";";
+            response = watch->addWatch(arg1, true) + ";";
         } else if(cmd == "del"){
-            response = watch->delWatch(path, false) + ";";
+            response = watch->delWatch(arg1, false) + ";";
         } else if (cmd == "delr"){
-            response = watch->delWatch(path, true) + ";";
+            response = watch->delWatch(arg1, true) + ";";
         } else if (cmd == "listLocal"){
             response = watch->listLocal() + ";";
         } else if (cmd == "listRemote"){
             response = remote->listObjects() + ";";
         } else if (cmd == "restoreAll"){
-            response = watch->downloadAll() + ";";
+            response = watch->downloadAll(arg1) + ";";
         }
 
         cout << "Socket: Sending response to socket: \"" << response.substr(0, 20) << "...\"" << endl;

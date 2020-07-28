@@ -111,10 +111,10 @@ string S3::downloadFromQueue(std::shared_ptr<Aws::Transfer::TransferManager> tra
     std::ostringstream ss;
     std::lock_guard<std::mutex> guard(mtx);
     if(!downloadQueue.empty()){ 
-        std::tuple<string, string, std::time_t> returnValue;
-        std::tuple<string, string, std::time_t> *returnValuePtr = &returnValue;
+        std::tuple<string, string, std::time_t, string> returnValue;
+        std::tuple<string, string, std::time_t, string> *returnValuePtr = &returnValue;
         while(dequeueDownload(returnValuePtr)){ // returns true until queue is empty
-            ss << downloadObject(transferManager, BUCKET_NAME, std::get<0>(*returnValuePtr), std::get<1>(*returnValuePtr), std::get<2>(*returnValuePtr));
+            ss << downloadObject(transferManager, BUCKET_NAME, std::get<0>(*returnValuePtr), std::get<1>(*returnValuePtr), std::get<2>(*returnValuePtr), std::get<3>(*returnValuePtr));
         }
         cout << "S3: downloadFromQueue complete" << endl; cout.flush();
     } else { ss << "S3: downloadQueue is empty" << endl; cout.flush(); }
@@ -224,10 +224,12 @@ bool S3::uploadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferMa
     return false;
 }
 
-string S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferManager, const Aws::String& bucketName, const std::string& writeToPath, const std::string& objectName, std::time_t& originalModTime){
+string S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferManager, const Aws::String& bucketName, const std::string& writeToPath, const std::string& objectName, std::time_t& originalModTime, std::string& targetPath){
     std::ostringstream ss;
+    
     // the directory we want to download to
-    string downloadDir = "/home/zach/enclone/dl/"; 
+    if(targetPath.back() != '/'){ targetPath.append("/"); } // ensure path is terminated by a trailing slash
+    string downloadDir = targetPath;
 
     // split path into directory path and filename
     std::size_t found = writeToPath.find_last_of("/");

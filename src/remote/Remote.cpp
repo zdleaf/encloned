@@ -45,10 +45,10 @@ bool Remote::queueForUpload(std::string path, std::string objectName, std::time_
     return s3->enqueueUpload(path, objectName, modtime);
 }
 
-bool Remote::queueForDownload(std::string path, std::string objectName, std::time_t modtime){
+bool Remote::queueForDownload(std::string path, std::string objectName, std::time_t modtime, string targetPath){
     std::lock_guard<std::mutex> guard(mtx);
     // call remotes
-    return s3->enqueueDownload(path, objectName, modtime);
+    return s3->enqueueDownload(path, objectName, modtime, targetPath);
 }
 
 bool Remote::queueForDelete(std::string objectName){
@@ -77,7 +77,7 @@ string Remote::listObjects(){
     for(string pathHash: objects){
         try {
             auto pair = watch->resolvePathHash(pathHash);
-            ss << pair.first << ":" << watch->displayTime(pair.second) << endl;
+            ss << pair.first << " : " << watch->displayTime(pair.second) << " : " << pathHash << endl;
         } catch (std::out_of_range &error){ // unable to resolve
             continue;
         }

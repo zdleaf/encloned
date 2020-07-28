@@ -25,14 +25,14 @@ bool Queue::dequeueUpload(){
     return true;
 }
 
-bool Queue::enqueueDownload(std::string path, std::string objectName, std::time_t modtime){
-    std::tuple<string, string, std::time_t> item;
-    item = std::make_tuple(path, objectName, modtime);
+bool Queue::enqueueDownload(std::string path, std::string objectName, std::time_t modtime, string targetPath){
+    std::tuple<string, string, std::time_t, string> item;
+    item = std::make_tuple(path, objectName, modtime, targetPath);
     downloadQueue.push_back(item);
     return true;
 }
 
-bool Queue::dequeueDownload(std::tuple<string, string, std::time_t>* returnValue){
+bool Queue::dequeueDownload(std::tuple<string, string, std::time_t, string>* returnValue){
     if(downloadQueue.empty()){ 
         return false; 
     } else if(!downloadQueue.empty()){

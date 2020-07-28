@@ -44,7 +44,8 @@ class enclone{
         bool delWatch(string path, bool recursive);
         bool listLocal();
         bool listRemote();
-        bool restoreAll();
+        bool restoreFiles(string targetPath);
+        bool restoreFiles(string path, string targetPath);
 
         void generateKey(); // generate encryption key to file
 

@@ -17,17 +17,20 @@ int enclone::showOptions(const int& argc, char** const argv){
         // CLI arguments
         po::options_description desc("Allowed options");
         desc.add_options()
-        ("help,h", "display this help message")
-        ("list,l", po::value<string>(), "show currently tracked/available files\n"
+        ("help,h", "display this help message\n")
+        ("list,l", po::value<string>(), "show currently tracked/available files\n\n"
             "   local: \tshow all tracked local files\n"
-            "   remote: \tshow all available remote files\n"
-            "   versions: \tshow all available versions of all files on remote\n")
+            "   remote: \tshow all available remote files\n")
         ("add-watch,a", po::value<std::vector<string>>(&toAdd)->composing(), "add a watch to a given path (file or directory)")
         ("add-recursive,A", po::value<std::vector<string>>(&toRecAdd)->composing(), "recursively add a watch to a directory")
         //("recursive,r", "specify watched directory should be watched or deleted recursively")
         ("del-watch,d", po::value<std::vector<string>>(&toDel)->composing(), "delete a watch from a given path (file or directory)")
-        ("del-recursive,D", po::value<std::vector<string>>(&toDel)->composing(), "recursively delete all watches in a directory")
-        ("restore,r", "restore all files from remote")
+        ("del-recursive,D", po::value<std::vector<string>>(&toDel)->composing(), "recursively delete all watches in a directory\n")
+        ("restore,r", po::value<std::vector<string>>(&toRestore)->composing(), "restore files from remote\n\n"
+            "   all: \trestore latest versions of all files\n"
+            "   path: \trestore the latest version of a file at specified path \n"
+            "   filehash: \trestore a specific version of a file by providing full filehash\n")
+        ("target,t", po::value<string>(), "specify a target path to restore files to\n")
         ("generate-key,k", "generate an encryption key")
         ("clean-up,c", "remove items from remote S3 which do not have a corresponding entry in fileIndex");
     
@@ -93,7 +96,20 @@ int enclone::showOptions(const int& argc, char** const argv){
         }
 
         if (vm.count("restore")){
-            restoreAll();
+            string targetPath;
+            if (vm.count("target")){
+                targetPath = vm["target"].as<string>();
+            } else {
+                std::cerr << "error: please specify a --target (-t) directory to save to" << endl;
+                return 1;
+            }
+            for(string arg: toRestore){
+                if(arg == "all"){
+                    restoreFiles(targetPath);
+                } else {
+                    restoreFiles(arg, targetPath);
+                }
+            }
         }
 
         if (vm.count("generate-key")){
@@ -173,8 +189,16 @@ bool enclone::listRemote(){
     return sendRequest(request);
 }
 
-bool enclone::restoreAll(){
-    string request = "restoreAll|";
+bool enclone::restoreFiles(string targetPath){
+    string request = "restoreAll|" + targetPath;
+    return sendRequest(request);
+}
+
+bool enclone::restoreFiles(string path, string targetPath){
+    if(path == ""){
+
+    }
+    string request = "restore|" + path + "|" + targetPath;
     return sendRequest(request);
 }
 

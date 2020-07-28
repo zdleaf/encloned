@@ -330,3 +330,6 @@ Mon 27/7/2020
 - Added --del-watch and --del-recursive CLI arguments - delete watches/files, including removing from remote backends
 - todo: downloading multiple versions - no clobber - need to change filename to include modtime on older version and test this
 - todo: --target CLI option for dl location (should be required with --restore)
+
+Tue 28/7/2020
+- Various research on calculating filename hash security
