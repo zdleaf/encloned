@@ -320,11 +320,13 @@ Sat 25/7/2020
 - todo: 
     - hash check of files on download
     - write a test - upload files to S3, check they are encrypted, check they decrypt with hashes
+        - can generate files with dd if=/dev/urandom bs=1M count=10 of=test.bin
     - backup index to S3 (replace, not version)
 
 Mon 27/7/2020
 - Decrypt file on download from S3
     - File is downloaded to temp location /tmp/enclone/ and deleted once decryption to dl directory confirmed
-    - todo: move download/decrypt to separate threads? don't want to wait for decryption to finish before downloading next file - decrypt queue?
+    - todo: move download/decrypt to separate threads? don't want to wait for decryption to finish before downloading next file - decrypt queue?#
 - Added --del-watch and --del-recursive CLI arguments - delete watches/files, including removing from remote backends
 - todo: downloading multiple versions - no clobber - need to change filename to include modtime on older version and test this
+- todo: --target CLI option for dl location (should be required with --restore)

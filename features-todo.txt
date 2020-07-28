@@ -1,6 +1,9 @@
 Feature list
 - run as unix daemon
+    - setup separate user with correct permissions
 - config file
 - output logs to named files, each thread has own log file - can watch live in console with "tail -f file.log"
 - add proper exclusions, e.g. ".swp" temporary files
 - unstructured db such as mongodb would be better at storing fileIndex as a tree like structure - easy to pull entire contents of a directory for example
+- store data as "blobs" or small chunks - this mean when updating a file version, we just update the blobs that have changed instead of re-uploading entire file
+    - see Rabin Fingerprints for implementing Content Defined Chunking (CDC)

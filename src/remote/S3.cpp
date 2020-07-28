@@ -309,7 +309,6 @@ string S3::deleteObject(std::shared_ptr<Aws::S3::S3Client> s3_client, const Aws:
     } else {
         ss << "S3: Delete of " << objectName << " successful" << endl;
     }
-    cout << ss.str();
     return ss.str();
 }
 

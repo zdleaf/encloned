@@ -12,6 +12,7 @@ Papers - see folder in root directory for full downloaded pdfs
 - http://cseweb.ucsd.edu/~mihir/papers/oem.pdf
 - https://www.cs.ucdavis.edu/~rogaway/papers/modes.pdf
 - https://eprint.iacr.org/2015/189.pdf
+- https://cr.yp.to/mac/poly1305-20050329.pdf
 
 Algos
 - XChaCha20-Poly1305
@@ -109,3 +110,27 @@ https://github.com/openssl/openssl/pull/5048
 - There are traditionally two ways to approach this problem:
     - Split the file into chunks, encrypt each chunk individually and let each chunk have its own authentication tag. AES-GCM would be the best mode to use for this. This method causes file size bloating proportionate to the size of the file. You'll also need a unique nonce for each chunk. You also need a way to indicate where chunks begin/end.
     - Encrypt using AES-CTR with a buffer, call Hash.Write on an HMAC for each buffer of encrypted data. The benefit of this is that encrypting can be done in one pass. The downside is that decryption requires one pass to validate the HMAC and then another pass to actually decrypt. The upside here is that the file size remains the same, plus roughly ~48 or so bytes for the IV and HMAC result.
+
+
+
+Filename hash security
+- For filename hash - we can calculate the size of the rainbow table. Minimum filename is 1 char (1 byte) with a 128 char salt added. Therefore to calculate a rainbow table for 33 bytes with SHA256, there are 
+    - Salt is 128 chars long with 62 char possibilities = 62^128 = 2.667695e+229
+        - for storage, size of 1 salt is 128 bytes
+        - a full rainbow table for the salt would need to be 2.667695e+229 * 128 bytes long = 3.41465e+231 bytes
+        - 1 PB = 1e+15 bytes
+        - 3.41465e+231/1e+15 = 3.41465e+216 PB
+    - Filename has 255 char possibilities, one char = 255^1 = 255
+
+https://blog.ircmaxell.com/2011/08/rainbow-table-is-dead.html
+https://crypto.stackexchange.com/questions/34158/is-this-sha256-hash-implementation-secure-from-rainbow-table-brute-forcing-atta
+Bitcoin currently completes 2 rounds of SHA256 to compute one hash
+- In 2020 an ASIC miner can compute 14.0 TH/s, which is 28 trillion SHA256 hashes per second, a cluster can compute many multiples of that, the overall bitcoin network computes ~ 120 million TH/s
+- To compute hashes for every 129 char string (our minimum filename length + salt) is 2.667695e+229 + 255 possibilities
+    - we can do 2.8e13 hashes per second
+    - 2.667695e+229/2.8e+13 = 9.527482e+215 seconds
+    - 1.587914e+214 minutes
+    - 2.646523e+212 hours
+    - 1.102718e+211 days
+    - 3.021145e+208 years
+    - 3.021145e+205 millenia
