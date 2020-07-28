@@ -68,7 +68,8 @@ class Watch {
         string listWatchDirs();
         string listWatchFiles();
         std::pair<string, std::time_t> resolvePathHash(string pathHash);
-        string downloadAll(string targetPath);
+        string downloadFiles(string targetPath); // download all
+        string downloadFiles(string targetPath, string pathOrHash); // specify path or hash to download
 
         void uploadSuccess(std::string path, std::string objectName, int remoteID);
 

@@ -304,12 +304,35 @@ std::pair<string, std::time_t> Watch::resolvePathHash(string pathHash){
     return result;
 }
 
-string Watch::downloadAll(string targetPath){
+string Watch::downloadFiles(string targetPath){ // download all files
     for(auto elem: fileIndex){
         remote->queueForDownload(elem.first, elem.second.back().pathhash, elem.second.back().modtime, targetPath);
     }
     return remote->downloadRemotes();
 }
+
+string Watch::downloadFiles(string targetPath, string pathOrHash){
+    // determine if 2nd parameter is a hash or a path - CLI argument does not distinguish between the two
+    if(pathOrHash.length() == 64){ // hashes are 64 bytes long, although we can also have a path this long - first check if file with this hash exists, else treat as a path
+        for(auto elem: fileIndex){ // unordered_map
+            for(auto version: elem.second){ // vector<FileVersion>
+                if(version.pathhash == pathOrHash){ // found matching hash
+                    remote->queueForDownload(elem.first, version.pathhash, version.modtime, targetPath);
+                }
+            }
+        }
+    } else {
+        for(auto elem: fileIndex){
+            if(pathOrHash == elem.first){ // found matching path
+                remote->queueForDownload(elem.first, elem.second.back().pathhash, elem.second.back().modtime, targetPath);
+            } else {
+                return "error: unable to find file with matching path or hash";
+            }
+        }
+    }
+    return remote->downloadRemotes();
+}
+
 
 void Watch::fileAttributes(const fs::path& path){
     fs::file_status s = fs::status(path);

@@ -107,7 +107,7 @@ int enclone::showOptions(const int& argc, char** const argv){
                 if(arg == "all"){
                     restoreFiles(targetPath);
                 } else {
-                    restoreFiles(arg, targetPath);
+                    restoreFiles(targetPath, arg);
                 }
             }
         }
@@ -194,11 +194,8 @@ bool enclone::restoreFiles(string targetPath){
     return sendRequest(request);
 }
 
-bool enclone::restoreFiles(string path, string targetPath){
-    if(path == ""){
-
-    }
-    string request = "restore|" + path + "|" + targetPath;
+bool enclone::restoreFiles(string targetPath, string pathOrHash){
+    string request = "restore|" + targetPath + "|" + pathOrHash;
     return sendRequest(request);
 }
 

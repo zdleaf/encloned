@@ -74,12 +74,12 @@ void Session::handle_read(const boost::system::error_code& error, size_t bytes_t
         std::string request(std::begin(data_), data_.begin()+bytes_transferred);
         auto firstDelimiter = request.find(delimiter);
         auto secondDelimiter = request.find(delimiter, firstDelimiter+1);
-        auto thirdDelimiter = request.find(delimiter, secondDelimiter+1);
         std::string cmd = request.substr(0, firstDelimiter); 
-        std::string arg1 = request.substr(firstDelimiter+1, secondDelimiter);
+        std::string arg1 = request.substr(firstDelimiter+1, secondDelimiter-firstDelimiter-1);
         std::string arg2 = request.substr(secondDelimiter+1);
 
         // DEBUGGING
+        cout << "Full request is: \"" << request << "\"" << endl;
         cout << "Command is: \"" << cmd << "\"" << endl; // get command that appears before delimter
         cout << "Arg1 is: \"" << arg1 << "\"" << endl;
         cout << "Arg2 is: \"" << arg2 << "\"" << endl;
@@ -98,7 +98,9 @@ void Session::handle_read(const boost::system::error_code& error, size_t bytes_t
         } else if (cmd == "listRemote"){
             response = remote->listObjects() + ";";
         } else if (cmd == "restoreAll"){
-            response = watch->downloadAll(arg1) + ";";
+            response = watch->downloadFiles(arg1) + ";";
+        } else if (cmd == "restore"){
+            response = watch->downloadFiles(arg1, arg2) + ";"; // targetPath, path/pathhash
         }
 
         cout << "Socket: Sending response to socket: \"" << response.substr(0, 20) << "...\"" << endl;
