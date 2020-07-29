@@ -92,14 +92,15 @@ void Watch::addFileVersion(std::string path){
     auto fstime = fs::last_write_time(path); // get modtime from file
     std::time_t modtime = decltype(fstime)::clock::to_time_t(fstime);
     string pathHash = Encryption::hashPath(path); // compute unique filename hash for file
-    fileVector->push_back(FileVersion{modtime, pathHash}); // create new FileVersion struct object and push to back of vector
+    string fileHash = Encryption::hashFile(path); // compute a hash of the file contents
+    fileVector->push_back(FileVersion{modtime, pathHash, fileHash}); // create new FileVersion struct object and push to back of vector
     
     pathHashIndex.insert(std::make_pair(pathHash, std::make_pair(path, modtime))); // hash file path
     
-    cout << "Watch: " << "Added file version: " << path << " with hash: " << pathHash.substr(0,10) << "..." << " modtime: " << modtime << endl;
+    cout << "Watch: " << "Added file version: " << path << " with filename hash: " << pathHash.substr(0,10) << "..." << " modtime: " << modtime << " file hash: " << fileHash.substr(0,10) << "..." << endl;
 
     // queue for upload on remote and insertion into DB
-    sqlQueue << "INSERT or IGNORE INTO fileIndex (PATH, MODTIME, PATHHASH, LOCALEXISTS) VALUES ('" << path << "'," << modtime << ",'" << pathHash << "',TRUE" << ");"; // if successful, queue an SQL insert into DB
+    sqlQueue << "INSERT or IGNORE INTO fileIndex (PATH, MODTIME, PATHHASH, FILEHASH, LOCALEXISTS) VALUES ('" << path << "'," << modtime << ",'" << pathHash << "','" << fileHash << "',TRUE" << ");"; // if successful, queue an SQL insert into DB
     remote->queueForUpload(path, pathHash, modtime); 
 }
 
@@ -146,7 +147,7 @@ string Watch::delFileWatch(string path){
     std::stringstream response;
     auto fileVersions = fileIndex[path];
     for(auto elem: fileVersions){
-        remote->queueForDelete(elem.pathhash);
+        remote->queueForDelete(elem.pathHash);
     }
     fileIndex.erase(path);
     sqlQueue << "DELETE FROM fileIndex WHERE PATH=\'" << path << "\';"; // queue SQL delete
@@ -306,7 +307,7 @@ std::pair<string, std::time_t> Watch::resolvePathHash(string pathHash){
 
 string Watch::downloadFiles(string targetPath){ // download all files
     for(auto elem: fileIndex){
-        remote->queueForDownload(elem.first, elem.second.back().pathhash, elem.second.back().modtime, targetPath);
+        remote->queueForDownload(elem.first, elem.second.back().pathHash, elem.second.back().modtime, targetPath);
     }
     return remote->downloadRemotes();
 }
@@ -317,9 +318,9 @@ string Watch::downloadFiles(string targetPath, string pathOrHash){
     if(pathOrHash.length() == 64){ // hashes are 64 bytes long, although we can also have a path this long - first check if file with this hash exists, else treat as a path
         for(auto elem: fileIndex){ // unordered_map
             for(auto version: elem.second){ // vector<FileVersion>
-                if(version.pathhash == pathOrHash){ // found matching hash
+                if(version.pathHash == pathOrHash){ // found matching hash
                     foundPathOrHash = true;
-                    remote->queueForDownload(elem.first, version.pathhash, version.modtime, targetPath);
+                    remote->queueForDownload(elem.first, version.pathHash, version.modtime, targetPath);
                 }
             }
         }
@@ -327,7 +328,7 @@ string Watch::downloadFiles(string targetPath, string pathOrHash){
         for(auto elem: fileIndex){
             if(pathOrHash == elem.first){ // found matching path
                 foundPathOrHash = true;
-                remote->queueForDownload(elem.first, elem.second.back().pathhash, elem.second.back().modtime, targetPath);
+                remote->queueForDownload(elem.first, elem.second.back().pathHash, elem.second.back().modtime, targetPath);
             }
         }
     }
@@ -390,6 +391,7 @@ void Watch::restoreFileIdx(){
         string path = string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0)));
         std::time_t modtime = (time_t)sqlite3_column_int(stmt, 1);
         string pathHash = string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2)));
+        string fileHash = string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3)));
         bool localExists = sqlite3_column_int(stmt, 4);
         bool remoteExists = sqlite3_column_int(stmt, 5);
         if(fileIndex.find(path) == fileIndex.end()){ // if entry for path does not exist
@@ -397,7 +399,7 @@ void Watch::restoreFileIdx(){
             fileIndex.insert({  path, std::vector<FileVersion>{ // create entry and initialise vector 
                                     FileVersion{    modtime,  // brace initialisation of first object
                                                     pathHash, 
-                                                    "",
+                                                    fileHash,
                                                     localExists,
                                                     remoteExists  }
                                     }
@@ -445,7 +447,7 @@ void Watch::uploadSuccess(std::string path, std::string objectName, int remoteID
     auto fileVersionVector = &fileIndex.at(path);
     // set the remoteExists flag for correct entry in fileIndex
     for(auto it = fileVersionVector->rbegin(); it != fileVersionVector->rend(); ++it){ // iterate in reverse, most likely the last entry is the one we're looking for
-        if(it->pathhash == objectName){ 
+        if(it->pathHash == objectName){ 
             it->remoteExists = true;
             // also add remoteID to list of remotes it's been uploaded to e.g. remoteLocation
         }

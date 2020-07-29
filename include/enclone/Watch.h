@@ -32,8 +32,8 @@ class Remote;
 
 struct FileVersion {
     std::time_t modtime;
-    std::string pathhash;
-    std::string filehash;
+    std::string pathHash;
+    std::string fileHash;
     bool localExists = true; // false if file has been deleted from local filesystem
     bool remoteExists = false; // set flag once successfully uploaded to remote
     std::string remoteLocation; // remote locations the file exists
