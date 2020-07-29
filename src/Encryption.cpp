@@ -110,6 +110,32 @@ string Encryption::randomString(std::size_t length)
 }
 
 string Encryption::hashPath(const string path){
-    const string saltedPath = path + randomString(HASH_SALT_LENGTH);
+    const string saltedPath = path + randomString(PATH_HASH_SALT_LENGTH);
     return sha256(saltedPath);
+}
+
+string Encryption::hashFile(const string path){ // hash a file in chunks of BUFFER_SIZE
+    unsigned char out[FILE_HASH_SIZE];
+    unsigned char buf[BUFFER_SIZE];
+    char hex[(FILE_HASH_SIZE * 2) + 1];
+    size_t read;
+
+    crypto_generichash_state state;
+    crypto_generichash_init(&state, NULL, 0, FILE_HASH_SIZE);
+
+    std::ifstream inputFile(path, std::ios::binary);
+
+    if (!inputFile.is_open()) {
+        std::cout << "Encryption: failed to open path for file hashing: " << path << endl;
+    } else {
+        while(inputFile){
+            inputFile.read((char *)buf, BUFFER_SIZE);
+            read = inputFile.gcount(); // # of bytes read
+            if (!read){ break; }
+            crypto_generichash_update(&state,buf,read);
+        }
+    }
+    crypto_generichash_final(&state, out, FILE_HASH_SIZE);
+    sodium_bin2hex(hex, sizeof hex, out, FILE_HASH_SIZE);
+    return hex;
 }
