@@ -116,6 +116,10 @@ int enclone::showOptions(const int& argc, char** const argv){
             generateKey();
         }
 
+        if (vm.count("clean-up")){
+            cleanRemote();
+        }
+
     } 
     catch(std::exception& e) {
         std::cerr << "error: " << e.what() << "\n";
@@ -186,6 +190,11 @@ bool enclone::listLocal(){
 
 bool enclone::listRemote(){
     string request = "listRemote|";
+    return sendRequest(request);
+}
+
+bool enclone::cleanRemote(){
+    string request = "cleanRemote|";
     return sendRequest(request);
 }
 

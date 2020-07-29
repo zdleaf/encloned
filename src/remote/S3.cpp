@@ -138,9 +138,7 @@ string S3::deleteFromQueue(std::shared_ptr<Aws::S3::S3Client> s3_client){
         }
         dequeueDelete(); // if success, pop the object from the front of the queue
     }
-
-    cout << ss.str();
-    cout << "S3: deleteQueue is empty" << endl;
+    cout << ss.str(); cout.flush();
     return ss.str();
 }
 
@@ -273,10 +271,9 @@ string S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transf
                 ss << "S3: Decryption of " << objectName << " to " << downloadPath << " successful" << endl;
                 fs::remove(localEncryptedPath); // remove temporary object on local fs
             } else {
-                std::ostringstream error;
-                error << "S3: Decryption of " << objectName << " to " << downloadPath << " failed" << endl;
-                cout << error.str();
-                throw std::runtime_error(error.str());
+                ss << "S3: Decryption of " << objectName << " to " << downloadPath << " failed" << endl;
+                cout << ss.str();
+                throw std::runtime_error(ss.str());
             }
             
             // set the modtime back to the original value
@@ -287,16 +284,14 @@ string S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transf
             cout << ss.str();
             return ss.str();
         } else {
-            std::ostringstream error;
-            error << "S3: Bytes downloaded did not equal requested number of bytes: " << downloadHandle->GetBytesTotalSize() << downloadHandle->GetBytesTransferred() << std::endl;
-            cout << error.str();
-            throw std::runtime_error(error.str());
+            ss << "S3: Bytes downloaded did not equal requested number of bytes: " << downloadHandle->GetBytesTotalSize() << downloadHandle->GetBytesTransferred() << std::endl;
+            cout << ss.str();
+            throw std::runtime_error(ss.str());
         }
     } else {
-        std::ostringstream error;
-        error << "S3: Download of " << objectName << " to " << awsWriteToFile << " failed with message: " << downloadHandle->GetStatus() << " (" << downloadHandle->GetLastError().GetMessage() << ")" << endl;
-        cout << error.str();
-        throw std::runtime_error(error.str());
+        ss << "S3: Download of " << objectName << " to " << awsWriteToFile << " failed with message: " << downloadHandle->GetStatus() << " (" << downloadHandle->GetLastError().GetMessage() << ")" << endl;
+        cout << ss.str();
+        throw std::runtime_error(ss.str());
     }
 
 /*  RETRY DOWNLOAD CODE

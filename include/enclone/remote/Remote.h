@@ -46,6 +46,7 @@ class Remote{
         bool queueForDelete(std::string objectName);
 
         string listObjects();
+        string cleanRemote();
 };
 
 #endif

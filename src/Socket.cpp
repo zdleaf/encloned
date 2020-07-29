@@ -101,6 +101,8 @@ void Session::handle_read(const boost::system::error_code& error, size_t bytes_t
             response = watch->downloadFiles(arg1) + ";";
         } else if (cmd == "restore"){
             response = watch->downloadFiles(arg1, arg2) + ";"; // targetPath, path/pathhash
+        } else if (cmd == "cleanRemote"){
+            response = remote->cleanRemote() + ";";
         }
 
         cout << "Socket: Sending response to socket: \"" << response.substr(0, 20) << "...\"" << endl;

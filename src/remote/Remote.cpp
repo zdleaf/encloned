@@ -67,7 +67,7 @@ string Remote::listObjects(){
     try {
         objects = s3->getObjects();
         if(objects.empty()){
-            return "S3: no files on remote S3 bucket\n";
+            return "Remote: no files on remote S3 bucket\n";
         }
     } catch(const std::exception& e){ // listObjects may fail due invalid credentials etc
         return e.what();
@@ -80,6 +80,30 @@ string Remote::listObjects(){
             ss << pair.first << " : " << watch->displayTime(pair.second) << " : " << pathHash << endl;
         } catch (std::out_of_range &error){ // unable to resolve
             continue;
+        }
+    }
+    return ss.str();
+}
+
+string Remote::cleanRemote(){
+    mtx.lock();
+    std::vector<string> objects;
+    try {
+        objects = s3->getObjects();
+        if(objects.empty()){
+            return "Remote: no files on remote S3 bucket\n";
+        }
+    } catch(const std::exception& e){ // listObjects may fail due invalid credentials etc
+        return e.what();
+    }
+    mtx.unlock();
+    std::ostringstream ss;
+    for(string pathHash: objects){
+        try {
+            auto pair = watch->resolvePathHash(pathHash);
+        } catch (std::out_of_range &error){ // unable to resolve
+            queueForDelete(pathHash);
+            ss << "Remote: " << pathHash << " queued for deletion - no match for this entry found in fileIndex" << endl;
         }
     }
     return ss.str();

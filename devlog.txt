@@ -340,6 +340,7 @@ Wed 29/7/2020
     - deleteQueue will keep retrying while program is open and remotes are called
     - todo: backup deleteQueue on exit - if we exit and deleteQueue has not been successfull, we will lose queue. can add a flag to db - "forDeletion"?
     - todo: retry upload - for files that have remoteExists == false on startup, re-add to upload queue to try again
+- Added --clean-up CLI argument - sometimes we may have old files in S3 bucket that have no corresponding entry in fileIndex (e.g. if we remove index.db and build a new db). This option cleans up the S3 bucket.
 
 - todo: search for papers on ACM Digital Library, IEEE Explore Digital Library & Google scholar
 
