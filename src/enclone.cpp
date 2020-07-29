@@ -28,8 +28,8 @@ int enclone::showOptions(const int& argc, char** const argv){
         ("del-recursive,D", po::value<std::vector<string>>(&toDel)->composing(), "recursively delete all watches in a directory\n")
         ("restore,r", po::value<std::vector<string>>(&toRestore)->composing(), "restore files from remote\n\n"
             "   all: \trestore latest versions of all files\n"
-            "   path: \trestore the latest version of a file at specified path \n"
-            "   filehash: \trestore a specific version of a file by providing full filehash\n")
+            "   /path/to/file: \trestore the latest version of a file at specified path \n"
+            "   filehash: \trestore a specific version of a file by providing the full hash as output by --list remote\n")
         ("target,t", po::value<string>(), "specify a target path to restore files to\n")
         ("generate-key,k", "generate an encryption key")
         ("clean-up,c", "remove items from remote S3 which do not have a corresponding entry in fileIndex");

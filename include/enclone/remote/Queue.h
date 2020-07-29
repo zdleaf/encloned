@@ -27,10 +27,10 @@ class Queue{
         bool dequeueUpload();
 
         bool enqueueDownload(std::string path, std::string objectName, std::time_t modtime, string targetPath);
-        bool dequeueDownload(std::tuple<string, string, std::time_t, string>* returnValue);
+        bool dequeueDownload();
 
         bool enqueueDelete(std::string objectName);
-        bool dequeueDelete(std::string* returnValue);
+        bool dequeueDelete();
 
 };
 

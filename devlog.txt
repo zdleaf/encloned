@@ -247,9 +247,7 @@ Wed 15/7/2020
 - Moved program options from main() into enclone class
 - Changed daemon request to follow format of "command|args" with a "|" as delimiter - allows for better daemon side parsing
 - Adding "--list" CLI option - enables showing available files both locally and on remote
-    - todo: show all versions of a given file - "--list versions" CLI cmd
-    - add remove argument - need to do generic function from Socket to call specialised
-    - restore - restore specific directory or single file, needs some kind of recursion - "restore" CLI cmd
+    - todo: show all versions of a given file - "--versions" CLI cmd
 
 Thur 16/7/2020
 - Implement "--list remote" CLI argument
@@ -297,7 +295,7 @@ Wed 22/7/2020
     - read some up to date papers on AEAD to see the latest developments/recommendations, especially in regards to chunking/streaming large files (seems to be an difficult/unsolved problem, particularly authenticating the ordering of chunks - although NaCL streaming implementation seems to resolve this)
 
 Thurs 23/7/2020
-- Reading/collecting various cloud storage papers on data security/encryption e.g. from ACM
+- Reading/collecting various cloud storage papers on data security/encryption
 
 Fri 24/7/2020
 - Further research/reading on file encryption
@@ -308,11 +306,11 @@ Fri 24/7/2020
     - Created "--generate-key" option to enclone - generate and save random encryption key to file
         - keyfile has owner+rw permissions set BEFORE key is written to file to protect key
     - encloned loads encryption key from file, or exits with error is it does not exist
-- todo: replace OpenSSL hash functions with NaCL to reduce 3rd party includes
+- todo: replace OpenSSL hash functions with NaCL to reduce 3rd party includes?
     - using generic hash with a password based on the encryption key, we can restore filenames if index.db is lost?
         - if we lose file names then even with password we cannot recreate - so only would be useful where index is lost but not original filenames
 - todo: fix file permissions of index.db - we do not want this readable by all - change to fs::permissions("index.db", fs::perms::owner_read | fs::perms::owner_write);
-- todo: move both index.db and key file to user home directory?
+- todo: move both index.db and key file to user home directory? .enclone directory with restricted unix permissions
 
 Sat 25/7/2020
 - Encrypted file on upload to S3
@@ -326,12 +324,22 @@ Sat 25/7/2020
 Mon 27/7/2020
 - Decrypt file on download from S3
     - File is downloaded to temp location /tmp/enclone/ and deleted once decryption to dl directory confirmed
-    - todo: move download/decrypt to separate threads? don't want to wait for decryption to finish before downloading next file - decrypt queue?#
+    - todo: move download/decrypt to separate threads? don't want to wait for decryption to finish before downloading next file - decrypt queue?
 - Added --del-watch and --del-recursive CLI arguments - delete watches/files, including removing from remote backends
-- todo: downloading multiple versions - no clobber - need to change filename to include modtime on older version and test this
-- todo: --target CLI option for dl location (should be required with --restore)
 
 Tue 28/7/2020
 - Various research on filename hash security - calculation of how long it would take to brute force filenames
 - Added --target CLI argument to be used with --restore - specify the target directory to download files to
 - Added support for --restore "path" and --restore "pathhash" to restore a particular version of a file by giving the hash or the latest version by providing path
+
+Wed 29/7/2020
+- Searched and relevant read papers from ACM Digital Library - see enclone-research repo
+- Read Improving Your Technical Writing Skills by Norman Fenton
+- Added error handling to downloadQueue and deleteQueue, and to make consistent with uploadQueue
+
+- todo: search for papers on ACM Digital Library, IEEE Explore Digital Library & Google scholar
+
+- todo: downloading multiple versions - no clobber - need to change filename to include modtime on older version and test this
+- todo: file hash validation
+- todo: save only X levels deep of file versions - config option
+- todo: --restore path supports downloading all files in directory if directory provided (and optional recursive flag)

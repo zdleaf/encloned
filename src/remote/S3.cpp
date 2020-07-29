@@ -111,10 +111,14 @@ string S3::downloadFromQueue(std::shared_ptr<Aws::Transfer::TransferManager> tra
     std::ostringstream ss;
     std::lock_guard<std::mutex> guard(mtx);
     if(!downloadQueue.empty()){ 
-        std::tuple<string, string, std::time_t, string> returnValue;
-        std::tuple<string, string, std::time_t, string> *returnValuePtr = &returnValue;
-        while(dequeueDownload(returnValuePtr)){ // returns true until queue is empty
-            ss << downloadObject(transferManager, BUCKET_NAME, std::get<0>(*returnValuePtr), std::get<1>(*returnValuePtr), std::get<2>(*returnValuePtr), std::get<3>(*returnValuePtr));
+        for(auto item: downloadQueue){
+            auto [path, objectName, modtime, targetPath] = item;
+            try {
+                ss << downloadObject(transferManager, BUCKET_NAME, path, objectName, modtime, targetPath);
+            } catch(const std::exception& e){ // may fail due invalid credentials etc
+                ss << e.what();
+            }
+            dequeueDownload(); // pop the object from the front of the queue whether failed or not - we should manually retry
         }
         cout << "S3: downloadFromQueue complete" << endl; cout.flush();
     } else { ss << "S3: downloadQueue is empty" << endl; cout.flush(); }
@@ -124,12 +128,14 @@ string S3::downloadFromQueue(std::shared_ptr<Aws::Transfer::TransferManager> tra
 string S3::deleteFromQueue(std::shared_ptr<Aws::S3::S3Client> s3_client){
     std::ostringstream ss;
     std::lock_guard<std::mutex> guard(mtx);
-    std::string returnValue;
-    std::string* returnValuePtr = &returnValue;
+/*     for(auto item: deleteQueue){
+        auto [objectName] = item; // get values out of the tuple
+    }
+
     while(dequeueDelete(returnValuePtr)){ // returns true until queue is empty
         Aws::String objectName(*returnValuePtr);
         ss << deleteObject(s3_client, objectName, BUCKET_NAME);
-    }
+    } */
     cout << ss.str();
     cout << "S3: deleteQueue is empty" << endl;
     return ss.str();
@@ -217,7 +223,7 @@ bool S3::uploadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferMa
         return true;
     } else {
         std::ostringstream error;
-        error << "S3: Upload of " << path << " as " << objectName << " failed with status: " << uploadHandle->GetStatus() << "(" << uploadHandle->GetLastError().GetMessage() << ")" << endl;
+        error << "S3: Upload of " << path << " as " << objectName << " failed with status: " << uploadHandle->GetStatus() << " (" << uploadHandle->GetLastError().GetMessage() << ")" << endl;
         cout << error.str();
         throw std::runtime_error(error.str());
     }
@@ -264,7 +270,10 @@ string S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transf
                 ss << "S3: Decryption of " << objectName << " to " << downloadPath << " successful" << endl;
                 fs::remove(localEncryptedPath); // remove temporary object on local fs
             } else {
-                ss << "S3: Decryption of " << objectName << " to " << downloadPath << " failed" << endl;
+                std::ostringstream error;
+                error << "S3: Decryption of " << objectName << " to " << downloadPath << " failed" << endl;
+                cout << error.str();
+                throw std::runtime_error(error.str());
             }
             
             // set the modtime back to the original value
@@ -275,11 +284,19 @@ string S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transf
             cout << ss.str();
             return ss.str();
         } else {
-            ss << "S3: Bytes downloaded did not equal requested number of bytes: " << downloadHandle->GetBytesTotalSize() << downloadHandle->GetBytesTransferred() << std::endl;
+            std::ostringstream error;
+            error << "S3: Bytes downloaded did not equal requested number of bytes: " << downloadHandle->GetBytesTotalSize() << downloadHandle->GetBytesTransferred() << std::endl;
+            cout << error.str();
+            throw std::runtime_error(error.str());
         }
     } else {
-        ss << "S3: Download of " << objectName << " to " << awsWriteToFile << " failed with message: " << downloadHandle->GetStatus() << endl;
+        std::ostringstream error;
+        error << "S3: Download of " << objectName << " to " << awsWriteToFile << " failed with message: " << downloadHandle->GetStatus() << " (" << downloadHandle->GetLastError().GetMessage() << ")" << endl;
+        cout << error.str();
+        throw std::runtime_error(error.str());
     }
+
+/*  RETRY DOWNLOAD CODE
 
     size_t retries = 0; // retry download if failed (up to 5 times)
     while (downloadHandle->GetStatus() == Aws::Transfer::TransferStatus::FAILED && retries++ < 5)
@@ -288,8 +305,10 @@ string S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transf
         transferManager->RetryDownload(downloadHandle);
         downloadHandle->WaitUntilFinished();
     }
+    ss << "S3: Download of " << objectName << " to " << awsWriteToFile << " failed after maximum retry attempts" << std::endl; 
+    
+*/
 
-    ss << "S3: Download of " << objectName << " to " << awsWriteToFile << " failed after maximum retry attempts" << std::endl;
     cout << ss.str();
     return ss.str();
 }

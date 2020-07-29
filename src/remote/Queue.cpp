@@ -32,11 +32,10 @@ bool Queue::enqueueDownload(std::string path, std::string objectName, std::time_
     return true;
 }
 
-bool Queue::dequeueDownload(std::tuple<string, string, std::time_t, string>* returnValue){
+bool Queue::dequeueDownload(){
     if(downloadQueue.empty()){ 
         return false; 
     } else if(!downloadQueue.empty()){
-        *returnValue = downloadQueue.front();
         downloadQueue.pop_front(); // delete element once we've returned
     }
     return true;
@@ -47,11 +46,10 @@ bool Queue::enqueueDelete(std::string objectName){
     return true;
 }
 
-bool Queue::dequeueDelete(std::string* returnValue){
+bool Queue::dequeueDelete(){
     if(deleteQueue.empty()){ 
         return false; 
     } else if(!deleteQueue.empty()){
-        *returnValue = deleteQueue.front();
         deleteQueue.pop_front(); // delete element once we've returned
     }
     return true;
