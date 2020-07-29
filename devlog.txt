@@ -336,6 +336,10 @@ Wed 29/7/2020
 - Searched and relevant read papers from ACM Digital Library - see enclone-research repo
 - Read Improving Your Technical Writing Skills by Norman Fenton
 - Added error handling to downloadQueue and deleteQueue, and to make consistent with uploadQueue
+    - downloadQueue will fail and print to CLI - need to manually retry
+    - deleteQueue will keep retrying while program is open and remotes are called
+    - todo: backup deleteQueue on exit - if we exit and deleteQueue has not been successfull, we will lose queue. can add a flag to db - "forDeletion"?
+    - todo: retry upload - for files that have remoteExists == false on startup, re-add to upload queue to try again
 
 - todo: search for papers on ACM Digital Library, IEEE Explore Digital Library & Google scholar
 

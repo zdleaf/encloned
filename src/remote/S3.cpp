@@ -128,14 +128,17 @@ string S3::downloadFromQueue(std::shared_ptr<Aws::Transfer::TransferManager> tra
 string S3::deleteFromQueue(std::shared_ptr<Aws::S3::S3Client> s3_client){
     std::ostringstream ss;
     std::lock_guard<std::mutex> guard(mtx);
-/*     for(auto item: deleteQueue){
-        auto [objectName] = item; // get values out of the tuple
+    for(auto item: deleteQueue){
+        Aws::String objectName(item);
+        try {
+            ss << deleteObject(s3_client, objectName, BUCKET_NAME);
+        } catch(const std::exception& e){ // may fail due invalid credentials etc
+            ss << e.what();
+            continue; // go to the next item, but do not remove failed item from queue
+        }
+        dequeueDelete(); // if success, pop the object from the front of the queue
     }
 
-    while(dequeueDelete(returnValuePtr)){ // returns true until queue is empty
-        Aws::String objectName(*returnValuePtr);
-        ss << deleteObject(s3_client, objectName, BUCKET_NAME);
-    } */
     cout << ss.str();
     cout << "S3: deleteQueue is empty" << endl;
     return ss.str();
@@ -321,12 +324,11 @@ string S3::deleteObject(std::shared_ptr<Aws::S3::S3Client> s3_client, const Aws:
 
     Aws::S3::Model::DeleteObjectOutcome result = s3_client->DeleteObject(request);
 
-    if (!result.IsSuccess())
-    {
-        ss << "S3: Delete of " << objectName << " failed" << endl;
+    if (!result.IsSuccess()){   
         auto err = result.GetError();
-        ss << "Error: DeleteObject: " << err.GetExceptionName() << ": " << err.GetMessage() << std::endl;
-        return ss.str();
+        ss << "S3: Delete of " << objectName << " failed (" << err.GetExceptionName() << ": " << err.GetMessage() << ")" << endl;
+        cout << ss.str();
+        throw std::runtime_error(ss.str());
     } else {
         ss << "S3: Delete of " << objectName << " successful" << endl;
     }
