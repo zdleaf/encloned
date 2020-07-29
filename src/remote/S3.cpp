@@ -31,10 +31,10 @@ string S3::callAPI(string arg){
         return "";
     }
     if(arg == "download" && downloadQueue.empty()) { // no need to connect to API if there is nothing to upload/download
-        //cout << "S3: downloadQueue are empty" << endl;
+        //cout << "S3: downloadQueue is empty" << endl;
         return "";
     }
-    if(arg == "delete" && deleteQueue.empty()) { // no need to connect to API if there is nothing to upload/download
+    if(arg == "delete" && deleteQueue.empty()) { // no need to connect to API if there is nothing to delete
         //cout << "S3: deleteQueue is empty" << endl;
         return "";
     }
@@ -265,15 +265,23 @@ string S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transf
     if(downloadHandle->GetStatus() == Aws::Transfer::TransferStatus::COMPLETED){
         if (downloadHandle->GetBytesTotalSize() == downloadHandle->GetBytesTransferred()) {
             ss << "S3: Download of " << objectName << " to " << awsWriteToFile << " successful" << endl;
-            
+
             // decrypt temporary file to download location
             if(Encryption::decryptFile(downloadPath.c_str(), localEncryptedPath.c_str(), daemon->getKey()) == 0){
-                ss << "S3: Decryption of " << objectName << " to " << downloadPath << " successful" << endl;
-                fs::remove(localEncryptedPath); // remove temporary object on local fs
+                // verify hash
+                string downloadedFileHash = Encryption::hashFile(downloadPath);
+                if(remote->getWatch()->verifyHash(objectName, downloadedFileHash)){
+                    ss << "S3: Decryption of " << objectName << " to " << downloadPath << " successful - file hash verified" << endl;
+                    fs::remove(localEncryptedPath); // remove temporary object on local fs
+                } else {
+                    ss << "S3: Decryption of " << objectName << " to " << downloadPath << " failed - unable to verify hash" << endl;
+                    fs::remove(localEncryptedPath); // remove temporary object on local fs
+                    fs::remove(downloadPath); // remove decrypted object
+                    cout << ss.str(); throw std::runtime_error(ss.str());
+                }
             } else {
                 ss << "S3: Decryption of " << objectName << " to " << downloadPath << " failed" << endl;
-                cout << ss.str();
-                throw std::runtime_error(ss.str());
+                cout << ss.str(); throw std::runtime_error(ss.str());
             }
             
             // set the modtime back to the original value

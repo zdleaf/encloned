@@ -24,6 +24,10 @@ encloned* Remote::getDaemon(){
     return daemon;
 }
 
+std::shared_ptr<Watch> Remote::getWatch(){
+    return watch;
+}
+
 void Remote::uploadRemotes(){
     std::lock_guard<std::mutex> guard(mtx);
     s3->callAPI("upload");

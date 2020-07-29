@@ -70,6 +70,7 @@ class Watch {
         std::pair<string, std::time_t> resolvePathHash(string pathHash);
         string downloadFiles(string targetPath); // download all
         string downloadFiles(string targetPath, string pathOrHash); // specify path or hash to download
+        bool verifyHash(string pathHash, string fileHash);
 
         void uploadSuccess(std::string path, std::string objectName, int remoteID);
 
@@ -95,8 +96,6 @@ class Watch {
         string delFileWatch(string path);
 
         std::time_t getLastModTime(std::string path);
-        void listDir(string path);
-        void fileAttributes(const fs::path& path);
 
         void restoreDB();
         void restoreFileIdx();

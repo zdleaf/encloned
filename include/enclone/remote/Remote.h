@@ -33,6 +33,7 @@ class Remote{
         Remote(std::atomic_bool* runThreads, encloned* daemon);
         void setPtr(std::shared_ptr<Watch> watch);
         encloned* getDaemon();
+        std::shared_ptr<Watch> getWatch();
 
         void execThread();
         void uploadRemotes();
@@ -47,6 +48,7 @@ class Remote{
 
         string listObjects();
         string cleanRemote();
+        
 };
 
 #endif

@@ -343,10 +343,11 @@ Wed 29/7/2020
 - Added --clean-up CLI argument - sometimes we may have old files in S3 bucket that have no corresponding entry in fileIndex (e.g. if we remove index.db and build a new db). This option cleans up the S3 bucket.
 - Added a fileHash() implementation in Encryption.h using NaCL that hashes a file in chunks of BUFFER_SIZE
     - each new FileVersion contains a hash of the file contents, so contents can be verified after download
+- Integrity checking - after file download and decryption, we re-hash file and verify with saved file hash for integrity checks
 
 - todo: search for papers on ACM Digital Library, IEEE Explore Digital Library & Google scholar
 
 - todo: downloading multiple versions - no clobber - need to change filename to include modtime on older version and test this
-- todo: file hash validation
 - todo: save only X levels deep of file versions - config option
 - todo: --restore path supports downloading all files in directory if directory provided (and optional recursive flag)
+- todo: on delete, make sure we remove from pathHashIndex also

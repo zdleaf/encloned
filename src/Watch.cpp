@@ -287,13 +287,6 @@ string Watch::displayTime(std::time_t modtime) const{
     return time; 
 }
 
-void Watch::listDir(string path){
-    for (const auto & entry : fs::directory_iterator(path)){
-        cout << entry.path();
-        fileAttributes(entry);
-    }
-}
-
 std::pair<string, std::time_t> Watch::resolvePathHash(string pathHash){
     std::pair<string, std::time_t> result;
     try {
@@ -338,30 +331,19 @@ string Watch::downloadFiles(string targetPath, string pathOrHash){
     return remote->downloadRemotes();
 }
 
-
-void Watch::fileAttributes(const fs::path& path){
-    fs::file_status s = fs::status(path);
-    // alternative: switch(s.type()) { case fs::file_type::regular: ...}
-    if(fs::is_regular_file(s)) std::cout << " is a regular file\n";
-    if(fs::is_directory(s)) std::cout << " is a directory\n";
-    if(fs::is_block_file(s)) std::cout << " is a block device\n";
-    if(fs::is_character_file(s)) std::cout << " is a character device\n";
-    if(fs::is_fifo(s)) std::cout << " is a named IPC pipe\n";
-    if(fs::is_socket(s)) std::cout << " is a named IPC socket\n";
-    if(fs::is_symlink(s)) std::cout << " is a symlink\n";
-    if(!fs::exists(s)) std::cout << " does not exist\n";
-    if(fs::is_empty(path)){ std::cout << "empty\n"; } else { std::cout << "not empty\n"; };
-
-    // size
-    try {
-        std::cout << "size: " << fs::file_size(path) << endl; // attempt to get size of a file
-    } catch(fs::filesystem_error& e) { // e.g. is a directory, no size
-        std::cout << e.what() << '\n';
+bool Watch::verifyHash(string pathHash, string fileHash){
+    auto result = pathHashIndex.at(pathHash);
+    auto versions = fileIndex.at(std::get<0>(result));
+    for(auto elem: versions){
+        if(elem.pathHash == pathHash){
+            if(elem.fileHash == fileHash){
+                return true;
+            }
+        }
     }
-
-    // last modification time
-    //std::cout << "File write time is " << displayTime(fs::last_write_time(path)) << endl;
+    return false;
 }
+
 
 void Watch::restoreDB(){
     std::lock_guard<std::mutex> guard(mtx);
@@ -454,3 +436,36 @@ void Watch::uploadSuccess(std::string path, std::string objectName, int remoteID
     }
     sqlQueue << "UPDATE fileIndex SET REMOTEEXISTS = TRUE WHERE PATHHASH ='" << objectName << "';"; // queue SQL update  
 }
+
+/* LEGACY CODE
+void Watch::fileAttributes(const fs::path& path){
+    fs::file_status s = fs::status(path);
+    // alternative: switch(s.type()) { case fs::file_type::regular: ...}
+    if(fs::is_regular_file(s)) std::cout << " is a regular file\n";
+    if(fs::is_directory(s)) std::cout << " is a directory\n";
+    if(fs::is_block_file(s)) std::cout << " is a block device\n";
+    if(fs::is_character_file(s)) std::cout << " is a character device\n";
+    if(fs::is_fifo(s)) std::cout << " is a named IPC pipe\n";
+    if(fs::is_socket(s)) std::cout << " is a named IPC socket\n";
+    if(fs::is_symlink(s)) std::cout << " is a symlink\n";
+    if(!fs::exists(s)) std::cout << " does not exist\n";
+    if(fs::is_empty(path)){ std::cout << "empty\n"; } else { std::cout << "not empty\n"; };
+
+    // size
+    try {
+        std::cout << "size: " << fs::file_size(path) << endl; // attempt to get size of a file
+    } catch(fs::filesystem_error& e) { // e.g. is a directory, no size
+        std::cout << e.what() << '\n';
+    }
+
+    // last modification time
+    //std::cout << "File write time is " << displayTime(fs::last_write_time(path)) << endl;
+} 
+
+void Watch::listDir(string path){
+    for (const auto & entry : fs::directory_iterator(path)){
+        cout << entry.path();
+        fileAttributes(entry);
+    }
+}
+*/
