@@ -268,9 +268,11 @@ string S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transf
 
             // decrypt temporary file to download location
             if(Encryption::decryptFile(downloadPath.c_str(), localEncryptedPath.c_str(), daemon->getKey()) == 0){
+                
                 // verify hash
                 string downloadedFileHash = Encryption::hashFile(downloadPath);
-                if(remote->getWatch()->verifyHash(objectName, downloadedFileHash)){
+                
+                if(remote->getWatch()->verifyHash(objectName, downloadedFileHash)){ // hash matches stored filehash
                     ss << "S3: Decryption of " << objectName << " to " << downloadPath << " successful - file hash verified" << endl;
                     fs::remove(localEncryptedPath); // remove temporary object on local fs
                 } else {
@@ -279,6 +281,7 @@ string S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transf
                     fs::remove(downloadPath); // remove decrypted object
                     cout << ss.str(); throw std::runtime_error(ss.str());
                 }
+
             } else {
                 ss << "S3: Decryption of " << objectName << " to " << downloadPath << " failed" << endl;
                 cout << ss.str(); throw std::runtime_error(ss.str());
