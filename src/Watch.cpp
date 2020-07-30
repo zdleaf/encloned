@@ -148,6 +148,7 @@ string Watch::delFileWatch(string path){
     auto fileVersions = fileIndex[path];
     for(auto elem: fileVersions){
         remote->queueForDelete(elem.pathHash);
+        pathHashIndex.erase(elem.pathHash);
     }
     fileIndex.erase(path);
     sqlQueue << "DELETE FROM fileIndex WHERE PATH=\'" << path << "\';"; // queue SQL delete
