@@ -333,8 +333,6 @@ Tue 28/7/2020
 - Added support for --restore "path" and --restore "pathhash" to restore a particular version of a file by giving the hash or the latest version by providing path
 
 Wed 29/7/2020
-- Searched and relevant read papers from ACM Digital Library - see enclone-research repo
-- Read Improving Your Technical Writing Skills by Norman Fenton
 - Added error handling to downloadQueue and deleteQueue, and to make consistent with uploadQueue
     - downloadQueue will fail and print to CLI - need to manually retry
     - deleteQueue will keep retrying while program is open and remotes are called
@@ -347,12 +345,8 @@ Wed 29/7/2020
     - is this extra authentication necessary? since encryption is authenticated, decryption will fail if file has changed in any way - poly1305 already provides integrity
     - however, using AE alone does not protect against a roll back - if the file on S3 is replaced with a previous authenticated file, it will successfully decrypt but provide out of date information
         - https://crypto.stackexchange.com/questions/42289/how-to-provide-integrity-even-though-using-authenticated-encryption
-        
-- todo: search for papers on ACM Digital Library, IEEE Explore Digital Library & Google scholar
 
 - todo: downloading multiple versions - no clobber - need to change filename to include modtime on older version and test this
 - todo: save only X levels deep of file versions - config option
 - todo: --restore path supports downloading all files in directory if directory provided (and optional recursive flag)
-
-Thurs 30/7/2020
-- 
+- todo: make queue into template, more generalised - to reuse for encryption queue
