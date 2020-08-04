@@ -330,8 +330,6 @@ Tue 28/7/2020
 - Added support for --restore "path" and --restore "pathhash" to restore a particular version of a file by giving the hash or the latest version by providing path
 
 Wed 29/7/2020
-- Searched and relevant read papers from ACM Digital Library - see enclone-research repo
-- Read Improving Your Technical Writing Skills by Norman Fenton
 - Added error handling to downloadQueue and deleteQueue, and to make consistent with uploadQueue
     - downloadQueue will fail and print to CLI - need to manually retry
     - deleteQueue will keep retrying while program is open and remotes are called
@@ -350,6 +348,7 @@ Wed 29/7/2020
 - todo: --restore path supports downloading all files in directory if directory provided (and optional recursive flag)
 - todo: remove int and bool return codes? we should be using exceptions to return errors, except where we rely on bool returns
     - loadEncryptionKey() is one example
+- todo: make queue into template, more generalised - to reuse for encryption queue
 
 Tue 4/8/2020
 - Replaced the sha256 hash of the path/filename + salt with a pure random 64 character string for increased security
