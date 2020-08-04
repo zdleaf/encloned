@@ -16,7 +16,6 @@
                 "-lboost_system",
                 "-lboost_thread",
                 "-pthread",
-                "-lcrypto",
                 "-lboost_program_options",
                 "-lsodium"
             ],

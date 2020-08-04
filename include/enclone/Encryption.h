@@ -9,7 +9,6 @@
 #include <fstream>
 
 #include <sodium.h>
-#include <openssl/sha.h>
 
 using std::string;
 using std::cout;
@@ -31,13 +30,12 @@ class Encryption{
         static const int CHUNK_SIZE = 4096;
 
         // path/filename hash constants
-        static const int PATH_HASH_SALT_LENGTH = 128;
+        // static const int PATH_HASH_SALT_LENGTH = 128;
 
         // file hash constants
         static const int BUFFER_SIZE = 512;
         static const int FILE_HASH_SIZE = 64;
 
-        static string sha256(const string str);
         static string randomString(std::size_t length);
 };
 

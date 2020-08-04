@@ -7,3 +7,4 @@ Feature list
 - unstructured db such as mongodb would be better at storing fileIndex as a tree like structure - easy to pull entire contents of a directory for example
 - store data as "blobs" or small chunks - this mean when updating a file version, we just update the blobs that have changed instead of re-uploading entire file
     - see Rabin Fingerprints for implementing Content Defined Chunking (CDC)
+- stream encrypted data directly to online services - avoiding saving as temporary file and then uploading that

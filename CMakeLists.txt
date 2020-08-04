@@ -18,7 +18,7 @@ find_package(OpenSSL REQUIRED)
 find_package(Boost COMPONENTS program_options REQUIRED)
 
 # flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lboost_system -lboost_thread -std=c++17 -lstdc++fs -lsqlite3 -pthread -lcrypto -lboost_program_options -lsodium")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lboost_system -lboost_thread -std=c++17 -lstdc++fs -lsqlite3 -pthread -lboost_program_options -lsodium")
 
 # include files
 include_directories( include src ${Boost_INCLUDE_DIR})
@@ -28,7 +28,7 @@ add_executable(encloned ./src/encloned.cpp ./src/Watch.cpp ./src/DB.cpp ./src/So
 add_executable(enclone ./src/enclone.cpp)
 
 # link std filesystem library
-target_link_libraries(encloned stdc++fs sqlite3 ${AWSSDK_LINK_LIBRARIES} OpenSSL::SSL)
+target_link_libraries(encloned stdc++fs sqlite3 ${AWSSDK_LINK_LIBRARIES})
 target_link_libraries(enclone stdc++fs ${Boost_LIBRARIES})
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})

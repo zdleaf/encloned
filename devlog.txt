@@ -306,9 +306,6 @@ Fri 24/7/2020
     - Created "--generate-key" option to enclone - generate and save random encryption key to file
         - keyfile has owner+rw permissions set BEFORE key is written to file to protect key
     - encloned loads encryption key from file, or exits with error is it does not exist
-- todo: replace OpenSSL hash functions with NaCL to reduce 3rd party includes?
-    - using generic hash with a password based on the encryption key, we can restore filenames if index.db is lost?
-        - if we lose file names then even with password we cannot recreate - so only would be useful where index is lost but not original filenames
 - todo: fix file permissions of index.db - we do not want this readable by all - change to fs::permissions("index.db", fs::perms::owner_read | fs::perms::owner_write);
 - todo: move both index.db and key file to user home directory? .enclone directory with restricted unix permissions
 
@@ -348,11 +345,14 @@ Wed 29/7/2020
     - however, using AE alone does not protect against a roll back - if the file on S3 is replaced with a previous authenticated file, it will successfully decrypt but provide out of date information
         - https://crypto.stackexchange.com/questions/42289/how-to-provide-integrity-even-though-using-authenticated-encryption
         
-- todo: search for papers on ACM Digital Library, IEEE Explore Digital Library & Google scholar
-
 - todo: downloading multiple versions - no clobber - need to change filename to include modtime on older version and test this
 - todo: save only X levels deep of file versions - config option
 - todo: --restore path supports downloading all files in directory if directory provided (and optional recursive flag)
+- todo: remove int and bool return codes? we should be using exceptions to return errors, except where we rely on bool returns
+    - loadEncryptionKey() is one example
 
-Thurs 30/7/2020
-- 
+Tue 4/8/2020
+- Replaced the sha256 hash of the path/filename + salt with a pure random 64 character string for increased security
+    - the sha256 hash was not otherwise used or checked, now there is no relation between the original filename and the new filename stored remotely
+    - why are we hashing filenames/paths - rather than encrypting with the same key? that way we can decrypt files to correct filenames even if index is lost but we still have the key
+        - encryption would need to be to a readable, filename friendly ascii format - not random binary/bit info - would require some kind of Format-preserving encryption
