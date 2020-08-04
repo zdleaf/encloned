@@ -1,4 +1,4 @@
-pa#include <iostream>
+#include <iostream>
 #include <sodium.h>
 #include <fstream>
 #include <stdio.h>
@@ -10,6 +10,7 @@ pa#include <iostream>
 using namespace std;
 namespace fs = std::filesystem;
 
+#define BASE64_VARIATION sodium_base64_VARIANT_URLSAFE
 unsigned char key[crypto_secretstream_xchacha20poly1305_KEYBYTES];
 
 void initSodium(){
@@ -46,6 +47,26 @@ int loadEncryptionKey(){
     return 0;
 }
 
+std::string base64_encode(std::string bin_str){
+    const size_t bin_len = bin_str.size();
+    const size_t  base64_max_len = sodium_base64_encoded_len(bin_len, BASE64_VARIATION);
+    std::string base64_str(base64_max_len-1,0);
+
+    char * encoded_str_char = sodium_bin2base64(
+            base64_str.data(),
+            base64_max_len,
+            (unsigned char *) bin_str.data(),
+            bin_len,
+            BASE64_VARIATION
+    );
+
+    if(encoded_str_char == NULL){
+        throw "Base64 Error: Failed to encode string";
+    }
+
+    return base64_str;
+}
+
 static string encryptPath(const string path){
     unsigned char nonce[crypto_secretbox_NONCEBYTES];
     unsigned char ciphertext[path.length()];
@@ -56,7 +77,9 @@ static string encryptPath(const string path){
 
     string nonceStr = std::string(reinterpret_cast<const char*>(nonce));
     string cipherTextStr = std::string(reinterpret_cast<const char*>(ciphertext));
-    return nonceStr + cipherTextStr;
+    string result = nonceStr + cipherTextStr;
+    auto base64 = base64_encode(result);
+    return base64;
 }
 
 static string decryptPath(const string encryptedPath){

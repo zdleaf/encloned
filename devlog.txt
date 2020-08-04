@@ -354,4 +354,6 @@ Tue 4/8/2020
 - Replaced the sha256 hash of the path/filename + salt with a pure random 64 character string for increased security
     - the sha256 hash was not otherwise used or checked, now there is no relation between the original filename and the new filename stored remotely
     - why are we hashing filenames/paths - rather than encrypting with the same key? that way we can decrypt files to correct filenames even if index is lost but we still have the key
-        - encryption would need to be to a readable, filename friendly ascii format - not random binary/bit info - would require some kind of Format-preserving encryption
+        - encryption would need to be to a readable, filename friendly ascii format - not random binary/bit info - would require some kind of format-preserving encryption or base64 encryption
+        - we would also need to store with the salt somehow - otherwise identical path names will encrypt to identical strings (for different versions of one file)
+            - is it safe to store salt in filename - secret key is still unknown
