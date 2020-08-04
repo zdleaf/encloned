@@ -41,7 +41,7 @@ void Socket::closeSocket(){
 
 Session::Session(asio::io_service& io_service, std::shared_ptr<Watch> watch, std::shared_ptr<Remote> remote): socket_(io_service)
 {
-    std::cout << "Socket: New session started..." << std::endl;
+    std::cout << "Socket: New session started..." << std::endl; std::cout.flush();
     this->watch = watch; 
     this->remote = remote;
 }
@@ -83,6 +83,7 @@ void Session::handle_read(const boost::system::error_code& error, size_t bytes_t
         cout << "Command is: \"" << cmd << "\"" << endl; // get command that appears before delimter
         cout << "Arg1 is: \"" << arg1 << "\"" << endl;
         cout << "Arg2 is: \"" << arg2 << "\"" << endl;
+        cout.flush();
 
         // input handling here - need a parser
         if(cmd == "add"){
