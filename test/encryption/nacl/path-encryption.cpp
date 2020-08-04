@@ -67,6 +67,21 @@ std::string base64_encode(std::string bin_str){
     return base64_str;
 }
 
+std::string base64_decode(std::string base64_str){
+    unsigned char * bin;
+    const size_t bin_maxlen = 4096;
+    const size_t b64_len = base64_str.size();
+
+/*     int sodium_base642bin(bin, 
+                        bin_maxlen,
+                        (unsigned char *) base64_str.data(), 
+                        b64_len,
+                        const char * const ignore, 
+                        size_t * const bin_len,
+                        NULL, 
+                        BASE64_VARIATION); */
+}
+
 static string encryptPath(const string path){
     unsigned char nonce[crypto_secretbox_NONCEBYTES];
     unsigned char ciphertext[path.length()];
@@ -78,16 +93,25 @@ static string encryptPath(const string path){
     string nonceStr = std::string(reinterpret_cast<const char*>(nonce));
     string cipherTextStr = std::string(reinterpret_cast<const char*>(ciphertext));
     string result = nonceStr + cipherTextStr;
-    auto base64 = base64_encode(result);
-    return base64;
+
+/*     cout << "nonce: " << nonceStr << endl;
+    cout << "sizeof nonce: " << sizeof nonceStr << endl;
+    cout << "cipherText: " << cipherTextStr << endl;
+    cout << "result: " << result << endl; */
+    cout << "b64: " << base64_encode(result) << endl;
+    return result;
 }
 
 static string decryptPath(const string encryptedPath){
-    string nonce = encryptedPath.substr(0, crypto_secretbox_NONCEBYTES);
-    string cipherText = encryptedPath.substr(crypto_secretbox_NONCEBYTES+1);
+    string nonce = encryptedPath.substr(0, 30);
+    string cipherText = encryptedPath.substr(30);
+
+/*     cout << "nonce: " << nonce << endl;
+    cout << "cipherText: " << cipherText << endl; */
+
 
     unsigned char decrypted[4096]; // max path length
-    if (crypto_secretbox_open_easy(decrypted, (const unsigned char *) cipherText.c_str(), crypto_secretbox_MACBYTES+cipherText.length(), (const unsigned char *) nonce.c_str(), key) != 0) {
+    if (crypto_secretbox_open_easy(decrypted, (const unsigned char *) cipherText.c_str(), cipherText.length(), (const unsigned char *) nonce.c_str(), key) != 0) {
         cout << "Message forged" << endl;
     }
     return std::string(reinterpret_cast<const char*>(decrypted));
@@ -96,5 +120,10 @@ static string decryptPath(const string encryptedPath){
 int main(){
     initSodium();
     loadEncryptionKey();
-    cout << encryptPath("/home/zach/enclone/test/files2/file1") << endl;
+
+    string a = encryptPath("/home/zach/enclone/test/files2/file1");
+    //cout << a << " length: " << a.length() << endl;
+    cout << decryptPath(a) << endl;
+
+
 }
