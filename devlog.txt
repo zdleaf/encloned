@@ -199,8 +199,6 @@ Wed 8/7/2020
 - Interface problem - Watch needs to be able to interact with specific instance of Remote, and Remote needs to interact with specific instance of Watch - this creates a circular problem as we cannot pass pointers in constructors in this circular way due to the order of each class being instantiated. If we first create Remote we cannot pass a pointer to Watch as it is not yet instantiated, and vice versa.
     - Solved by passing shared pointers to the objects after all construction has completed.
     - For S3 class which is spawned by Remote, we passed a regular pointer to the Remote class instance with "this" key in S3 constructor, as S3 needs to call specific functions on Remote.
-- todo: restore from remote, download queue
-- todo: socket control
 
 Thur 9/7/2020
 - Changed S3 to inherit from Queue instead of spawning an instance 
@@ -306,7 +304,6 @@ Fri 24/7/2020
     - Created "--generate-key" option to enclone - generate and save random encryption key to file
         - keyfile has owner+rw permissions set BEFORE key is written to file to protect key
     - encloned loads encryption key from file, or exits with error is it does not exist
-- todo: fix file permissions of index.db - we do not want this readable by all - change to fs::permissions("index.db", fs::perms::owner_read | fs::perms::owner_write);
 - todo: move both index.db and key file to user home directory? .enclone directory with restricted unix permissions
 
 Sat 25/7/2020
@@ -355,5 +352,9 @@ Tue 4/8/2020
     - the sha256 hash was not otherwise used or checked, now there is no relation between the original filename and the new filename stored remotely
     - why are we hashing filenames/paths - rather than encrypting with the same key? that way we can decrypt files to correct filenames even if index is lost but we still have the key
         - encryption would need to be to a readable, filename friendly ascii format - not random binary/bit info - would require some kind of format-preserving encryption or base64 encryption
-        - we would also need to store with the salt somehow - otherwise identical path names will encrypt to identical strings (for different versions of one file)
-            - is it safe to store salt in filename - secret key is still unknown
+        - we would also need to store with the nonce somehow - otherwise identical path names will encrypt to identical strings (for different versions of one file)
+            - it is considered safe to store the nonce alongside the ciphertext (concat'd) - secret key is still unknown
+        - some remotes are care insensitive, so possible base32 encoding (no upper case) may be required
+
+Fri 14/8/2020
+- Check validity of database after opening, and set permissions to ONLY owner read and write for local security

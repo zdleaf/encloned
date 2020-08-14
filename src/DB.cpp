@@ -10,11 +10,20 @@ DB::~DB(){ // destructor
 }
 
 void DB::openDB(){
-    int exitcode = sqlite3_open("index.db", &db);
+    int exitcode = sqlite3_open(DATABASE_LOCATION, &db);
     if(exitcode) {
       fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
     } else {
       fprintf(stderr, "Opened database successfully\n");
+      fs::permissions(DATABASE_LOCATION, fs::perms::owner_read | fs::perms::owner_write);
+    }
+
+    int validDBcheck = execSQL("PRAGMA schema_version;");
+    if(validDBcheck != 0){
+        cout << "DB: ERROR - unable to open index.db - it does not appear to be a valid database. Please check and resolve, or remove to create a new index" << endl;
+        throw std::runtime_error("Invalid database file");
+    } else {
+        fprintf(stderr, "Database is valid\n");
     }
 }
 
