@@ -358,3 +358,11 @@ Tue 4/8/2020
 
 Fri 14/8/2020
 - Check validity of database after opening, and set permissions to ONLY owner read and write for local security
+- todo: backup index automatically, and provide a --restore-idx option
+    - ideally want to save index on remote in same filename format as files to avoid potential known-plaintext issues i.e. a 64 char random string, and file still encrypted with XChaCha20-Poly1305
+        - problem: how to remember/recognise what file is the index on remote?
+        - solution: derive filename from X bits of the key file using scrypt/Argon2 (supported in NaCL). only a key file is then required to restore all files and index from remote.
+            - if the Argon2id is reversed, some bits of the full encryption key would be revealed. this should be difficult with sufficient parameters, but if high memory requirements are used e.g. 1GB memory then this may limit running on small systems.
+            - derive a subkey - this is safer "Given the master key and a key identifier, a subkey can be deterministically computed. However, given a subkey, an attacker cannot compute the master key nor any other subkeys."
+        - solution 2: use a separate password phrase to encode the index filename - but this password would then have to be remembered
+- todo: construct a loop that does some actions more frequent than others, run a loop within a loop - we want DB to updated less frequently than scanFileChange in Watch.cpp
