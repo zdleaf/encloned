@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <cstring>
 #include <filesystem>
+#include <algorithm> 
 
 // g++ index-encrypt.cpp -o idx -lsodium -lstdc++fs -std=c++17 
 
@@ -11,7 +12,7 @@ using namespace std;
 namespace fs = std::filesystem;
 
 unsigned char key[crypto_secretstream_xchacha20poly1305_KEYBYTES];
-uint8_t subkey1[32];
+uint8_t subkey1[64];
 
 void initSodium(){
     if (sodium_init() != 0) {
@@ -96,34 +97,46 @@ std::string base64_decode(const std::string & in) {
   return out;
 }
 
-void pwhash_str(string key_b64){
+string pwhash_str(string key_b64){
     char hashed_password[crypto_pwhash_STRBYTES];
 
-    /* 
-    
-    DO NOT USE ENTIRE KEY - IF THE ARGON HASH IS DEFEATED, THE FULL ENCRYPTION KEY IS REVEALED
+    string halfSubKey = key_b64.substr(0, key_b64.length()/2); // split the key in half (32 bytes)
 
-    IF HALF THE KEY IS USED, HALF THE BITS OF ENCRYPTION ARE DEFEATED, LEAVING 128 BITS TO BRUTE FORCE
-    
-     */
+    cout << "half of subkey: " << halfSubKey << endl;
+
+    // even if Argon hash is defeated, we only have half a subkey. with a full subkey, we still cannot get the original master key
     
     if (crypto_pwhash_str
-    (hashed_password, key_b64.c_str(), key_b64.length(),
-     crypto_pwhash_OPSLIMIT_SENSITIVE, crypto_pwhash_MEMLIMIT_SENSITIVE) != 0) {
-    cout << "out of memory" << endl;
+    (hashed_password, halfSubKey.c_str(), halfSubKey.length(), crypto_pwhash_OPSLIMIT_SENSITIVE, crypto_pwhash_MEMLIMIT_SENSITIVE) != 0){
+        cout << "out of memory" << endl;
     }
 
     cout << "hashed key str: " << hashed_password << endl;
 
-    auto hash_password_str = std::string(reinterpret_cast<const char*>(hashed_password)).substr(33);
+    auto hashedPasswordStr = std::string(reinterpret_cast<const char*>(hashed_password));
+    
+    // remove argon2id parameters
+    size_t pos = 0;
+    int count = 0;
 
-    cout << "hashed key str2: " << hash_password_str << " length: " << hash_password_str.length() << endl;
+    while(count != 3){
+        pos+=1;
+        pos = hashedPasswordStr.find("$", pos);
+        count++;
+    }
 
-    auto hashed_b64 = base64_encode(hash_password_str);
+    if (pos == std::string::npos){
+        cout << "error: Argon2id hashed string, unable to find delimiter" << endl;
+    } else {
+        hashedPasswordStr = hashedPasswordStr.substr(pos+1);
+    }
+    
+    cout << "hashed key str2: " << hashedPasswordStr << " length: " << hashedPasswordStr.length() << endl;
+
+    auto hashed_b64 = base64_encode(hashedPasswordStr);
     cout << "hashed key b64: " << hashed_b64 << " length: " << hashed_b64.length() << endl;
 
-    auto decoded_b64 = base64_decode(hashed_b64);
-    cout << "decoded b64: " << decoded_b64 << " length: " << decoded_b64.length() << endl;
+    return hashed_b64;
 }
 
 #define KEY_LEN crypto_box_SEEDBYTES
@@ -162,56 +175,39 @@ int main(){
     auto subkey_b64 = base64_encode(std::string(reinterpret_cast<const char*>(subkey1)));
     cout << "sub key in b64: " << subkey_b64 << endl;
 
-    pwhash_str(key_b64);
-    //pwhash(key_b64);
+    string hashed_b64 = pwhash_str(subkey_b64);
 
-/*     for(int i=0; i<100; i++){
-        unsigned char salt[crypto_pwhash_SALTBYTES];
-        randombytes_buf(salt, sizeof salt);
-        cout << i << ": " << base64_encode(std::string(reinterpret_cast<const char*>(salt))) << endl;
-    } */
+    auto decoded_b64 = base64_decode(hashed_b64);
+    cout << "decoded b64: " << decoded_b64 << " length: " << decoded_b64.length() << endl;
 
+    string argon_param = "$argon2id$v=19$m=1048576,t=4,p=1$";
 
-    string argon_param = "$argon2id$v=19$m=1048576,t=4,p=";
+    string decodedAndParams = argon_param + decoded_b64; 
 
-}
+    cout << "decodedAndParams: " << decodedAndParams << endl;
 
-/* #define BASE64_VARIATION sodium_base64_VARIANT_URLSAFE_NO_PADDING
-
-std::string base64_encode(std::string bin_str){
-    const size_t bin_len = bin_str.size();
-    const size_t base64_max_len = sodium_base64_encoded_len(bin_len, BASE64_VARIATION);
-    std::string base64_str(base64_max_len-1,0);
-
-    char * encoded_str_char = sodium_bin2base64(
-            base64_str.data(),
-            base64_max_len,
-            (unsigned char *) bin_str.data(),
-            bin_len,
-            BASE64_VARIATION
-    );
-
-    if(encoded_str_char == NULL){
-        throw "Base64 Error: Failed to encode string";
+    if (crypto_pwhash_str_verify
+    (decodedAndParams.c_str(), "cBivDoh6KUrTStfrAWTGMGSoRIVTV34DkWYvq79o3LC", strlen("cBivDoh6KUrTStfrAWTGMGSoRIVTV34DkWYvq79o3LC")) != 0) {
+        cout << "wrong password - did not verify" << endl;
+    } else {
+        cout << "verified password" << endl;
     }
 
-    return base64_str;
+    /* 
+    derive subkey
+    base64 encode subkey
+    use half of base64 subkey as password in Argon2id algorithm to string
+    remove Argon2id params from front of string
+    base64_url encode Argon2id hash = filename of index
+
+    to restore index:
+        - compute same subkey from master key
+        - base64 encode subkey split in half
+        - decode base 64 for all filenames on remote
+        - prefix Argon2id params to all decoded b64 strings ("$argon2id$v=19$m=1048576,t=4,p=1$")
+        - use verify function to check base 64 encoded half subkey against all values until it verifies
+        - on average will have to check half the files before finding a match. base64 decode is quick, test verification.
+
+        - 
+     */
 }
-
-std::string base64_decode(std::string base64_str){
-    const size_t bin_len = sodium_base64_ENCODED_LEN(base64_str.size(), BASE64_VARIATION);
-    const size_t base64_max_len = sodium_base64_encoded_len(bin_len, BASE64_VARIATION);
-    std::string outputStr(base64_max_len-1,0);
-
-    const size_t bin_maxlen = 4096;
-    const size_t b64_len = base64_str.size();
-
-    int sodium_base642bin(outputStr.data(), 
-                        outputStr.length(),
-                        (unsigned char *) base64_str.data(), 
-                        b64_len,
-                        const char * const ignore, 
-                        size_t * const bin_len,
-                        NULL, 
-                        BASE64_VARIATION);
-} */

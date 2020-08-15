@@ -366,3 +366,21 @@ Fri 14/8/2020
             - derive a subkey - this is safer "Given the master key and a key identifier, a subkey can be deterministically computed. However, given a subkey, an attacker cannot compute the master key nor any other subkeys."
         - solution 2: use a separate password phrase to encode the index filename - but this password would then have to be remembered
 - todo: construct a loop that does some actions more frequent than others, run a loop within a loop - we want DB to updated less frequently than scanFileChange in Watch.cpp
+
+Sat 15/8/2020
+- Finish test implementation of index filename encryption - see test/encryption/nacl/index-encrypt.cpp
+    - to derive index filename encryption:
+        - derive 64 byte subkey from master key
+        - base64 encode subkey
+        - use half of base64 subkey as password in Argon2id algorithm to stored string
+        - remove Argon2id params from front of string
+        - base64_url encode Argon2id hash = filename of index
+    to restore index:
+        - compute same subkey as above from master key (use same CONTEXT string as parameter - "INDEX___")
+        - base64 encode subkey and split in half
+        - decode base 64 for all filenames on remote
+        - prefix Argon2id params to all decoded b64 strings ("$argon2id$v=19$m=1048576,t=4,p=1$")
+        - use verify function to check base 64 encoded half subkey against all values until it verifies
+        - on average will have to check half the files before finding a match. base64 decode is quick, test speed of verification with many files.
+        - some slowness is acceptable since restoring index from remote will only be done very rarely, in the event of loss of local index file.
+- todo: change random file name to 88 chars to match above b64 output, and include b64 url chars ('_' and '-')
