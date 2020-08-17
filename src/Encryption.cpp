@@ -123,6 +123,59 @@ string Encryption::hashFile(const string path){ // hash a file in chunks of BUFF
     return hex;
 }
 
+std::string Encryption::base64_encode(const std::string & in){
+  std::string out;
+  int val =0, valb=-6;
+  size_t len = in.length();
+  unsigned int i = 0;
+  for (i = 0; i < len; i++) {
+    unsigned char c = in[i];
+    val = (val<<8) + c;
+    valb += 8;
+    while (valb >= 0) {
+      out.push_back(base64_url_alphabet[(val>>valb)&0x3F]);
+      valb -= 6;
+    }
+  }
+  if (valb > -6) {
+    out.push_back(base64_url_alphabet[((val<<8)>>(valb+8))&0x3F]);
+  }
+  return out;
+}
+
+std::string Encryption::base64_decode(const std::string & in){
+  std::string out;
+  std::vector<int> T(256, -1);
+  unsigned int i;
+  for (i =0; i < 64; i++) T[base64_url_alphabet[i]] = i;
+
+  int val = 0, valb = -8;
+  for (i = 0; i < in.length(); i++) {
+    unsigned char c = in[i];
+    if (T[c] == -1) break;
+    val = (val<<6) + T[c];
+    valb += 6;
+    if (valb >= 0) {
+      out.push_back(char((val>>valb)&0xFF));
+      valb -= 8;
+    }
+  }
+  return out;
+}
+
+string Encryption::passwordKDF(string password){
+    char hashed_password[crypto_pwhash_STRBYTES];
+
+    if (crypto_pwhash_str
+    (hashed_password, password.c_str(), password.length(), crypto_pwhash_OPSLIMIT_SENSITIVE, crypto_pwhash_MEMLIMIT_SENSITIVE) != 0){
+        throw std::bad_alloc(); // out of memory
+    }
+
+    auto hashedPasswordStr = std::string(reinterpret_cast<const char*>(hashed_password));
+
+    return hashedPasswordStr;
+}
+
 /* legacy hash code
 
 string Encryption::sha256(const string str)

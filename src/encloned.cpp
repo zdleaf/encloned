@@ -15,7 +15,7 @@ encloned::encloned(){ // constructor
     db = std::make_shared<DB>();
     socket = std::make_shared<Socket>(&runThreads);
     remote = std::make_shared<Remote>(&runThreads, this);
-    watch = std::make_shared<Watch>(db, &runThreads);
+    watch = std::make_shared<Watch>(db, &runThreads, this);
 
     remote->setPtr(watch);
     watch->setPtr(remote);

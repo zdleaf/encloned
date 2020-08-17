@@ -29,6 +29,7 @@ using std::get;
 namespace fs = std::filesystem;
 
 class Remote;
+class encloned;
 
 struct FileVersion {
     std::time_t modtime;
@@ -41,7 +42,7 @@ struct FileVersion {
 
 class Watch {
     public:
-        Watch(std::shared_ptr<DB> db, std::atomic_bool *runThreads);
+        Watch(std::shared_ptr<DB> db, std::atomic_bool *runThreads, encloned* daemon);
         ~Watch();
 
         void setPtr(std::shared_ptr<Remote> remote);
@@ -81,6 +82,7 @@ class Watch {
 
         std::shared_ptr<Remote> remote; // pointer to Remote handler
         std::shared_ptr<DB> db;         // database handle
+        encloned* daemon; // ptr to main daemon class that spawned this
 
         std::stringstream sqlQueue;     // sql queue/bucket of queries to execute in batches
 
@@ -97,9 +99,14 @@ class Watch {
 
         std::time_t getLastModTime(std::string path);
 
+        string indexBackupName;
+        void deriveIdxBackupName();
+        void indexBackup();
+
         void restoreDB();
         void restoreFileIdx();
         void restoreDirIdx();
+        void restoreIdxBackupName();
 };
 
 #endif

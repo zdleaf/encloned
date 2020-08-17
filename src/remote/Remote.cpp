@@ -65,6 +65,10 @@ void Remote::uploadSuccess(std::string path, std::string objectName, int remoteI
     watch->uploadSuccess(path, objectName, remoteID);
 }
 
+void Remote::uploadNow(string path, string pathHash){
+    s3->callAPI("uploadNow|" + path + "|" + pathHash);
+}
+
 string Remote::listObjects(){
     mtx.lock();
     std::vector<string> objects;

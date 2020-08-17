@@ -1,8 +1,9 @@
 #include <enclone/Watch.h>
 
-Watch::Watch(std::shared_ptr<DB> db, std::atomic_bool *runThreads){ // constructor
+Watch::Watch(std::shared_ptr<DB> db, std::atomic_bool *runThreads, encloned* daemon){ // constructor
     this->db = db; // set DB handle
     this->runThreads = runThreads;
+    this->daemon = daemon;
 }
 
 Watch::~Watch(){ // destructor
@@ -15,12 +16,20 @@ void Watch::setPtr(std::shared_ptr<Remote> remote){
 
 void Watch::execThread(){
     restoreDB();
-
     while(*runThreads){
-        //cout << "Watch: Scanning for file changes..." << endl; cout.flush(); 
-        scanFileChange();
-        execQueuedSQL();
-        std::this_thread::sleep_for(std::chrono::seconds(2));
+        for(int i = 0; i<5; i++){ // takes 5x2s before next = 10s
+            for(int i = 0; i<5; i++){ // takes 5x1s before next = 5s
+                scanFileChange();
+                
+                indexBackup(); // temp - delete me
+                
+                //cout << "Watch: Scanning for file changes..." << endl; cout.flush();
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+            }
+            execQueuedSQL();
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+        }
+        //indexBackup();
     }
 }
 
@@ -345,6 +354,50 @@ bool Watch::verifyHash(string pathHash, string fileHash){
     return false;
 }
 
+void Watch::deriveIdxBackupName(){
+    uint8_t subKey[64];
+
+    // derive subkey from master key
+    crypto_kdf_derive_from_key(subKey, sizeof subKey, 1, "INDEX___", daemon->getKey());
+
+    // base64 encode the subkey
+    auto subKey_b64 = Encryption::base64_encode(std::string(reinterpret_cast<const char*>(subKey)));
+    // derive an Argon2id password hash string
+    string hashedSubKey = Encryption::passwordKDF(subKey_b64.substr(0, subKey_b64.length()/2)); // split the key in half (32 bytes) - even if Argon2id password hash is defeated, this only results in half a subkey being exposed. even with a full derived subkey, it is not possible to determine the master key from this.
+
+    // remove argon2id parameters from the front of the hash - "$argon2id$v=19$m=1048576,t=4,p=1$"
+    size_t pos = 0;
+    int count = 0;
+
+    while(count != 3){
+        pos+=1;
+        pos = hashedSubKey.find("$", pos);
+        count++;
+    }
+
+    if (pos == std::string::npos){
+        throw std::runtime_error("error: Argon2id hashed string, unable to find delimiter\n");
+    } else {
+        hashedSubKey = hashedSubKey.substr(pos+1);
+    }
+
+    // b64 url encode the password hash - this is the filename used as index backup name on remote
+    indexBackupName = Encryption::base64_encode(hashedSubKey);
+    cout << "Used master key to derive filename to use for index file backup: " << indexBackupName << " length: " << indexBackupName.length() << endl;
+    sqlQueue << "INSERT or IGNORE INTO indexBackup (PATH, IDXNAME) VALUES ('" << db->getDbLocation() << "','" << indexBackupName << "');"; 
+}
+
+void Watch::indexBackup(){
+    std::lock_guard<std::mutex> guard(mtx);
+    /* 
+    close db
+    encrypt index to temp
+    open db
+     */
+
+    remote->uploadNow(db->getDbLocation(), "12345");
+}
+
 
 void Watch::restoreDB(){
     std::lock_guard<std::mutex> guard(mtx);
@@ -354,6 +407,17 @@ void Watch::restoreDB(){
     cout << "Restoring directory index from DB..." << endl; cout.flush();
     restoreDirIdx();
     cout << listWatchDirs();
+    cout << "Restoring index backup name from DB..." << endl; cout.flush();
+    restoreIdxBackupName();
+
+    // check we've restore an indexBackupName - if it doesn't exist then we need to derive it
+    if(indexBackupName.empty()){ // if the indexBackup doesn't exist i.e. db location doesn't exist in map, then derive one
+        try {
+            deriveIdxBackupName();
+        } catch (std::exception &e) {
+            cout << e.what() << endl;
+        }
+    }
 }
 
 void Watch::restoreFileIdx(){
@@ -378,7 +442,7 @@ void Watch::restoreFileIdx(){
         bool localExists = sqlite3_column_int(stmt, 4);
         bool remoteExists = sqlite3_column_int(stmt, 5);
         if(fileIndex.find(path) == fileIndex.end()){ // if entry for path does not exist
-            //cout << path << " does not exist in fileIndex - adding and init vector.." << endl;
+            cout << path << " does not exist in fileIndex - adding and init vector.." << endl;
             fileIndex.insert({  path, std::vector<FileVersion>{ // create entry and initialise vector 
                                     FileVersion{    modtime,  // brace initialisation of first object
                                                     pathHash, 
@@ -420,6 +484,31 @@ void Watch::restoreDirIdx(){
         string path = string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0)));
         int recursiveFlag = sqlite3_column_int(stmt, 1);
         dirIndex.insert({path, recursiveFlag});      // insert path and recursive flag into dirIndex
+        rc = sqlite3_step(stmt);
+    }
+
+    sqlite3_finalize(stmt);
+}
+
+void Watch::restoreIdxBackupName(){
+    const char getName[] = "SELECT * FROM indexBackup;";
+
+    int rc, i, ncols;
+    sqlite3_stmt *stmt;
+    const char *tail;
+    rc = sqlite3_prepare(db->getDbPtr(), getName, strlen(getName), &stmt, &tail);
+    if(rc != SQLITE_OK) {
+        fprintf(stderr, "restoreDirIdx: SQL error: %s\n", sqlite3_errmsg(db->getDbPtr()));
+    }
+
+    rc = sqlite3_step(stmt);
+    ncols = sqlite3_column_count(stmt);
+
+    while(rc == SQLITE_ROW) {
+        string path = string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0)));
+        string idxName = string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1)));
+        indexBackupName = idxName;
+        cout << "Restored index backup name: " << idxName << endl;
         rc = sqlite3_step(stmt);
     }
 

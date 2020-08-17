@@ -35,6 +35,10 @@ sqlite3* DB::getDbPtr(){
     return db;
 }
 
+const char* DB::getDbLocation(){
+    return DATABASE_LOCATION;
+}
+
 int DB::execSQL(const char sql[]){
     char* error;
     int exitcode = sqlite3_exec(db, sql, NULL, NULL, &error);
@@ -62,6 +66,11 @@ void DB::initialiseTables(){
         "FILEHASH       TEXT,"
         "LOCALEXISTS    BOOLEAN,"
         "REMOTEEXISTS   BOOLEAN);";
+    const char indexBackup[] = "CREATE TABLE IF NOT EXISTS indexBackup ("
+        "PATH       TEXT    NOT NULL    UNIQUE,"
+        "IDXNAME    TEXT    NOT NULL);";
+
     execSQL(dirIndex);
     execSQL(fileIndex);
+    execSQL(indexBackup);
 }

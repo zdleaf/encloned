@@ -47,8 +47,18 @@ string S3::callAPI(string arg){
         transferConfig.s3Client = s3_client;
         auto transferManager = Aws::Transfer::TransferManager::Create(transferConfig);
 
+        cout << "DEBUG: arg.substr(0, 9): " << arg.substr(0, 9) << endl;
         if(arg == "upload"){
             uploadFromQueue(transferManager);
+        } else if (arg.substr(0, 9) == "uploadNow"){
+            // split the arguments (path|pathHash)
+            auto delimPos = arg.find('|', 10);
+            string path = std::string(&arg[10], &arg[delimPos]);
+            string pathHash = arg.substr(delimPos+1);
+
+            cout << "DEBUG: path: " << path << " pathHash: " << pathHash << endl;
+
+            //uploadObject(transferManager, BUCKET_NAME, path, pathHash);
         } else if (arg == "download"){
             response = downloadFromQueue(transferManager);
         } else if (arg == "listObjects"){

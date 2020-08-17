@@ -384,3 +384,7 @@ Sat 15/8/2020
         - on average will have to check half the files before finding a match. base64 decode is quick, test speed of verification with many files.
         - some slowness is acceptable since restoring index from remote will only be done very rarely, in the event of loss of local index file.
 - todo: change random file name to 88 chars to match above b64 output, and include b64 url chars ('_' and '-')
+
+Mon 17/8/2020
+- todo: load indexBackupName from database - do not want to derive on every start, only if index does not exist
+    - make sure --clean doesn't delete our index backup
