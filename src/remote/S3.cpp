@@ -47,7 +47,7 @@ string S3::callAPI(string arg){
         transferConfig.s3Client = s3_client;
         auto transferManager = Aws::Transfer::TransferManager::Create(transferConfig);
 
-        cout << "DEBUG: arg.substr(0, 9): " << arg.substr(0, 9) << endl;
+        //cout << "DEBUG: arg.substr(0, 9): " << arg.substr(0, 9) << endl;
         if(arg == "upload"){
             uploadFromQueue(transferManager);
         } else if (arg.substr(0, 9) == "uploadNow"){
@@ -56,9 +56,12 @@ string S3::callAPI(string arg){
             string path = std::string(&arg[10], &arg[delimPos]);
             string pathHash = arg.substr(delimPos+1);
 
-            cout << "DEBUG: path: " << path << " pathHash: " << pathHash << endl;
+            //cout << "DEBUG: path: " << path << " pathHash: " << pathHash << endl;
 
-            //uploadObject(transferManager, BUCKET_NAME, path, pathHash);
+            bool result = uploadObject(transferManager, BUCKET_NAME, path, pathHash);
+            if(result){ response = "Remote: index file backup complete\n"; }
+            else { response = "Remote: error backing up Index to " + pathHash + "\n"; }
+
         } else if (arg == "download"){
             response = downloadFromQueue(transferManager);
         } else if (arg == "listObjects"){

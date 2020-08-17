@@ -59,6 +59,7 @@ void DB::initialiseTables(){
     const char dirIndex[] = "CREATE TABLE IF NOT EXISTS dirIndex ("
         "PATH       TEXT    NOT NULL    UNIQUE,"
         "RECURSIVE  BOOLEAN NOT NULL    DEFAULT FALSE);";
+
     const char fileIndex[] = "CREATE TABLE IF NOT EXISTS fileIndex ("
         "PATH       TEXT    NOT NULL," 
         "MODTIME    INTEGER NOT NULL,"
@@ -66,9 +67,11 @@ void DB::initialiseTables(){
         "FILEHASH       TEXT,"
         "LOCALEXISTS    BOOLEAN,"
         "REMOTEEXISTS   BOOLEAN);";
+
     const char indexBackup[] = "CREATE TABLE IF NOT EXISTS indexBackup ("
         "PATH       TEXT    NOT NULL    UNIQUE,"
-        "IDXNAME    TEXT    NOT NULL);";
+        "IDXNAME    TEXT    NOT NULL,"
+        "MODTIME    INTEGER);";
 
     execSQL(dirIndex);
     execSQL(fileIndex);

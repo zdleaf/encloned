@@ -46,7 +46,7 @@ class Remote{
         bool queueForDownload(std::string path, std::string objectName, std::time_t modtime, string targetPath);
         bool queueForDelete(std::string objectName);
 
-        void uploadNow(string path, string pathHash);
+        string uploadNow(string path, string pathHash);
 
         string listObjects();
         string cleanRemote();

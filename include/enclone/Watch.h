@@ -100,6 +100,7 @@ class Watch {
         std::time_t getLastModTime(std::string path);
 
         string indexBackupName;
+        std::time_t indexLastMod;
         void deriveIdxBackupName();
         void indexBackup();
 

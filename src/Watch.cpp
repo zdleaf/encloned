@@ -19,17 +19,14 @@ void Watch::execThread(){
     while(*runThreads){
         for(int i = 0; i<5; i++){ // takes 5x2s before next = 10s
             for(int i = 0; i<5; i++){ // takes 5x1s before next = 5s
-                scanFileChange();
-                
-                indexBackup(); // temp - delete me
-                
                 //cout << "Watch: Scanning for file changes..." << endl; cout.flush();
+                scanFileChange();
                 std::this_thread::sleep_for(std::chrono::seconds(1));
             }
             execQueuedSQL();
             std::this_thread::sleep_for(std::chrono::seconds(2));
         }
-        //indexBackup();
+        indexBackup();
     }
 }
 
@@ -388,14 +385,33 @@ void Watch::deriveIdxBackupName(){
 }
 
 void Watch::indexBackup(){
-    std::lock_guard<std::mutex> guard(mtx);
     /* 
     close db
-    encrypt index to temp
+    encrypt and upload index file
     open db
+    set last mod time in db
      */
-
-    remote->uploadNow(db->getDbLocation(), "12345");
+    std::lock_guard<std::mutex> guard(mtx);
+    auto fstime = fs::last_write_time(db->getDbLocation()); // get modtime from index file
+    auto recentModTime = decltype(fstime)::clock::to_time_t(fstime);
+    if(recentModTime > indexLastMod || indexLastMod == (time_t)-1)
+    {
+        cout << "Watch: Backing up Index file to remote..." << endl;
+        db->closeDB(); cout << "Watch: Closing DB..." << endl;
+        string result = remote->uploadNow(db->getDbLocation(), indexBackupName); // encrypt and upload
+        cout << result;
+        db->openDB(); cout << "Watch: Re-opening DB..." << endl;
+        
+        // set the modtime
+        std::stringstream ss;
+        ss << "UPDATE indexBackup SET MODTIME = " << recentModTime << " WHERE IDXNAME = \"" << indexBackupName << "\";";
+        int errorcode = db->execSQL(ss.str().c_str());
+        if(!errorcode){ 
+            // modtime of index has now changed as we've updated modtime value in database - reset the modtime
+            auto fstime = fs::last_write_time(db->getDbLocation()); // get modtime from index file
+            indexLastMod = decltype(fstime)::clock::to_time_t(fstime);
+        };
+    }
 }
 
 
@@ -412,6 +428,7 @@ void Watch::restoreDB(){
 
     // check we've restore an indexBackupName - if it doesn't exist then we need to derive it
     if(indexBackupName.empty()){ // if the indexBackup doesn't exist i.e. db location doesn't exist in map, then derive one
+        indexLastMod = -1; // reset the last mod time of the index
         try {
             deriveIdxBackupName();
         } catch (std::exception &e) {
@@ -507,7 +524,9 @@ void Watch::restoreIdxBackupName(){
     while(rc == SQLITE_ROW) {
         string path = string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0)));
         string idxName = string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1)));
+        std::time_t modtime = (time_t)sqlite3_column_int(stmt, 2);
         indexBackupName = idxName;
+        indexLastMod = modtime;
         cout << "Restored index backup name: " << idxName << endl;
         rc = sqlite3_step(stmt);
     }
@@ -516,15 +535,20 @@ void Watch::restoreIdxBackupName(){
 }
 
 void Watch::uploadSuccess(std::string path, std::string objectName, int remoteID){
-    auto fileVersionVector = &fileIndex.at(path);
-    // set the remoteExists flag for correct entry in fileIndex
-    for(auto it = fileVersionVector->rbegin(); it != fileVersionVector->rend(); ++it){ // iterate in reverse, most likely the last entry is the one we're looking for
-        if(it->pathHash == objectName){ 
-            it->remoteExists = true;
-            // also add remoteID to list of remotes it's been uploaded to e.g. remoteLocation
+    if(objectName == indexBackupName){ return; } // if we've uploaded a backup of the index, we don't need to run this function
+    try {
+        auto fileVersionVector = &fileIndex.at(path);
+        // set the remoteExists flag for correct entry in fileIndex
+        for(auto it = fileVersionVector->rbegin(); it != fileVersionVector->rend(); ++it){ // iterate in reverse, most likely the last entry is the one we're looking for
+            if(it->pathHash == objectName){ 
+                it->remoteExists = true;
+                // also add remoteID to list of remotes it's been uploaded to e.g. remoteLocation
+            }
         }
-    }
-    sqlQueue << "UPDATE fileIndex SET REMOTEEXISTS = TRUE WHERE PATHHASH ='" << objectName << "';"; // queue SQL update  
+        sqlQueue << "UPDATE fileIndex SET REMOTEEXISTS = TRUE WHERE PATHHASH ='" << objectName << "';"; // queue SQL update  
+    } catch (const std::out_of_range &e){
+        throw;
+    } 
 }
 
 /* LEGACY CODE

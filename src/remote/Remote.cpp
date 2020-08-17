@@ -61,12 +61,12 @@ bool Remote::queueForDelete(std::string objectName){
     return s3->enqueueDelete(objectName);
 }
 
-void Remote::uploadSuccess(std::string path, std::string objectName, int remoteID){ // update fileIndex if upload to remote is succesfull
+void Remote::uploadSuccess(std::string path, std::string objectName, int remoteID){ // update fileIndex if upload to remote is succesful
     watch->uploadSuccess(path, objectName, remoteID);
 }
 
-void Remote::uploadNow(string path, string pathHash){
-    s3->callAPI("uploadNow|" + path + "|" + pathHash);
+string Remote::uploadNow(string path, string pathHash){
+    return s3->callAPI("uploadNow|" + path + "|" + pathHash);
 }
 
 string Remote::listObjects(){

@@ -386,5 +386,9 @@ Sat 15/8/2020
 - todo: change random file name to 88 chars to match above b64 output, and include b64 url chars ('_' and '-')
 
 Mon 17/8/2020
-- todo: load indexBackupName from database - do not want to derive on every start, only if index does not exist
-    - make sure --clean doesn't delete our index backup
+- Implemented index backup into code - index is backed up if it has changed since last upload
+    - When starting daemon, the index filename on remote and last modtime is restored from DB
+    - If this does not exist, a new index filename is derived from a subkey derived from the master key
+    -todo:
+        - make sure --clean doesn't delete our index backup
+        - implement --restore-index command to restore backup from remote

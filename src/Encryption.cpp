@@ -82,7 +82,7 @@ ret:
 
 string Encryption::randomString(std::size_t length)
 {
-    const std::string CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    const std::string CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_-";
     std::random_device random_device;
     std::mt19937 generator(random_device());
     std::uniform_int_distribution<> distribution(0, CHARACTERS.size()-1);
@@ -94,7 +94,7 @@ string Encryption::randomString(std::size_t length)
 }
 
 string Encryption::hashPath(const string path){
-    return randomString(64);
+    return randomString(88);
 }
 
 string Encryption::hashFile(const string path){ // hash a file in chunks of BUFFER_SIZE

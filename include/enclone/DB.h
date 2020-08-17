@@ -15,15 +15,15 @@ class DB {
         const char* DATABASE_LOCATION = "index.db";
         
         sqlite3 *db; // index handle
-
-        void openDB();
-        void closeDB();
         
         void initialiseTables(); // initialise tables on first run
 
     public:
         DB();
         ~DB();
+
+        void openDB();
+        void closeDB();
 
         sqlite3* getDbPtr();
         const char* getDbLocation();
