@@ -52,6 +52,7 @@ string Watch::addWatch(string path, bool recursive){
 }
 
 string Watch::addDirWatch(string path, bool recursive){
+    std::lock_guard<std::mutex> guard(mtx);
     auto result = dirIndex.insert({path, recursive});
     std::stringstream response;
     if(result.second){ // check if insertion was successful i.e. result.second = true (false when already exists in map)
@@ -75,7 +76,7 @@ string Watch::addDirWatch(string path, bool recursive){
 }
 
 string Watch::addFileWatch(string path){
-    
+    std::lock_guard<std::mutex> guard(mtx);
     // temporary extension exclusions - ignore .swp files
     if(fs::path(path).extension() == ".swp"){
         return "ignored .swp file";
@@ -94,6 +95,7 @@ string Watch::addFileWatch(string path){
 }
 
 void Watch::addFileVersion(std::string path){
+    std::lock_guard<std::mutex> guard(mtx);
     auto fileVector = &fileIndex[path];
     auto fstime = fs::last_write_time(path); // get modtime from file
     std::time_t modtime = decltype(fstime)::clock::to_time_t(fstime);
@@ -128,6 +130,7 @@ string Watch::delWatch(string path, bool recursive){
 }
 
 string Watch::delDirWatch(string path, bool recursive){
+    std::lock_guard<std::mutex> guard(mtx);
     std::stringstream response;
 
     for (const auto & entry : fs::directory_iterator(path)){ // iterate through all directory entries
@@ -150,6 +153,7 @@ string Watch::delDirWatch(string path, bool recursive){
 }
 
 string Watch::delFileWatch(string path){
+    std::lock_guard<std::mutex> guard(mtx);
     std::stringstream response;
     auto fileVersions = fileIndex[path];
     for(auto elem: fileVersions){
@@ -163,6 +167,7 @@ string Watch::delFileWatch(string path){
 }
 
 void Watch::scanFileChange(){
+    std::lock_guard<std::mutex> guard(mtx);
     // existing files that are being watched
     for(auto elem: fileIndex){
         string path = elem.first;
@@ -172,7 +177,6 @@ void Watch::scanFileChange(){
 
         // if file has been deleted, but is still marked as existing locally
         if(!fs::exists(path) && elem.second.back().localExists == true){ 
-            std::lock_guard<std::mutex> guard(mtx);
             cout << "Watch: " << "File no longer exists: " << path << endl;
             
             fileIndex[path].back().localExists = false;
@@ -245,6 +249,7 @@ void Watch::execQueuedSQL(){
 }
 
 void Watch::displayWatchDirs(){
+    std::lock_guard<std::mutex> guard(mtx);
     cout << "Watched directories: " << endl;
     for(auto elem: dirIndex){
         cout << elem.first << " recursive: " << elem.second << endl;
@@ -252,6 +257,7 @@ void Watch::displayWatchDirs(){
 }
 
 void Watch::displayWatchFiles(){
+    std::lock_guard<std::mutex> guard(mtx);
     cout << "Watched files: " << endl;
     for(auto elem: fileIndex){
         cout << elem.first << " last modtime: " << elem.second.back().modtime << ", # of versions: " << elem.second.size() << ", exists locally: " << elem.second.back().localExists << ", exists remotely: " << elem.second.back().remoteExists << endl;
@@ -263,6 +269,7 @@ string Watch::listLocal(){
 }
 
 string Watch::listWatchDirs(){
+    std::lock_guard<std::mutex> guard(mtx);
     std::ostringstream ss;
     ss << "Watched directories: " << endl;
     if(dirIndex.empty()){ ss << "none" << endl; }
@@ -276,6 +283,7 @@ string Watch::listWatchDirs(){
 }
 
 string Watch::listWatchFiles(){
+    std::lock_guard<std::mutex> guard(mtx);
     std::ostringstream ss;
     ss << "Watched files: " << endl;
     if(fileIndex.empty()){ ss << "none" << endl; }
@@ -295,6 +303,7 @@ string Watch::displayTime(std::time_t modtime) const{
 }
 
 std::pair<string, std::time_t> Watch::resolvePathHash(string pathHash){
+    std::lock_guard<std::mutex> guard(mtx);
     std::pair<string, std::time_t> result;
     try {
         result = pathHashIndex.at(pathHash);
@@ -306,6 +315,7 @@ std::pair<string, std::time_t> Watch::resolvePathHash(string pathHash){
 }
 
 string Watch::downloadFiles(string targetPath){ // download all files
+    std::lock_guard<std::mutex> guard(mtx);
     for(auto elem: fileIndex){
         remote->queueForDownload(elem.first, elem.second.back().pathHash, elem.second.back().modtime, targetPath);
     }
@@ -313,6 +323,7 @@ string Watch::downloadFiles(string targetPath){ // download all files
 }
 
 string Watch::downloadFiles(string targetPath, string pathOrHash){
+    std::lock_guard<std::mutex> guard(mtx);
     bool foundPathOrHash = false;
     // determine if 2nd parameter is a hash or a path - CLI argument does not distinguish between the two
     if(pathOrHash.length() == 64){ // hashes are 64 bytes long, although we can also have a path this long - first check if file with this hash exists, else treat as a path
@@ -339,6 +350,7 @@ string Watch::downloadFiles(string targetPath, string pathOrHash){
 }
 
 bool Watch::verifyHash(string pathHash, string fileHash){
+    std::lock_guard<std::mutex> guard(mtx);
     auto result = pathHashIndex.at(pathHash);
     auto versions = fileIndex.at(std::get<0>(result));
     for(auto elem: versions){
@@ -352,6 +364,7 @@ bool Watch::verifyHash(string pathHash, string fileHash){
 }
 
 void Watch::deriveIdxBackupName(){
+    std::lock_guard<std::mutex> guard(mtx);
     uint8_t subKey[64];
 
     // derive subkey from master key
@@ -535,6 +548,7 @@ void Watch::restoreIdxBackupName(){
 }
 
 void Watch::uploadSuccess(std::string path, std::string objectName, int remoteID){
+    std::lock_guard<std::mutex> guard(mtx);
     if(objectName == indexBackupName){ return; } // if we've uploaded a backup of the index, we don't need to run this function
     try {
         auto fileVersionVector = &fileIndex.at(path);
