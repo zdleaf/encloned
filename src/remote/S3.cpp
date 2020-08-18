@@ -41,6 +41,7 @@ string S3::callAPI(string arg){
     string response;
     Aws::InitAPI(options);
     {
+        std::lock_guard<std::mutex> guard(mtx);
         std::shared_ptr<Aws::S3::S3Client> s3_client = Aws::MakeShared<Aws::S3::S3Client>("S3Client");
         auto executor = Aws::MakeShared<Aws::Utils::Threading::PooledThreadExecutor>("executor", 25);
         Aws::Transfer::TransferManagerConfiguration transferConfig(executor.get());

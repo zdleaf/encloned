@@ -396,3 +396,7 @@ Tue 18/8/2020
 - Fixed hangs due to certain mutexes in Watch
 - Tidied up --clean output and made sure --clean didn't remove index back up file
 - Added the index backup and modtime to show on --list remote
+- todo: need some kind of lock to avoid any operations on Remote/Socket threads when Watch is closing DB
+    - segfault if other threads try to access DB when Watch closes DB to backup
+        - option 1: try online sqlite db backup, rather than trying to close live DB#
+        - option 2: implement a cross thread mutex to get a lock

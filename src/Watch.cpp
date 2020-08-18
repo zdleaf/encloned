@@ -110,6 +110,7 @@ void Watch::addFileVersion(std::string path){
 }
 
 string Watch::delWatch(string path, bool recursive){
+    std::lock_guard<std::mutex> guard(mtx);
     std::stringstream response;
     fs::file_status s = fs::status(path);
     if(!fs::exists(s)){                 // file/directory does not exist
@@ -126,7 +127,6 @@ string Watch::delWatch(string path, bool recursive){
 }
 
 string Watch::delDirWatch(string path, bool recursive){
-    std::lock_guard<std::mutex> guard(mtx);
     std::stringstream response;
 
     for (const auto & entry : fs::directory_iterator(path)){ // iterate through all directory entries
@@ -149,7 +149,6 @@ string Watch::delDirWatch(string path, bool recursive){
 }
 
 string Watch::delFileWatch(string path){
-    std::lock_guard<std::mutex> guard(mtx);
     std::stringstream response;
     auto fileVersions = fileIndex[path];
     for(auto elem: fileVersions){
