@@ -80,7 +80,7 @@ string S3::callAPI(string arg){
 }
 
 void S3::uploadFromQueue(std::shared_ptr<Aws::Transfer::TransferManager> transferManager){
-    std::lock_guard<std::mutex> guard(mtx);
+    std::scoped_lock<std::mutex> guard(mtx);
     if(uploadQueue.empty()){ return; } 
     for(auto item: uploadQueue){ 
         auto [path, pathHash, modtime] = item; // get values out of the tuple
@@ -121,7 +121,7 @@ void S3::uploadFromQueue(std::shared_ptr<Aws::Transfer::TransferManager> transfe
 
 string S3::downloadFromQueue(std::shared_ptr<Aws::Transfer::TransferManager> transferManager){
     std::ostringstream ss;
-    std::lock_guard<std::mutex> guard(mtx);
+    std::scoped_lock<std::mutex> guard(mtx);
     if(!downloadQueue.empty()){ 
         for(auto item: downloadQueue){
             auto [path, objectName, modtime, targetPath] = item;
@@ -139,7 +139,7 @@ string S3::downloadFromQueue(std::shared_ptr<Aws::Transfer::TransferManager> tra
 
 string S3::deleteFromQueue(std::shared_ptr<Aws::S3::S3Client> s3_client){
     std::ostringstream ss;
-    std::lock_guard<std::mutex> guard(mtx);
+    std::scoped_lock<std::mutex> guard(mtx);
     for(auto item: deleteQueue){
         Aws::String objectName(item);
         try {

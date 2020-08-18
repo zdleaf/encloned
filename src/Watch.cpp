@@ -36,7 +36,7 @@ std::unordered_map<string, std::vector<FileVersion>>* Watch::getFileIndex(){
 }
 
 string Watch::addWatch(string path, bool recursive){
-    std::lock_guard<std::mutex> guard(mtx);
+    std::scoped_lock<std::mutex> guard(mtx);
     std::stringstream response;
     fs::file_status s = fs::status(path);
     if(!fs::exists(s)){                 // file/directory does not exist
@@ -111,7 +111,7 @@ void Watch::addFileVersion(std::string path){
 }
 
 string Watch::delWatch(string path, bool recursive){
-    std::lock_guard<std::mutex> guard(mtx);
+    std::scoped_lock<std::mutex> guard(mtx);
     std::stringstream response;
     fs::file_status s = fs::status(path);
     if(!fs::exists(s)){                 // file/directory does not exist
@@ -163,7 +163,7 @@ string Watch::delFileWatch(string path){
 }
 
 void Watch::scanFileChange(){
-    std::lock_guard<std::mutex> guard(mtx);
+    std::scoped_lock<std::mutex> guard(mtx);
     // existing files that are being watched
     for(auto elem: fileIndex){
         string path = elem.first;
@@ -232,7 +232,7 @@ std::time_t Watch::getLastModTime(std::string path){
 }
 
 void Watch::execQueuedSQL(){
-    std::lock_guard<std::mutex> guard(mtx);
+    std::scoped_lock<std::mutex> guard(mtx);
     if(sqlQueue.rdbuf()->in_avail() != 0) { // if queue is not empty
         db->execSQL(sqlQueue.str().c_str()); // convert to c style string and execute bucket
         sqlQueue.str(""); // empty bucket
@@ -241,7 +241,7 @@ void Watch::execQueuedSQL(){
 }
 
 void Watch::displayWatchDirs(){
-    std::lock_guard<std::mutex> guard(mtx);
+    std::scoped_lock<std::mutex> guard(mtx);
     cout << "Watched directories: " << endl;
     for(auto elem: dirIndex){
         cout << elem.first << " recursive: " << elem.second << endl;
@@ -249,7 +249,7 @@ void Watch::displayWatchDirs(){
 }
 
 void Watch::displayWatchFiles(){
-    std::lock_guard<std::mutex> guard(mtx);
+    std::scoped_lock<std::mutex> guard(mtx);
     cout << "Watched files: " << endl;
     for(auto elem: fileIndex){
         cout << elem.first << " last modtime: " << elem.second.back().modtime << ", # of versions: " << elem.second.size() << ", exists locally: " << elem.second.back().localExists << ", exists remotely: " << elem.second.back().remoteExists << endl;
@@ -261,7 +261,7 @@ string Watch::listLocal(){
 }
 
 string Watch::listWatchDirs(){
-    std::lock_guard<std::mutex> guard(mtx);
+    std::scoped_lock<std::mutex> guard(mtx);
     std::ostringstream ss;
     ss << "Watched directories: " << endl;
     if(dirIndex.empty()){ ss << "none" << endl; }
@@ -275,7 +275,7 @@ string Watch::listWatchDirs(){
 }
 
 string Watch::listWatchFiles(){
-    std::lock_guard<std::mutex> guard(mtx);
+    std::scoped_lock<std::mutex> guard(mtx);
     std::ostringstream ss;
     ss << "Watched files: " << endl;
     if(fileIndex.empty()){ ss << "none" << endl; }
@@ -295,7 +295,7 @@ string Watch::displayTime(std::time_t modtime) const{
 }
 
 std::pair<string, std::time_t> Watch::resolvePathHash(string pathHash){
-    std::lock_guard<std::mutex> guard(mtx);
+    std::scoped_lock<std::mutex> guard(mtx);
     std::pair<string, std::time_t> result;
     try {
         result = pathHashIndex.at(pathHash);
@@ -308,7 +308,7 @@ std::pair<string, std::time_t> Watch::resolvePathHash(string pathHash){
 }
 
 string Watch::downloadFiles(string targetPath){ // download all files
-    std::lock_guard<std::mutex> guard(mtx);
+    std::scoped_lock<std::mutex> guard(mtx);
     for(auto elem: fileIndex){
         remote->queueForDownload(elem.first, elem.second.back().pathHash, elem.second.back().modtime, targetPath);
     }
@@ -316,7 +316,7 @@ string Watch::downloadFiles(string targetPath){ // download all files
 }
 
 string Watch::downloadFiles(string targetPath, string pathOrHash){
-    std::lock_guard<std::mutex> guard(mtx);
+    std::scoped_lock<std::mutex> guard(mtx);
     bool foundPathOrHash = false;
     // determine if 2nd parameter is a hash or a path - CLI argument does not distinguish between the two
     if(pathOrHash.length() == 64){ // hashes are 64 bytes long, although we can also have a path this long - first check if file with this hash exists, else treat as a path
@@ -343,7 +343,7 @@ string Watch::downloadFiles(string targetPath, string pathOrHash){
 }
 
 bool Watch::verifyHash(string pathHash, string fileHash){
-    std::lock_guard<std::mutex> guard(mtx);
+    std::scoped_lock<std::mutex> guard(mtx);
     auto result = pathHashIndex.at(pathHash);
     auto versions = fileIndex.at(std::get<0>(result));
     for(auto elem: versions){
@@ -357,7 +357,7 @@ bool Watch::verifyHash(string pathHash, string fileHash){
 }
 
 void Watch::deriveIdxBackupName(){
-    std::lock_guard<std::mutex> guard(mtx);
+    std::scoped_lock<std::mutex> guard(mtx);
     uint8_t subKey[64];
 
     // derive subkey from master key
@@ -554,7 +554,7 @@ void Watch::restoreIdxBackupName(){
 }
 
 void Watch::uploadSuccess(std::string path, std::string objectName, int remoteID){
-    std::lock_guard<std::mutex> guard(mtx);
+    std::scoped_lock<std::mutex> guard(mtx);
     if(objectName == indexBackupName){ return; } // if we've uploaded a backup of the index, we don't need to run this function
     try {
         auto fileVersionVector = &fileIndex.at(path);
@@ -565,7 +565,7 @@ void Watch::uploadSuccess(std::string path, std::string objectName, int remoteID
                 // also add remoteID to list of remotes it's been uploaded to e.g. remoteLocation
             }
         }
-        std::lock_guard<std::mutex> guard(mtx);
+        std::scoped_lock<std::mutex> guard(mtx);
         sqlQueue << "UPDATE fileIndex SET REMOTEEXISTS = TRUE WHERE PATHHASH ='" << objectName << "';"; // queue SQL update  
     } catch (const std::out_of_range &e){
         throw;

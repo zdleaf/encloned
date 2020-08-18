@@ -29,34 +29,34 @@ std::shared_ptr<Watch> Remote::getWatch(){
 }
 
 void Remote::uploadRemotes(){
-    std::lock_guard<std::mutex> guard(mtx);
+    std::scoped_lock<std::mutex> guard(mtx);
     s3->callAPI("upload");
 }
 
 string Remote::downloadRemotes(){
-    std::lock_guard<std::mutex> guard(mtx);
+    std::scoped_lock<std::mutex> guard(mtx);
     return s3->callAPI("download"); 
 }
 
 void Remote::deleteRemotes(){
-    std::lock_guard<std::mutex> guard(mtx);
+    std::scoped_lock<std::mutex> guard(mtx);
     s3->callAPI("delete");
 }
 
 bool Remote::queueForUpload(std::string path, std::string objectName, std::time_t modtime){
-    std::lock_guard<std::mutex> guard(mtx);
+    std::scoped_lock<std::mutex> guard(mtx);
     // call remotes
     return s3->enqueueUpload(path, objectName, modtime);
 }
 
 bool Remote::queueForDownload(std::string path, std::string objectName, std::time_t modtime, string targetPath){
-    std::lock_guard<std::mutex> guard(mtx);
+    std::scoped_lock<std::mutex> guard(mtx);
     // call remotes
     return s3->enqueueDownload(path, objectName, modtime, targetPath);
 }
 
 bool Remote::queueForDelete(std::string objectName){
-    std::lock_guard<std::mutex> guard(mtx);
+    std::scoped_lock<std::mutex> guard(mtx);
     // call remotes
     return s3->enqueueDelete(objectName);
 }
@@ -70,7 +70,7 @@ string Remote::uploadNow(string path, string pathHash){
 }
 
 string Remote::listObjects(){
-    std::lock_guard<std::mutex> guard(mtx);
+    std::scoped_lock<std::mutex> guard(mtx);
     std::vector<string> objects;
     try {
         objects = s3->getObjects();
