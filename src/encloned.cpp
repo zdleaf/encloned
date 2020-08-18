@@ -11,6 +11,7 @@ int main(){
 
 encloned::encloned(){ // constructor
     runThreads = true;
+    daemonMtxPtr = &daemonMtx;
 
     db = std::make_shared<DB>();
     socket = std::make_shared<Socket>(&runThreads);

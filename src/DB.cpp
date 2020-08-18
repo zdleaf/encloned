@@ -40,6 +40,7 @@ const char* DB::getDbLocation(){
 }
 
 int DB::execSQL(const char sql[]){
+    std::lock_guard<std::mutex> guard(mtx);
     char* error;
     int exitcode = sqlite3_exec(db, sql, NULL, NULL, &error);
     if(exitcode != SQLITE_OK) {

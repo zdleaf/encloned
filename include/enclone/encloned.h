@@ -37,7 +37,8 @@ class encloned{
         std::shared_ptr<Remote> remote; // remote backend handler
 
         std::atomic<bool> runThreads; // flag to indicate whether detached threads should continue to run
-
+        std::mutex daemonMtx;
+        
         // file encryption key
         unsigned char key[crypto_secretstream_xchacha20poly1305_KEYBYTES];
         int loadEncryptionKey();
@@ -47,6 +48,8 @@ class encloned{
         ~encloned();
         string daemonPath;
         static constexpr char TEMP_FILE_LOCATION[] = "/tmp/enclone/";
+        
+        std::mutex* daemonMtxPtr;
 
         int execLoop();
         unsigned char* getKey();

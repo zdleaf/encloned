@@ -400,3 +400,4 @@ Tue 18/8/2020
     - segfault if other threads try to access DB when Watch closes DB to backup
         - option 1: try online sqlite db backup, rather than trying to close live DB#
         - option 2: implement a cross thread mutex to get a lock
+- todo: test all functions/features for mutex deadlocks e.g. download files

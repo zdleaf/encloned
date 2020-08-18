@@ -25,8 +25,9 @@ void Watch::execThread(){
             }
             execQueuedSQL();
             std::this_thread::sleep_for(std::chrono::seconds(2));
+            indexBackup();
         }
-        indexBackup();
+        //indexBackup();
     }
 }
 
@@ -564,6 +565,7 @@ void Watch::uploadSuccess(std::string path, std::string objectName, int remoteID
                 // also add remoteID to list of remotes it's been uploaded to e.g. remoteLocation
             }
         }
+        std::lock_guard<std::mutex> guard(mtx);
         sqlQueue << "UPDATE fileIndex SET REMOTEEXISTS = TRUE WHERE PATHHASH ='" << objectName << "';"; // queue SQL update  
     } catch (const std::out_of_range &e){
         throw;
