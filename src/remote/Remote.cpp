@@ -70,7 +70,7 @@ string Remote::uploadNow(string path, string pathHash){
 }
 
 string Remote::listObjects(){
-    mtx.lock();
+    std::lock_guard<std::mutex> guard(mtx);
     std::vector<string> objects;
     try {
         objects = s3->getObjects();
@@ -80,7 +80,6 @@ string Remote::listObjects(){
     } catch(const std::exception& e){ // listObjects may fail due invalid credentials etc
         return e.what();
     }
-    mtx.unlock();
     std::ostringstream ss;
     for(string pathHash: objects){
         try {
@@ -90,6 +89,7 @@ string Remote::listObjects(){
             continue;
         }
     }
+    if(ss.str().empty()){ return "Remote: " + std::to_string(objects.size()) + " object/s on remote, but none of them match items in the file index. Run enclone --clean to remove.\n"; }
     return ss.str();
 }
 
@@ -106,13 +106,16 @@ string Remote::cleanRemote(){
     }
     mtx.unlock();
     std::ostringstream ss;
+    string outputPrefix = "No matches found for the following remote objects: \n";
+    ss << outputPrefix;
     for(string pathHash: objects){
         try {
             auto pair = watch->resolvePathHash(pathHash);
         } catch (std::out_of_range &error){ // unable to resolve
             queueForDelete(pathHash);
-            ss << "Remote: " << pathHash << " queued for deletion - no match for this entry found in fileIndex" << endl;
+            ss << pathHash << " queued for deletion" << endl;
         }
     }
+    if(ss.str().size() == outputPrefix.size()){ return "No files found to cleanup\n"; }
     return ss.str();
 }

@@ -390,5 +390,9 @@ Mon 17/8/2020
     - When starting daemon, the index filename on remote and last modtime is restored from DB
     - If this does not exist, a new index filename is derived from a subkey derived from the master key
     -todo:
-        - make sure --clean doesn't delete our index backup
         - implement --restore-index command to restore backup from remote
+
+Tue 18/8/2020
+- Fixed hangs due to certain mutexes in Watch
+- Tidied up --clean output and made sure --clean didn't remove index back up file
+- Added the index backup and modtime to show on --list remote

@@ -78,12 +78,14 @@ void Session::handle_read(const boost::system::error_code& error, size_t bytes_t
         std::string arg1 = request.substr(firstDelimiter+1, secondDelimiter-firstDelimiter-1);
         std::string arg2 = request.substr(secondDelimiter+1);
 
-        // DEBUGGING
+/*         // DEBUGGING
         cout << "Full request is: \"" << request << "\"" << endl;
         cout << "Command is: \"" << cmd << "\"" << endl; // get command that appears before delimter
         cout << "Arg1 is: \"" << arg1 << "\"" << endl;
         cout << "Arg2 is: \"" << arg2 << "\"" << endl;
-        cout.flush();
+        cout.flush(); */
+
+        cout << "Socket: " << cmd << " command received" << endl;
 
         // input handling here - need a parser
         if(cmd == "add"){

@@ -52,7 +52,6 @@ string Watch::addWatch(string path, bool recursive){
 }
 
 string Watch::addDirWatch(string path, bool recursive){
-    std::lock_guard<std::mutex> guard(mtx);
     auto result = dirIndex.insert({path, recursive});
     std::stringstream response;
     if(result.second){ // check if insertion was successful i.e. result.second = true (false when already exists in map)
@@ -76,7 +75,6 @@ string Watch::addDirWatch(string path, bool recursive){
 }
 
 string Watch::addFileWatch(string path){
-    std::lock_guard<std::mutex> guard(mtx);
     // temporary extension exclusions - ignore .swp files
     if(fs::path(path).extension() == ".swp"){
         return "ignored .swp file";
@@ -95,7 +93,6 @@ string Watch::addFileWatch(string path){
 }
 
 void Watch::addFileVersion(std::string path){
-    std::lock_guard<std::mutex> guard(mtx);
     auto fileVector = &fileIndex[path];
     auto fstime = fs::last_write_time(path); // get modtime from file
     std::time_t modtime = decltype(fstime)::clock::to_time_t(fstime);
@@ -113,7 +110,6 @@ void Watch::addFileVersion(std::string path){
 }
 
 string Watch::delWatch(string path, bool recursive){
-    std::lock_guard<std::mutex> guard(mtx);
     std::stringstream response;
     fs::file_status s = fs::status(path);
     if(!fs::exists(s)){                 // file/directory does not exist
@@ -200,7 +196,6 @@ void Watch::scanFileChange(){
         std::time_t recentModTime = decltype(recentfsTime)::clock::to_time_t(recentfsTime);
         //cout << "Watch: Comparing current modtime: " << recentModTime << " to saved: " << getLastModTime(path) << " file: " << path << endl;
         if(recentModTime != getLastModTime(path)){ 
-            std::lock_guard<std::mutex> guard(mtx);
             cout << "Watch: " << "File change detected: " << path << endl;
             fileIndex[path].back().localExists = false;
             addFileVersion(path);
@@ -210,7 +205,6 @@ void Watch::scanFileChange(){
     // check watched directories for new files and directories
     for(auto elem: dirIndex){
         if(!fs::exists(elem.first)){ // if directory has been deleted
-            std::lock_guard<std::mutex> guard(mtx);
             cout << "Watch: " << "Directory no longer exists: " << elem.first << endl;
             dirIndex.erase(elem.first); // remove watch to directory
             sqlQueue << "DELETE from dirIndex where PATH='" << elem.first << "';"; // queue deletion from DB
@@ -220,13 +214,11 @@ void Watch::scanFileChange(){
             fs::file_status s = fs::status(entry);
             if(fs::is_directory(s) && elem.second) {// check recursive flag (elem.second) is true before checking if watch to dir already exists
                 if(!dirIndex.count(entry.path())){   // check if directory already exists in watched map
-                    std::lock_guard<std::mutex> guard(mtx);
                     cout << "Watch: " << "New directory found: " << elem.first << endl;
                     cout << addDirWatch(entry.path().string(), true);  // add new directory and any files contained within and print response
                 }
             } else if(fs::is_regular_file(s)){
                 if(!fileIndex.count(entry.path())){  // check if each file already exists
-                    std::lock_guard<std::mutex> guard(mtx);
                     cout << "Watch: " << "New file found: " << entry.path() << endl;
                     cout << addFileWatch(entry.path().string());
                 }
@@ -308,6 +300,7 @@ std::pair<string, std::time_t> Watch::resolvePathHash(string pathHash){
     try {
         result = pathHashIndex.at(pathHash);
     } catch (std::out_of_range &error){
+        if(pathHash == indexBackupName){ return std::make_pair("index backup", indexLastMod); }
         cout << "Watch: Error: Unable to find path associated to hash " + pathHash << endl;
         throw;
     }
@@ -394,7 +387,11 @@ void Watch::deriveIdxBackupName(){
     // b64 url encode the password hash - this is the filename used as index backup name on remote
     indexBackupName = Encryption::base64_encode(hashedSubKey);
     cout << "Used master key to derive filename to use for index file backup: " << indexBackupName << " length: " << indexBackupName.length() << endl;
-    sqlQueue << "INSERT or IGNORE INTO indexBackup (PATH, IDXNAME) VALUES ('" << db->getDbLocation() << "','" << indexBackupName << "');"; 
+
+    // update db
+    std::stringstream ss;
+    ss << "INSERT or IGNORE INTO indexBackup (PATH, IDXNAME) VALUES ('" << db->getDbLocation() << "','" << indexBackupName << "');";
+    int errorcode = db->execSQL(ss.str().c_str());
 }
 
 void Watch::indexBackup(){
@@ -404,7 +401,6 @@ void Watch::indexBackup(){
     open db
     set last mod time in db
      */
-    std::lock_guard<std::mutex> guard(mtx);
     auto fstime = fs::last_write_time(db->getDbLocation()); // get modtime from index file
     auto recentModTime = decltype(fstime)::clock::to_time_t(fstime);
     if(recentModTime > indexLastMod || indexLastMod == (time_t)-1)
@@ -429,7 +425,6 @@ void Watch::indexBackup(){
 
 
 void Watch::restoreDB(){
-    std::lock_guard<std::mutex> guard(mtx);
     cout << "Restoring file index from DB..." << endl; cout.flush();
     restoreFileIdx();
     cout << listWatchFiles();
@@ -471,24 +466,27 @@ void Watch::restoreFileIdx(){
         string fileHash = string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3)));
         bool localExists = sqlite3_column_int(stmt, 4);
         bool remoteExists = sqlite3_column_int(stmt, 5);
-        if(fileIndex.find(path) == fileIndex.end()){ // if entry for path does not exist
-            cout << path << " does not exist in fileIndex - adding and init vector.." << endl;
-            fileIndex.insert({  path, std::vector<FileVersion>{ // create entry and initialise vector 
-                                    FileVersion{    modtime,  // brace initialisation of first object
-                                                    pathHash, 
-                                                    fileHash,
-                                                    localExists,
-                                                    remoteExists  }
-                                    }
-                            }); 
-        } else {
-            //cout << path << " exists, attempting to push to vector.." << endl;
-            auto fileVector = &fileIndex[path]; // get a pointer to the vector associated to the path
-            fileVector->push_back(FileVersion{modtime, pathHash, ""}); // push a FileVersion struct to the back of the vector
-            // this should retain the correct ordering in the vector of oldest = first in vector, most recent = last in vector
-        }
 
-        pathHashIndex.insert(std::make_pair(pathHash, std::make_pair(path, modtime))); // also insert into reverse lookup table
+        mtx.lock();
+            if(fileIndex.find(path) == fileIndex.end()){ // if entry for path does not exist
+                cout << path << " does not exist in fileIndex - adding and init vector.." << endl;
+                fileIndex.insert({  path, std::vector<FileVersion>{ // create entry and initialise vector 
+                                        FileVersion{    modtime,  // brace initialisation of first object
+                                                        pathHash, 
+                                                        fileHash,
+                                                        localExists,
+                                                        remoteExists  }
+                                        }
+                                }); 
+            } else {
+                //cout << path << " exists, attempting to push to vector.." << endl;
+                auto fileVector = &fileIndex[path]; // get a pointer to the vector associated to the path
+                fileVector->push_back(FileVersion{modtime, pathHash, ""}); // push a FileVersion struct to the back of the vector
+                // this should retain the correct ordering in the vector of oldest = first in vector, most recent = last in vector
+            }
+            
+            pathHashIndex.insert(std::make_pair(pathHash, std::make_pair(path, modtime))); // also insert into reverse lookup table
+        mtx.unlock();
 
         rc = sqlite3_step(stmt);
     }
@@ -513,7 +511,11 @@ void Watch::restoreDirIdx(){
     while(rc == SQLITE_ROW) {
         string path = string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0)));
         int recursiveFlag = sqlite3_column_int(stmt, 1);
-        dirIndex.insert({path, recursiveFlag});      // insert path and recursive flag into dirIndex
+
+        mtx.lock();
+            dirIndex.insert({path, recursiveFlag});      // insert path and recursive flag into dirIndex
+        mtx.unlock();
+
         rc = sqlite3_step(stmt);
     }
 
@@ -538,8 +540,12 @@ void Watch::restoreIdxBackupName(){
         string path = string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0)));
         string idxName = string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1)));
         std::time_t modtime = (time_t)sqlite3_column_int(stmt, 2);
-        indexBackupName = idxName;
-        indexLastMod = modtime;
+
+        mtx.lock();
+            indexBackupName = idxName;
+            indexLastMod = modtime;
+        mtx.unlock();
+
         cout << "Restored index backup name: " << idxName << endl;
         rc = sqlite3_step(stmt);
     }
