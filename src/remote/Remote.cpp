@@ -81,15 +81,20 @@ string Remote::listObjects(){
         return e.what();
     }
     std::ostringstream ss;
+    int untrackedCount = 0;
     for(string pathHash: objects){
         try {
             auto pair = watch->resolvePathHash(pathHash);
             ss << pair.first << " : " << watch->displayTime(pair.second) << " : " << pathHash << endl;
         } catch (std::out_of_range &error){ // unable to resolve
+            untrackedCount++;
             continue;
         }
     }
-    if(ss.str().empty()){ return "Remote: " + std::to_string(objects.size()) + " object/s on remote, but none of them match items in the file index. Run enclone --clean to remove.\n"; }
+
+    if(ss.str().empty()){ return "Remote: " + std::to_string(untrackedCount) + " object/s on remote, but none of them match items in the file index. Run enclone --clean to remove.\n"; }
+    else { ss << "+ " << untrackedCount << " files untracked by index (--clean to remove)" << endl; }
+
     return ss.str();
 }
 
