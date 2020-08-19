@@ -405,5 +405,5 @@ Tue 18/8/2020
 Wed 19/8/2020
 - Backup database using the SQLite3 C Online Backup API - we do not need to close and reopen database, we can still complete SQL queries during backup process
     - see https://www.sqlite.org/backup.html
-- todo: indexBackupName for some reason b64 encode doesn't ever include any _ or - characters
-    - either remote _ and - from random filenames or find bug in b64 url encode
+- The way that Argon2id hashes a password, the resulting base64 url encoding never includes the '-' or '_' characters
+    - When creating random filenames for remotes, removed these two chars
