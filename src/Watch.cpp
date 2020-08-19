@@ -96,8 +96,7 @@ string Watch::addFileWatch(string path){
 
 void Watch::addFileVersion(std::string path){
     auto fileVector = &fileIndex[path];
-    auto fstime = fs::last_write_time(path); // get modtime from file
-    std::time_t modtime = decltype(fstime)::clock::to_time_t(fstime);
+    std::time_t modtime = fsLastMod(path);
     string pathHash = Encryption::hashPath(path); // compute unique filename hash for file
     string fileHash = Encryption::hashFile(path); // compute a hash of the file contents
     fileVector->push_back(FileVersion{modtime, pathHash, fileHash}); // create new FileVersion struct object and push to back of vector
@@ -193,10 +192,9 @@ void Watch::scanFileChange(){
         }
 
         // if current last_write_time of file != last saved value, file has changed
-        auto recentfsTime = fs::last_write_time(path);
-        std::time_t recentModTime = decltype(recentfsTime)::clock::to_time_t(recentfsTime);
-        //cout << "Watch: Comparing current modtime: " << recentModTime << " to saved: " << getLastModTime(path) << " file: " << path << endl;
-        if(recentModTime != getLastModTime(path)){ 
+        std::time_t recentModTime = fsLastMod(path);
+        //cout << "Watch: Comparing current modtime: " << recentModTime << " to saved: " << getLastModFromIdx(path) << " file: " << path << endl;
+        if(recentModTime != getLastModFromIdx(path)){ 
             cout << "Watch: " << "File change detected: " << path << endl;
             fileIndex[path].back().localExists = false;
             addFileVersion(path);
@@ -228,7 +226,7 @@ void Watch::scanFileChange(){
     }
 }
 
-std::time_t Watch::getLastModTime(std::string path){
+std::time_t Watch::getLastModFromIdx(std::string path){
     return fileIndex[path].back().modtime;
 }
 
@@ -293,6 +291,17 @@ string Watch::displayTime(std::time_t modtime) const{
     string time = std::asctime(std::localtime(&modtime));
     time.pop_back(); // asctime returns a '\n' on the end of the string - use str.pop_back to remove this
     return time; 
+}
+
+time_t Watch::fsLastMod(string path){
+    try {
+        auto fstime = fs::last_write_time(path); // get modtime from index file
+        time_t modtime = decltype(fstime)::clock::to_time_t(fstime);
+        return modtime;
+    } catch (const std::exception &e){
+        cout << "Watch: exception thrown in fsLastMod: " << e.what() << endl;
+        return -1;
+    }
 }
 
 std::pair<string, std::time_t> Watch::resolvePathHash(string pathHash){
@@ -413,9 +422,7 @@ void Watch::deriveIdxBackupName(){
 void Watch::indexBackup(){
     std::scoped_lock<std::mutex> guard(mtx);
 
-    auto fstime = fs::last_write_time(db->getDbLocation()); // get modtime from index file
-    auto recentModTime = decltype(fstime)::clock::to_time_t(fstime);
-
+    auto recentModTime = fsLastMod(db->getDbLocation());
     if(recentModTime > indexLastMod || indexLastMod == (time_t)-1) // index.db has changed since last backup
     {
         cout << "Watch: Backing up Index file to remote..." << endl;
@@ -426,20 +433,22 @@ void Watch::indexBackup(){
         int errorcode = db->execSQL(ss.str().c_str());
         if(!errorcode){ 
             // modtime of index has now changed as we've updated modtime value in database - reset the modtime
-            auto newIdxFsTime = fs::last_write_time(db->getDbLocation()); // get modtime from database
-            indexLastMod = decltype(newIdxFsTime)::clock::to_time_t(newIdxFsTime);
+            indexLastMod = fsLastMod(db->getDbLocation()); // get modtime from database
         }
 
         // now backup and upload the database
         int error = db->backupDB("index.backup"); // make a temporary backup file
         if(!error){
-            auto backupFsTime = fs::last_write_time("index.backup"); // get modtime from backup database
-            time_t backupLastMod = decltype(backupFsTime)::clock::to_time_t(backupFsTime);
+            time_t backupLastMod = fsLastMod("index.backup");
             remote->queueForUpload("index.backup", indexBackupName, backupLastMod); // queue for encryption/upload
         } else {
             cout << "DB: sqlite index backup to temp file failed with code: " << error << endl;
         }
     }
+}
+
+string Watch::restoreIndex(){
+    return "";
 }
 
 

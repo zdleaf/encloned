@@ -31,6 +31,7 @@ int enclone::showOptions(const int& argc, char** const argv){
             "   /path/to/file: \trestore the latest version of a file at specified path \n"
             "   filehash: \trestore a specific version of a file by providing the full hash as output by --list remote\n")
         ("target,t", po::value<string>(), "specify a target path to restore files to\n")
+        ("restore-index,i", "restore an index/database from remote storage\n")
         ("generate-key,k", "generate an encryption key")
         ("clean-up,c", "remove items from remote S3 which do not have a corresponding entry in fileIndex");
     
@@ -110,6 +111,10 @@ int enclone::showOptions(const int& argc, char** const argv){
                     restoreFiles(targetPath, arg);
                 }
             }
+        }
+
+        if (vm.count("restore-index")){
+            restoreIndex();
         }
 
         if (vm.count("generate-key")){
@@ -205,6 +210,11 @@ bool enclone::restoreFiles(string targetPath){
 
 bool enclone::restoreFiles(string targetPath, string pathOrHash){
     string request = "restore|" + targetPath + "|" + pathOrHash;
+    return sendRequest(request);
+}
+
+bool enclone::restoreIndex(){
+    string request = "restoreIndex|";
     return sendRequest(request);
 }
 

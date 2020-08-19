@@ -64,6 +64,7 @@ class Watch {
         void displayWatchFiles();
 
         string displayTime(std::time_t modtime) const;
+        time_t fsLastMod(string path); // get last mod time from file system
 
         string listLocal();
         string listWatchDirs();
@@ -71,6 +72,7 @@ class Watch {
         std::pair<string, std::time_t> resolvePathHash(string pathHash);
         string downloadFiles(string targetPath); // download all
         string downloadFiles(string targetPath, string pathOrHash); // specify path or hash to download
+        string restoreIndex();
         bool verifyHash(string pathHash, string fileHash);
 
         void uploadSuccess(std::string path, std::string objectName, int remoteID);
@@ -90,6 +92,7 @@ class Watch {
         std::mutex mtx;
         std::atomic_bool *runThreads; // ptr to flag indicating if execThread should loop or close down
 
+        // file system watcher 
         string addDirWatch(string path, bool recursive);
         string addFileWatch(string path);
         void addFileVersion(std::string path);
@@ -97,13 +100,15 @@ class Watch {
         string delDirWatch(string path, bool recursive);
         string delFileWatch(string path);
 
-        std::time_t getLastModTime(std::string path);
+        std::time_t getLastModFromIdx(std::string path);
 
+        // backup index to remote storage methods
         string indexBackupName;
         std::time_t indexLastMod;
         void deriveIdxBackupName();
         void indexBackup();
 
+        // restore from DB on daemon start
         void restoreDB();
         void restoreFileIdx();
         void restoreDirIdx();
