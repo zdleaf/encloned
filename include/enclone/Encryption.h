@@ -37,13 +37,15 @@ class Encryption{
         };
 
         static std::string passwordKDF(string password);
+
+        static const int getRandomFilenameLength();
     
     private:
         // encryption/decryption constants
         static const int CHUNK_SIZE = 4096;
 
-        // path/filename hash constants
-        // static const int PATH_HASH_SALT_LENGTH = 128;
+        // random path/filename constants
+        static const int RANDOM_FILENAME_LENGTH = 88;
 
         // file hash constants
         static const int BUFFER_SIZE = 512;

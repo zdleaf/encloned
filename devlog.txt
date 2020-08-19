@@ -407,3 +407,4 @@ Wed 19/8/2020
     - see https://www.sqlite.org/backup.html
 - The way that Argon2id hashes a password, the resulting base64 url encoding never includes the '-' or '_' characters
     - When creating random filenames for remotes, removed these two chars
+- Fixed --restore when provided a path hash now that RANDOM_FILENAME_LENGTH has changed

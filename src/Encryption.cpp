@@ -94,7 +94,11 @@ string Encryption::randomString(std::size_t length)
 }
 
 string Encryption::hashPath(const string path){
-    return randomString(88);
+    return randomString(RANDOM_FILENAME_LENGTH);
+}
+
+const int Encryption::getRandomFilenameLength(){
+    return RANDOM_FILENAME_LENGTH;
 }
 
 string Encryption::hashFile(const string path){ // hash a file in chunks of BUFFER_SIZE

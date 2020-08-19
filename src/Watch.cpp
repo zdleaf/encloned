@@ -25,9 +25,10 @@ void Watch::execThread(){
             }
             execQueuedSQL();
             std::this_thread::sleep_for(std::chrono::seconds(2));
-            indexBackup();
+            //indexBackup();
         }
-        //indexBackup();
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        indexBackup();
     }
 }
 
@@ -308,7 +309,6 @@ std::pair<string, std::time_t> Watch::resolvePathHash(string pathHash){
 }
 
 string Watch::downloadFiles(string targetPath){ // download all files
-    std::scoped_lock<std::mutex> guard(mtx);
     for(auto elem: fileIndex){
         remote->queueForDownload(elem.first, elem.second.back().pathHash, elem.second.back().modtime, targetPath);
     }
@@ -316,10 +316,9 @@ string Watch::downloadFiles(string targetPath){ // download all files
 }
 
 string Watch::downloadFiles(string targetPath, string pathOrHash){
-    std::scoped_lock<std::mutex> guard(mtx);
     bool foundPathOrHash = false;
     // determine if 2nd parameter is a hash or a path - CLI argument does not distinguish between the two
-    if(pathOrHash.length() == 64){ // hashes are 64 bytes long, although we can also have a path this long - first check if file with this hash exists, else treat as a path
+    if(pathOrHash.length() == Encryption::getRandomFilenameLength()){ // random path hashes are 88 chars long, although we can also have a path this long - first check if file with this hash exists, else treat as a path
         for(auto elem: fileIndex){ // unordered_map
             for(auto version: elem.second){ // vector<FileVersion>
                 if(version.pathHash == pathOrHash){ // found matching hash
