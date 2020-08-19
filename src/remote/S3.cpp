@@ -272,7 +272,7 @@ string S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transf
     downloadHandle->WaitUntilFinished();
     if(downloadHandle->GetStatus() == Aws::Transfer::TransferStatus::COMPLETED){
         if (downloadHandle->GetBytesTotalSize() == downloadHandle->GetBytesTransferred()) {
-            ss << "S3: Download of " << objectName << " to " << awsWriteToFile << " successful" << endl;
+            ss << "S3: Download of " << objectName.substr(0, 10) << "... to " << awsWriteToFile << " successful" << endl;
 
             // decrypt temporary file to download location
             if(Encryption::decryptFile(downloadPath.c_str(), localEncryptedPath.c_str(), daemon->getKey()) == 0){
@@ -281,7 +281,7 @@ string S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transf
                 string downloadedFileHash = Encryption::hashFile(downloadPath);
                 
                 if(remote->getWatch()->verifyHash(objectName, downloadedFileHash)){ // hash matches stored filehash
-                    ss << "S3: Decryption of " << objectName << " to " << downloadPath << " successful - file hash verified" << endl;
+                    ss << "S3: Decryption of " << objectName.substr(0, 10) << "... to " << downloadPath << " successful - file hash verified" << endl;
                     fs::remove(localEncryptedPath); // remove temporary object on local fs
                 } else {
                     ss << "S3: Decryption of " << objectName << " to " << downloadPath << " failed - unable to verify hash" << endl;

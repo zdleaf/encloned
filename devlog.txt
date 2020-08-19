@@ -383,7 +383,6 @@ Sat 15/8/2020
         - use verify function to check base 64 encoded half subkey against all values until it verifies
         - on average will have to check half the files before finding a match. base64 decode is quick, test speed of verification with many files.
         - some slowness is acceptable since restoring index from remote will only be done very rarely, in the event of loss of local index file.
-- todo: change random file name to 88 chars to match above b64 output, and include b64 url chars ('_' and '-')
 
 Mon 17/8/2020
 - Implemented index backup into code - index is backed up if it has changed since last upload
@@ -391,6 +390,11 @@ Mon 17/8/2020
     - If this does not exist, a new index filename is derived from a subkey derived from the master key
     -todo:
         - implement --restore-index command to restore backup from remote
+            - download and decrypt index to a temp file
+            - close DB - we need to ensure all other threads are shut down = runThreads = false
+                - need to ensure they close down cleanly, and verify this before closing DB
+            - rename db files
+            - then restart program entirely, or restart threads if possible
 
 Tue 18/8/2020
 - Fixed hangs due to certain mutexes in Watch

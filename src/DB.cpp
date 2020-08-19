@@ -122,7 +122,7 @@ int DB::backupDB(const char *backupFilename){
       ** indicates that there are still further pages to copy, sleep for
       ** 250 ms before repeating. */
       do {
-        rc = sqlite3_backup_step(pBackup, 5);
+        rc = sqlite3_backup_step(pBackup, 10);
         backupProgress(
             sqlite3_backup_remaining(pBackup),
             sqlite3_backup_pagecount(pBackup)

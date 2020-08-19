@@ -8,3 +8,6 @@ Feature list
 - store data as "blobs" or small chunks - this mean when updating a file version, we just update the blobs that have changed instead of re-uploading entire file
     - see Rabin Fingerprints for implementing Content Defined Chunking (CDC)
 - stream encrypted data directly to online services - avoiding saving as temporary file and then uploading that
+- encrypt/upload multi-threaded pipeline
+    - encrypt and upload on separate threads
+    - alternatively, separate threads to encrypt/upload multiple files at once
