@@ -426,14 +426,16 @@ void Watch::indexBackup(){
         int errorcode = db->execSQL(ss.str().c_str());
         if(!errorcode){ 
             // modtime of index has now changed as we've updated modtime value in database - reset the modtime
-            auto fstime = fs::last_write_time(db->getDbLocation()); // get modtime from database
-            indexLastMod = decltype(fstime)::clock::to_time_t(fstime);
+            auto newIdxFsTime = fs::last_write_time(db->getDbLocation()); // get modtime from database
+            indexLastMod = decltype(newIdxFsTime)::clock::to_time_t(newIdxFsTime);
         }
 
         // now backup and upload the database
         int error = db->backupDB("index.backup"); // make a temporary backup file
         if(!error){
-            remote->queueForUpload("index.backup", indexBackupName, indexLastMod); // queue for encryption/upload
+            auto backupFsTime = fs::last_write_time("index.backup"); // get modtime from backup database
+            time_t backupLastMod = decltype(backupFsTime)::clock::to_time_t(backupFsTime);
+            remote->queueForUpload("index.backup", indexBackupName, backupLastMod); // queue for encryption/upload
         } else {
             cout << "DB: sqlite index backup to temp file failed with code: " << error << endl;
         }
@@ -486,7 +488,7 @@ void Watch::restoreFileIdx(){
 
         mtx.lock();
             if(fileIndex.find(path) == fileIndex.end()){ // if entry for path does not exist
-                cout << path << " does not exist in fileIndex - adding and init vector.." << endl;
+                //cout << path << " does not exist in fileIndex - adding and init vector.." << endl;
                 fileIndex.insert({  path, std::vector<FileVersion>{ // create entry and initialise vector 
                                         FileVersion{    modtime,  // brace initialisation of first object
                                                         pathHash, 
