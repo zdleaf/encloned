@@ -396,8 +396,14 @@ Tue 18/8/2020
 - Fixed hangs due to certain mutexes in Watch
 - Tidied up --clean output and made sure --clean didn't remove index back up file
 - Added the index backup and modtime to show on --list remote
-- todo: need some kind of lock to avoid any operations on Remote/Socket threads when Watch is closing DB
+- todo: FIXED 19/8/2020 need some kind of lock to avoid any operations on Remote/Socket threads when Watch is closing DB
     - segfault if other threads try to access DB when Watch closes DB to backup
         - option 1: try online sqlite db backup, rather than trying to close live DB#
         - option 2: implement a cross thread mutex to get a lock
 - todo: test all functions/features for mutex deadlocks e.g. download files
+
+Wed 19/8/2020
+- Backup database using the SQLite3 C Online Backup API - we do not need to close and reopen database, we can still complete SQL queries during backup process
+    - see https://www.sqlite.org/backup.html
+- todo: indexBackupName for some reason b64 encode doesn't ever include any _ or - characters
+    - either remote _ and - from random filenames or find bug in b64 url encode

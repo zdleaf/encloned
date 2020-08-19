@@ -25,6 +25,8 @@ class DB {
         
         void initialiseTables(); // initialise tables on first run
 
+        void backupProgress(int leftToCopy, int totalToCopy); // output information on backup progress
+
     public:
         DB();
         ~DB();
@@ -34,7 +36,9 @@ class DB {
 
         sqlite3* getDbPtr();
         const char* getDbLocation();
+
         virtual int execSQL(const char sql[]);
+        int backupDB(const char *backupFilename); // complete an online backup of an open database to backupFilename
 };
 
 #endif

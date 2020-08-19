@@ -57,10 +57,7 @@ string S3::callAPI(string arg){
 
             //cout << "DEBUG: path: " << path << " pathHash: " << pathHash << endl;
 
-            bool result = uploadObject(transferManager, BUCKET_NAME, path, pathHash);
-            if(result){ response = "Remote: index file backup complete\n"; }
-            else { response = "Remote: error backing up Index to " + pathHash + "\n"; }
-
+            uploadObject(transferManager, BUCKET_NAME, path, pathHash);
         } else if (arg == "download"){
             response = downloadFromQueue(transferManager);
         } else if (arg == "listObjects"){
@@ -217,7 +214,6 @@ std::vector<string> S3::getObjects(){
 }
 
 bool S3::uploadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferManager, const Aws::String& bucketName, const std::string& path, const std::string& objectName){
-    
     // encrypt file into temporary object
     string localEncryptedPath = encloned::TEMP_FILE_LOCATION + objectName;
     //cout << "localEncryptedPath: " << localEncryptedPath << endl;
