@@ -452,9 +452,9 @@ string Watch::restoreIndex(string arg){
         - compute same subkey as above from master key (use same CONTEXT string as parameter - "INDEX___")
         - base64 encode subkey and split in half
         - decode base 64 for all filenames on remote
+        - check if decoded b64 contains only a-z,A-Z,0-9,+/$ chars - this saves long verification of files that cannot be index backups
         - prefix Argon2id params to all decoded b64 strings ("$argon2id$v=19$m=1048576,t=4,p=1$")
         - use verify function to check base 64 encoded half subkey against all values until it verifies
-        - on average will have to check half the files before finding a match. base64 decode is quick, test speed of verification with many files.
         - some slowness is acceptable since restoring index from remote will only be done very rarely, in the event of loss of local index file.
      */
     std::stringstream response;
@@ -470,22 +470,34 @@ string Watch::restoreIndex(string arg){
             auto decoded = Encryption::base64_decode(item.first);
             if(std::regex_match(decoded, std::regex("^[A-Za-z0-9\\$\\+\\/]+$"))){ // decoded strings will always be b64 with a $ sign, do not need to verify hashes that do not match this form
                 if(Encryption::verifyPassword("$argon2id$v=19$m=1048576,t=4,p=1$" + decoded, password)){ // verify hash with derived password
-                    cout << "verified " << item.first << endl;
+                    cout << "Watch: verified index backup " << item.first << endl;
                     verifiedIndexes.push_back(item.first);
                     if(arg == "show"){
                         response << item.second << " : " << item.first << endl;
                     }
                 } else {
-                    cout << "verification failed on " << decoded << endl;
+                    cout << "Watch: verification failed on " << decoded << endl;
                 }
             }
         }
     } catch (const std::exception& e){
         response << "Watch: error getting and decoding objects from remote: " << e.what() << endl;
     }
-    
+
+    if (arg.length() == 88){ // hash should be 88 chars long
+        if(std::find(verifiedIndexes.cbegin(), verifiedIndexes.cend(), arg) != verifiedIndexes.cend()){ // check if provided hash matches a verified index
+            response << "Restoring index backup with hash " << arg.substr(0,10) << "..." << endl;
+            // download backup to index.restore
+            // need to close this thread - but not able to do so from this thread
+            // then need to run a --restart-daemon type command, and execute daemon checking for existence of index.restore file - rename this file if exists, and load it
+            response << "Downloaded index backup from remote. Run --restart-daemon to load it" << endl;
+        }
+    } else if (arg != "show"){
+        response << "Unknown argument provided - either 'show' or an 88 character hash of an index backup" << endl;
+    }
     return response.str();
 }
+
 
 
 void Watch::restoreDB(){

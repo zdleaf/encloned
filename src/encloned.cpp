@@ -72,7 +72,7 @@ int encloned::execLoop(){
     socketThread.detach();                               // detach thread, we not want to wait for it to finish before continuing. execThread() loops until runThreads == false;
 
     while(1){
-        // do nothing while watch thread is running
+        // do nothing
     }
     return 0;
 }

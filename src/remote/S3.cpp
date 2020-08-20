@@ -189,6 +189,7 @@ string S3::listObjects(std::shared_ptr<Aws::S3::S3Client> s3_client){
             response << "S3: Files on S3 bucket " << BUCKET_NAME << ":" << std::endl;
             for (auto const &s3_object : object_list)
             {   
+                const char customTimeFormat[] = "%dd-%MM-%y %H:%m"; // does not work - need to figure out how to format this, then put as param to ToLocalTimeString()
                 auto modtime = s3_object.GetLastModified().ToLocalTimeString(Aws::Utils::DateFormat::RFC822);
                 response << s3_object.GetKey() << " : " << modtime << std::endl;
                 remoteObjects.push_back(s3_object.GetKey().c_str());
