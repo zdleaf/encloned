@@ -383,13 +383,9 @@ void Watch::uploadSuccess(std::string path, std::string objectName, int remoteID
 
 void Watch::deriveIdxBackupName(){
     std::scoped_lock<std::mutex> guard(mtx);
-    uint8_t subKey[64];
-
-    // derive subkey from master key
-    crypto_kdf_derive_from_key(subKey, sizeof subKey, 1, "INDEX___", daemon->getKey());
 
     // base64 encode the subkey
-    auto subKey_b64 = Encryption::base64_encode(std::string(reinterpret_cast<const char*>(subKey)));
+    auto subKey_b64 = Encryption::base64_encode(std::string(reinterpret_cast<const char*>(daemon->getSubKey())));
     // derive an Argon2id password hash string
     string hashedSubKey = Encryption::passwordKDF(subKey_b64.substr(0, subKey_b64.length()/2)); // split the key in half (32 bytes) - even if Argon2id password hash is defeated, this only results in half a subkey being exposed. even with a full derived subkey, it is not possible to determine the master key from this.
 
@@ -411,7 +407,7 @@ void Watch::deriveIdxBackupName(){
 
     // b64 url encode the password hash - this is the filename used as index backup name on remote
     indexBackupName = Encryption::base64_encode(hashedSubKey);
-    cout << "Used master key to derive filename to use for index file backup: " << indexBackupName << " length: " << indexBackupName.length() << endl;
+    cout << "Used subkey to derive filename to use for index file backup: " << indexBackupName << " length: " << indexBackupName.length() << endl;
 
     // update db
     std::stringstream ss;
@@ -423,6 +419,7 @@ void Watch::indexBackup(){
     std::scoped_lock<std::mutex> guard(mtx);
 
     auto recentModTime = fsLastMod(db->getDbLocation());
+    //cout << "DEBUG: comparing db backup old time: " << displayTime(indexLastMod) << " with new: " << displayTime(recentModTime) << endl;
     if(recentModTime > indexLastMod || indexLastMod == (time_t)-1) // index.db has changed since last backup
     {
         cout << "Watch: Backing up Index file to remote..." << endl;
@@ -447,8 +444,40 @@ void Watch::indexBackup(){
     }
 }
 
-string Watch::restoreIndex(){
-    return "";
+string Watch::restoreIndex(string arg){
+    /* 
+    list remote objects and save filenames to vector
+    base64 decode all of them
+
+        - compute same subkey as above from master key (use same CONTEXT string as parameter - "INDEX___")
+        - base64 encode subkey and split in half
+        - decode base 64 for all filenames on remote
+        - prefix Argon2id params to all decoded b64 strings ("$argon2id$v=19$m=1048576,t=4,p=1$")
+        - use verify function to check base 64 encoded half subkey against all values until it verifies
+        - on average will have to check half the files before finding a match. base64 decode is quick, test speed of verification with many files.
+        - some slowness is acceptable since restoring index from remote will only be done very rarely, in the event of loss of local index file.
+     */
+    std::stringstream response;
+
+    auto subKey_b64 = Encryption::base64_encode(std::string(reinterpret_cast<const char*>(daemon->getSubKey()))); // base64 encode the subkey
+    string password = subKey_b64.substr(0, subKey_b64.length()/2); // password used for KDF is first half of the subKey in b64
+
+    std::vector<string> remoteObjects;
+    std::vector<string> verifiedIndexes;
+    try {
+        remoteObjects = remote->getObjects(); // get vector of objects from remote storage
+        for(auto item: remoteObjects){ 
+            if(Encryption::verifyPassword("$argon2id$v=19$m=1048576,t=4,p=1$" + Encryption::base64_decode(item), password)){
+                cout << "verified " << Encryption::base64_decode(item) << endl;
+            } else {
+                cout << "verification failed on " << Encryption::base64_decode(item) << endl;
+            }
+        }
+    } catch (const std::exception& e){
+        response << "Watch: error getting and decoding objects from remote" << endl;
+    }
+    
+    return response.str();
 }
 
 
@@ -572,6 +601,7 @@ void Watch::restoreIdxBackupName(){
         mtx.lock();
             indexBackupName = idxName;
             indexLastMod = modtime;
+            //cout << "DEBUG: restored db backup modtime: " << displayTime(indexLastMod) << endl;
         mtx.unlock();
 
         cout << "Restored index backup name: " << idxName << endl;

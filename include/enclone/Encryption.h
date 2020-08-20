@@ -25,8 +25,8 @@ class Encryption{
         static int encryptFile(const char *target_file, const char *source_file, const unsigned char key[crypto_secretstream_xchacha20poly1305_KEYBYTES]);
         static int decryptFile(const char *target_file, const char *source_file, const unsigned char key[crypto_secretstream_xchacha20poly1305_KEYBYTES]);
 
-        static std::string base64_encode(const std::string & in);
-        static std::string base64_decode(const std::string & in);
+        static std::string base64_encode(const std::string &in);
+        static std::string base64_decode(const std::string &in);
 
         static constexpr char base64_url_alphabet[64] = {
             'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
@@ -37,6 +37,7 @@ class Encryption{
         };
 
         static std::string passwordKDF(string password);
+        static bool verifyPassword(string hash, string password);
 
         static const int getRandomFilenameLength();
     

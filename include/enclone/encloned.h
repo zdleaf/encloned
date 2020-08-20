@@ -40,8 +40,10 @@ class encloned{
         std::mutex daemonMtx;
         
         // file encryption key
-        unsigned char key[crypto_secretstream_xchacha20poly1305_KEYBYTES];
+        unsigned char key[crypto_secretstream_xchacha20poly1305_KEYBYTES]; // master key
+        unsigned char subKey[64]; // derived subKey for index backup name encryption
         int loadEncryptionKey();
+        int deriveSubKey();
         
     public:
         encloned();
@@ -52,7 +54,8 @@ class encloned{
         std::mutex* daemonMtxPtr;
 
         int execLoop();
-        unsigned char* getKey();
+        unsigned char* const getKey();
+        unsigned char* const getSubKey();
 
         void addWatch(string path, bool recursive); // needs mutex support
         void displayWatches();

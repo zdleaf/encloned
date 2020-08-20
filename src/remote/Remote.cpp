@@ -98,6 +98,10 @@ string Remote::listObjects(){
     return ss.str();
 }
 
+std::vector<string> Remote::getObjects(){
+    return s3->getObjects();
+}
+
 string Remote::cleanRemote(){
     mtx.lock();
     std::vector<string> objects;

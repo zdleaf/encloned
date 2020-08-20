@@ -388,13 +388,6 @@ Mon 17/8/2020
 - Implemented index backup into code - index is backed up if it has changed since last upload
     - When starting daemon, the index filename on remote and last modtime is restored from DB
     - If this does not exist, a new index filename is derived from a subkey derived from the master key
-    -todo:
-        - implement --restore-index command to restore backup from remote
-            - download and decrypt index to a temp file
-            - close DB - we need to ensure all other threads are shut down = runThreads = false
-                - need to ensure they close down cleanly, and verify this before closing DB
-            - rename db files
-            - then restart program entirely, or restart threads if possible
 
 Tue 18/8/2020
 - Fixed hangs due to certain mutexes in Watch
@@ -405,6 +398,7 @@ Tue 18/8/2020
         - option 1: try online sqlite db backup, rather than trying to close live DB#
         - option 2: implement a cross thread mutex to get a lock
 - todo: test all functions/features for mutex deadlocks e.g. download files
+    - test with a large directory of images - e.g. many GB
 
 Wed 19/8/2020
 - Backup database using the SQLite3 C Online Backup API - we do not need to close and reopen database, we can still complete SQL queries during backup process
@@ -412,3 +406,15 @@ Wed 19/8/2020
 - The way that Argon2id hashes a password, the resulting base64 url encoding never includes the '-' or '_' characters
     - When creating random filenames for remotes, removed these two chars
 - Fixed --restore when provided a path hash now that RANDOM_FILENAME_LENGTH has changed
+- todo: why is DB backing up on a clean start, db shouldn't have changed - must not be loading last modtime correctly from db
+    - same issue where we update modtime in DB, this edits db - and we cannot know modtime AFTER the DB change where we put in a value
+
+Thur 20/8/2020
+    -todo:
+        - implement --restore-index command to restore backup from remote
+            - download and decrypt index to a temp file
+                - may be multiple indexes on remote, if bucket hasn't been --cleaned - give option which one to restore or just restore latest?
+            - close DB - we need to ensure all other threads are shut down = runThreads = false
+                - need to ensure they close down cleanly, and verify this before closing DB
+            - rename db files
+            - then restart program entirely, or restart threads if possible

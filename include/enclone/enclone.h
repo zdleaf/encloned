@@ -46,7 +46,7 @@ class enclone{
         bool listRemote();
         bool restoreFiles(string targetPath);
         bool restoreFiles(string targetPath, string pathOrHash);
-        bool restoreIndex();
+        bool restoreIndex(string arg);
         bool cleanRemote();
 
         void generateKey(); // generate encryption key to file

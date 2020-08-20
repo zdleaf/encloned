@@ -107,7 +107,7 @@ void Session::handle_read(const boost::system::error_code& error, size_t bytes_t
         } else if (cmd == "cleanRemote"){
             response = remote->cleanRemote() + ";";
         } else if (cmd == "restoreIndex"){
-            response = watch->restoreIndex() + ";";
+            response = watch->restoreIndex(arg1) + ";";
         }
 
         cout << "Socket: Sending response to socket: \"" << response.substr(0, 20) << "...\"" << endl;

@@ -49,6 +49,7 @@ class Remote{
         string uploadNow(string path, string pathHash);
 
         string listObjects();
+        std::vector<string> getObjects();
         string cleanRemote();
         
 };

@@ -47,8 +47,16 @@ encloned::~encloned(){ // destructor
 }
 
 int encloned::execLoop(){
-    if(loadEncryptionKey() != 0){
+    if(loadEncryptionKey()){
+        cout << "Error loading encryption key from file" << endl;
         return 1;
+    }
+
+    if(deriveSubKey()){
+        cout << "Error deriving sub-key from master encryption key" << endl;
+        return 1;
+    } else {
+        cout << "Derived sub-key from master encryption key" << endl;
     }
 
     cout << "Starting Watch thread..." << endl; cout.flush();
@@ -69,8 +77,12 @@ int encloned::execLoop(){
     return 0;
 }
 
-unsigned char* encloned::getKey(){
+unsigned char* const encloned::getKey(){
     return key;
+}
+
+unsigned char* const encloned::getSubKey(){
+    return subKey;
 }
 
 void encloned::addWatch(string path, bool recursive){
@@ -106,4 +118,8 @@ int encloned::loadEncryptionKey(){
         return 1; 
     }
     return 0;
+}
+
+int encloned::deriveSubKey(){ // derive subkey from master key
+    return crypto_kdf_derive_from_key(subKey, sizeof subKey, 1, "INDEX___", key);
 }

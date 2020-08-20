@@ -180,6 +180,14 @@ string Encryption::passwordKDF(string password){
     return hashedPasswordStr;
 }
 
+bool Encryption::verifyPassword(string hash, string password){
+    if (crypto_pwhash_str_verify(hash.c_str(), password.c_str(), password.length()) != 0) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
 /* legacy hash code
 
 string Encryption::sha256(const string str)

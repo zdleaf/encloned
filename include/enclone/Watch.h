@@ -12,6 +12,7 @@
 #include <tuple>
 #include <unordered_set>
 #include <unordered_map>
+#include <algorithm>
 
 // concurrency/multi-threading
 #include <thread>
@@ -72,7 +73,7 @@ class Watch {
         std::pair<string, std::time_t> resolvePathHash(string pathHash);
         string downloadFiles(string targetPath); // download all
         string downloadFiles(string targetPath, string pathOrHash); // specify path or hash to download
-        string restoreIndex();
+        string restoreIndex(string arg);
         bool verifyHash(string pathHash, string fileHash);
 
         void uploadSuccess(std::string path, std::string objectName, int remoteID);

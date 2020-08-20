@@ -31,7 +31,10 @@ int enclone::showOptions(const int& argc, char** const argv){
             "   /path/to/file: \trestore the latest version of a file at specified path \n"
             "   filehash: \trestore a specific version of a file by providing the full hash as output by --list remote\n")
         ("target,t", po::value<string>(), "specify a target path to restore files to\n")
-        ("restore-index,i", "restore an index/database from remote storage\n")
+        ("restore-index,i", po::value<string>(), "restore an index/database from remote storage\n"
+            "   latest: \trestore most recent index backup found on remote\n"
+            "   show: \tshow all remotely backed up indexes\n"
+            "   filehash: \trestore a specific index by giving the encrypted filename\n")
         ("generate-key,k", "generate an encryption key")
         ("clean-up,c", "remove items from remote S3 which do not have a corresponding entry in fileIndex");
     
@@ -114,7 +117,15 @@ int enclone::showOptions(const int& argc, char** const argv){
         }
 
         if (vm.count("restore-index")){
-            restoreIndex();
+            string arg = vm["restore-index"].as<string>();
+            if(arg == "latest" || arg == "show" || arg.length() == 88){
+                restoreIndex(arg);
+            }
+            else {
+                std::cerr << "error: please enter 'latest', 'show' or an 88 character encrypted index name" << endl;
+                return 1;
+            }
+            
         }
 
         if (vm.count("generate-key")){
@@ -213,8 +224,8 @@ bool enclone::restoreFiles(string targetPath, string pathOrHash){
     return sendRequest(request);
 }
 
-bool enclone::restoreIndex(){
-    string request = "restoreIndex|";
+bool enclone::restoreIndex(string arg){
+    string request = "restoreIndex|" + arg;
     return sendRequest(request);
 }
 
