@@ -410,6 +410,7 @@ Wed 19/8/2020
     - same issue where we update modtime in DB, this edits db - and we cannot know modtime AFTER the DB change where we put in a value
 
 Thur 20/8/2020
+- Started --restore-index implementation
     -todo:
         - implement --restore-index command to restore backup from remote
             - download and decrypt index to a temp file
@@ -418,3 +419,4 @@ Thur 20/8/2020
                 - need to ensure they close down cleanly, and verify this before closing DB
             - rename db files
             - then restart program entirely, or restart threads if possible
+            - problem with "latest" parameter, when programs start with new database it will create a new one and upload, so latest has potential to be blank depending on if --restore-index is excecuted before new db has been uploaded

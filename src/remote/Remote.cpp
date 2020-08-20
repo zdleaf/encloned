@@ -102,6 +102,10 @@ std::vector<string> Remote::getObjects(){
     return s3->getObjects();
 }
 
+std::unordered_map<string, string> Remote::getObjectMap(){
+    return s3->getObjectMap();
+}
+
 string Remote::cleanRemote(){
     mtx.lock();
     std::vector<string> objects;

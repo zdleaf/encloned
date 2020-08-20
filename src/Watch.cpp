@@ -462,19 +462,26 @@ string Watch::restoreIndex(string arg){
     auto subKey_b64 = Encryption::base64_encode(std::string(reinterpret_cast<const char*>(daemon->getSubKey()))); // base64 encode the subkey
     string password = subKey_b64.substr(0, subKey_b64.length()/2); // password used for KDF is first half of the subKey in b64
 
-    std::vector<string> remoteObjects;
+    std::unordered_map<string, string> remoteObjectMap;
     std::vector<string> verifiedIndexes;
     try {
-        remoteObjects = remote->getObjects(); // get vector of objects from remote storage
-        for(auto item: remoteObjects){ 
-            if(Encryption::verifyPassword("$argon2id$v=19$m=1048576,t=4,p=1$" + Encryption::base64_decode(item), password)){
-                cout << "verified " << Encryption::base64_decode(item) << endl;
-            } else {
-                cout << "verification failed on " << Encryption::base64_decode(item) << endl;
+        remoteObjectMap = remote->getObjectMap(); // get vector of objects from remote storage
+        for(auto item: remoteObjectMap){ 
+            auto decoded = Encryption::base64_decode(item.first);
+            if(std::regex_match(decoded, std::regex("^[A-Za-z0-9\\$\\+\\/]+$"))){ // decoded strings will always be b64 with a $ sign, do not need to verify hashes that do not match this form
+                if(Encryption::verifyPassword("$argon2id$v=19$m=1048576,t=4,p=1$" + decoded, password)){ // verify hash with derived password
+                    cout << "verified " << item.first << endl;
+                    verifiedIndexes.push_back(item.first);
+                    if(arg == "show"){
+                        response << item.second << " : " << item.first << endl;
+                    }
+                } else {
+                    cout << "verification failed on " << decoded << endl;
+                }
             }
         }
     } catch (const std::exception& e){
-        response << "Watch: error getting and decoding objects from remote" << endl;
+        response << "Watch: error getting and decoding objects from remote: " << e.what() << endl;
     }
     
     return response.str();

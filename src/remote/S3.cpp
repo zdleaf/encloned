@@ -188,10 +188,11 @@ string S3::listObjects(std::shared_ptr<Aws::S3::S3Client> s3_client){
         } else {
             response << "S3: Files on S3 bucket " << BUCKET_NAME << ":" << std::endl;
             for (auto const &s3_object : object_list)
-            {
-                auto modtime = s3_object.GetLastModified().ToGmtString(Aws::Utils::DateFormat::ISO_8601);
+            {   
+                auto modtime = s3_object.GetLastModified().ToLocalTimeString(Aws::Utils::DateFormat::RFC822);
                 response << s3_object.GetKey() << " : " << modtime << std::endl;
                 remoteObjects.push_back(s3_object.GetKey().c_str());
+                remoteObjectMap.emplace(s3_object.GetKey().c_str(), modtime);
             }
         }
     } else {
@@ -211,6 +212,15 @@ std::vector<string> S3::getObjects(){
         throw;
     }
     return remoteObjects;
+}
+
+std::unordered_map<string, string> S3::getObjectMap(){
+    try {
+        callAPI("listObjects"); // populate remoteObjects vector by calling listObjects via API
+    } catch(const std::exception& e){ // listObjects may fail due invalid credentials etc
+        throw;
+    }
+    return remoteObjectMap;
 }
 
 bool S3::uploadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferManager, const Aws::String& bucketName, const std::string& path, const std::string& objectName){

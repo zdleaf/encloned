@@ -13,6 +13,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <algorithm>
+#include <regex>
 
 // concurrency/multi-threading
 #include <thread>

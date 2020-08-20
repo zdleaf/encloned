@@ -42,6 +42,7 @@ class S3: public Queue {
         encloned *daemon;
         
         std::vector<string> remoteObjects;
+        std::unordered_map<string, string> remoteObjectMap; // also stores last mod time in readable string format
 
         Aws::SDKOptions options;
         const Aws::String BUCKET_NAME = "enclone";
@@ -77,6 +78,8 @@ class S3: public Queue {
         string callAPI(string arg);
 
         std::vector<string> getObjects();
+        std::unordered_map<string, string> getObjectMap();
+
 };
 
 #endif

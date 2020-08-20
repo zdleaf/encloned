@@ -50,6 +50,7 @@ class Remote{
 
         string listObjects();
         std::vector<string> getObjects();
+        std::unordered_map<string, string> getObjectMap();
         string cleanRemote();
         
 };

@@ -32,7 +32,6 @@ int enclone::showOptions(const int& argc, char** const argv){
             "   filehash: \trestore a specific version of a file by providing the full hash as output by --list remote\n")
         ("target,t", po::value<string>(), "specify a target path to restore files to\n")
         ("restore-index,i", po::value<string>(), "restore an index/database from remote storage\n"
-            "   latest: \trestore most recent index backup found on remote\n"
             "   show: \tshow all remotely backed up indexes\n"
             "   filehash: \trestore a specific index by giving the encrypted filename\n")
         ("generate-key,k", "generate an encryption key")
