@@ -481,13 +481,14 @@ string Watch::restoreIndex(string arg){
             }
         }
     } catch (const std::exception& e){
-        response << "Watch: error getting and decoding objects from remote: " << e.what() << endl;
+        response << "Watch: Error getting remote objects: " << e.what() << endl;
     }
 
     if (arg.length() == 88){ // hash should be 88 chars long
         if(std::find(verifiedIndexes.cbegin(), verifiedIndexes.cend(), arg) != verifiedIndexes.cend()){ // check if provided hash matches a verified index
             response << "Restoring index backup with hash " << arg.substr(0,10) << "..." << endl;
             // download backup to index.restore
+            remote->downloadNow(arg, "index.restore");
             // need to close this thread - but not able to do so from this thread
             // then need to run a --restart-daemon type command, and execute daemon checking for existence of index.restore file - rename this file if exists, and load it
             response << "Downloaded index backup from remote. Run --restart-daemon to load it" << endl;

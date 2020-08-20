@@ -69,6 +69,10 @@ string Remote::uploadNow(string path, string pathHash){
     return s3->callAPI("uploadNow|" + path + "|" + pathHash);
 }
 
+string Remote::downloadNow(string pathHash, string target){
+    return s3->callAPI("downloadNow|" + pathHash + "|" + target);
+}
+
 string Remote::listObjects(){
     std::scoped_lock<std::mutex> guard(mtx);
     std::vector<string> objects;

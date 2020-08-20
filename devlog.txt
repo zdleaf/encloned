@@ -418,5 +418,7 @@ Thur 20/8/2020
             - then restart program entirely, or restart threads if possible
                 - unable to close threads from within the threads - since restoreIndex is called from the Watch thread, we cannot close a thread in execution
                 - download index to an index.restore file
+                    - we do not store modtime or a hash for the index database - so cannot verify this
+                    - needs a separate downloadObject() function that does not check hashes or restore a modtime
                 - add a --restart-daemon option, then rename and load from this restore db
             - problem with "latest" parameter, when programs start with new database it will create a new one and upload, so latest has potential to be blank depending on if --restore-index is excecuted before new db has been uploaded - removed this option for now

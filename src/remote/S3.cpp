@@ -51,15 +51,21 @@ string S3::callAPI(string arg){
             uploadFromQueue(transferManager);
         } else if (arg.substr(0, 9) == "uploadNow"){
             // split the arguments (path|pathHash)
-            auto delimPos = arg.find('|', 10);
+            auto delimPos = arg.find('|', 10); // find second delimiter
             string path = std::string(&arg[10], &arg[delimPos]);
             string pathHash = arg.substr(delimPos+1);
-
             //cout << "DEBUG: path: " << path << " pathHash: " << pathHash << endl;
-
             uploadObject(transferManager, BUCKET_NAME, path, pathHash);
         } else if (arg == "download"){
             response = downloadFromQueue(transferManager);
+        } else if (arg.substr(0, 11) == "downloadNow"){
+            // split the arguments (pathHash|target)
+            auto delimPos = arg.find('|', 12); // find second delimiter
+            string pathHash = std::string(&arg[12], &arg[delimPos]);
+            string target = arg.substr(delimPos+1);
+            //cout << "DEBUG: pathHash: " << pathHash << " target: " << target << endl;
+            downloadObject(transferManager, BUCKET_NAME, target, pathHash, modtime, "./"); // we do not store modtime or a hash for the index database - so cannot verify this
+            // need a separate downloadObject method that does not verify hash
         } else if (arg == "listObjects"){
             try {
                 response = listObjects(s3_client);
@@ -200,7 +206,7 @@ string S3::listObjects(std::shared_ptr<Aws::S3::S3Client> s3_client){
         response << "S3: listObjects error: " <<
             list_objects_outcome.GetError().GetExceptionName() << " " <<
             list_objects_outcome.GetError().GetMessage() << std::endl;
-        throw std::runtime_error("S3: listObjects error - unable to get objects from S3, check ~/.aws/credentials are valid\n");
+        throw std::runtime_error(list_objects_outcome.GetError().GetMessage().c_str());
     }
     cout << response.str();
     return response.str();

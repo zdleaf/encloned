@@ -6,6 +6,7 @@
 #include <memory> // shared_ptr
 #include <chrono>
 #include <fstream>
+#include <filesystem>
 
 // concurrency/multi-threading
 #include <thread>
@@ -23,6 +24,7 @@
 #include <enclone/remote/Remote.h>
 
 namespace io = boost::asio;
+namespace fs = std::filesystem;
 
 class Watch;
 class Socket;
