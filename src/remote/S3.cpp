@@ -55,7 +55,11 @@ string S3::callAPI(string arg){
             string path = std::string(&arg[10], &arg[delimPos]);
             string pathHash = arg.substr(delimPos+1);
             //cout << "DEBUG: path: " << path << " pathHash: " << pathHash << endl;
-            uploadObject(transferManager, BUCKET_NAME, path, pathHash);
+            try {
+                uploadObject(transferManager, BUCKET_NAME, path, pathHash);
+            } catch(const std::exception& e){ // listObjects may fail due invalid credentials etc
+                response == e.what();
+            }
         } else if (arg == "download"){
             response = downloadFromQueue(transferManager);
         } else if (arg.substr(0, 11) == "downloadNow"){
@@ -64,7 +68,12 @@ string S3::callAPI(string arg){
             string pathHash = std::string(&arg[12], &arg[delimPos]);
             string target = arg.substr(delimPos+1);
             //cout << "DEBUG: pathHash: " << pathHash << " target: " << target << endl;
-            downloadObject(transferManager, BUCKET_NAME, target, pathHash, modtime, "./"); // we do not store modtime or a hash for the index database - so cannot verify this
+            try {
+                response = downloadObject(transferManager, BUCKET_NAME, target, pathHash);
+            } catch(const std::exception& e){ // may fail due invalid credentials etc
+                response = e.what();
+            }
+            //downloadObject(transferManager, BUCKET_NAME, target, pathHash, modtime, "./"); // we do not store modtime or a hash for the index database - so cannot verify this
             // need a separate downloadObject method that does not verify hash
         } else if (arg == "listObjects"){
             try {
@@ -343,6 +352,44 @@ string S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transf
     
 */
 
+    cout << ss.str();
+    return ss.str();
+}
+
+string S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferManager, const Aws::String& bucketName, const std::string& writeToPath, const std::string& objectName){
+    std::ostringstream ss;
+    
+    Aws::String awsObjectName(objectName);
+    // set temporary location
+    string localEncryptedPath = encloned::TEMP_FILE_LOCATION + writeToPath;
+    cout << "localEncryptedPath: " << localEncryptedPath << endl;
+    Aws::String awsWriteToFile(localEncryptedPath);
+
+    auto downloadHandle = transferManager->DownloadFile(bucketName, awsObjectName, awsWriteToFile);
+    downloadHandle->WaitUntilFinished();
+    if(downloadHandle->GetStatus() == Aws::Transfer::TransferStatus::COMPLETED){
+        if (downloadHandle->GetBytesTotalSize() == downloadHandle->GetBytesTransferred()) {
+            ss << "S3: Download of " << objectName.substr(0, 10) << "... to " << awsWriteToFile << " successful" << endl;
+
+            // decrypt temporary file to download location
+            if(Encryption::decryptFile(writeToPath.c_str(), localEncryptedPath.c_str(), daemon->getKey()) == 0){
+                fs::remove(localEncryptedPath); // remove temporary object on local fs
+            } else {
+                ss << "S3: Decryption of " << objectName << " to " << writeToPath << " failed" << endl;
+                cout << ss.str(); throw std::runtime_error(ss.str());
+            }
+            cout << ss.str();
+            return ss.str();
+        } else {
+            ss << "S3: Bytes downloaded did not equal requested number of bytes: " << downloadHandle->GetBytesTotalSize() << downloadHandle->GetBytesTransferred() << std::endl;
+            cout << ss.str();
+            throw std::runtime_error(ss.str());
+        }
+    } else {
+        ss << "S3: Download of " << objectName << " to " << awsWriteToFile << " failed with message: " << downloadHandle->GetStatus() << " (" << downloadHandle->GetLastError().GetMessage() << ")" << endl;
+        cout << ss.str();
+        throw std::runtime_error(ss.str());
+    }
     cout << ss.str();
     return ss.str();
 }

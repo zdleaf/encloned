@@ -96,7 +96,7 @@ string Remote::listObjects(){
         }
     }
 
-    if(ss.str().empty()){ return "Remote: " + std::to_string(untrackedCount) + " object/s on remote, but none of them match items in the file index. Run enclone --clean to remove.\n"; }
+    if(ss.str().empty()){ return "Remote: " + std::to_string(untrackedCount) + " object/s on remote, but none of them match items in the file index. Run enclone --clean to remove, or --restore-index show to see if an index file can be restored.\n"; }
     else { ss << "+ " << untrackedCount << " files untracked by index (--clean to remove)" << endl; }
 
     return ss.str();

@@ -15,8 +15,11 @@ encloned::encloned(){ // constructor
 
     // check for existence of index.restore file and rename to index.db to load it
     if(fs::exists("index.restore")){
-        // if index.db exists - display warning message to manually backup, then quit?
-        // rename index.restore to index.db
+        if(fs::exists("index.db")){ // if index.db already exists, throw exception - we do not want data loss
+            throw std::runtime_error("index.restore file exists, remove or backup index.db before restoring. Remove or rename index.restore to abort restoring backup.");
+        } else {
+            fs::rename("index.restore", "index.db");
+        }
     }
 
     db = std::make_shared<DB>();

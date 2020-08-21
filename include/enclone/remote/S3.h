@@ -60,7 +60,8 @@ class S3: public Queue {
         string listObjects(std::shared_ptr<Aws::S3::S3Client> s3_client);
 
         bool uploadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferManager, const Aws::String& bucketName, const std::string& path, const std::string& objectName);
-        string downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferManager, const Aws::String& bucketName, const std::string& writeToPath, const std::string& objectName, std::time_t& originalModTime, std::string& targetPath);
+        string downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferManager, const Aws::String& bucketName, const std::string& writeToPath, const std::string& objectName, std::time_t& originalModTime, std::string& targetPath); // download, restore modtime and verify hashes
+        string downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferManager, const Aws::String& bucketName, const std::string& writeToPath, const std::string& objectName); // do not verify, do not restore modtime - used for index backup only
         string deleteObject(std::shared_ptr<Aws::S3::S3Client> s3_client, const Aws::String& objectName, const Aws::String& fromBucket);
         
         //bool put_s3_object(const Aws::String& s3_bucket_name, const std::string& path, const Aws::String& s3_object_name);

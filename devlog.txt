@@ -411,14 +411,10 @@ Wed 19/8/2020
 
 Thur 20/8/2020
 - Started --restore-index implementation
-    -todo:
-        - implement --restore-index command to restore backup from remote
-            - download and decrypt index to a temp file
-                - may be multiple indexes on remote, if bucket hasn't been --cleaned - give option which one to restore or just restore latest?
-            - then restart program entirely, or restart threads if possible
-                - unable to close threads from within the threads - since restoreIndex is called from the Watch thread, we cannot close a thread in execution
-                - download index to an index.restore file
-                    - we do not store modtime or a hash for the index database - so cannot verify this
-                    - needs a separate downloadObject() function that does not check hashes or restore a modtime
-                - add a --restart-daemon option, then rename and load from this restore db
-            - problem with "latest" parameter, when programs start with new database it will create a new one and upload, so latest has potential to be blank depending on if --restore-index is excecuted before new db has been uploaded - removed this option for now
+
+Fri 21/8/2020
+- Finished --restore-index implementation
+    - Use --restore-index show to list all available index backups on remote
+    - Use --restore-index HASH to download and decrypt the index backup to an index.restore file, and prompt to restart daemon
+    - If index.restore file exists, daemon will prompt to remove/backup current index.db if it exists
+        - If there is no index.db when daemon starts, daemon will rename index.restore to index.db and load the backup

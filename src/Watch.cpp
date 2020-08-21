@@ -491,7 +491,7 @@ string Watch::restoreIndex(string arg){
             remote->downloadNow(arg, "index.restore");
             // need to close this thread - but not able to do so from this thread
             // then need to run a --restart-daemon type command, and execute daemon checking for existence of index.restore file - rename this file if exists, and load it
-            response << "Downloaded index backup from remote. Run --restart-daemon to load it" << endl;
+            response << "Downloaded index backup from remote. Remove and backup the current index.db if required, and restart daemon to load it" << endl;
         }
     } else if (arg != "show"){
         response << "Unknown argument provided - either 'show' or an 88 character hash of an index backup" << endl;
