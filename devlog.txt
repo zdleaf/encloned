@@ -411,10 +411,17 @@ Wed 19/8/2020
 
 Thur 20/8/2020
 - Started --restore-index implementation
+    - Not possible to cleanly restore a backup while program/threads are running. Easier and safer to prompt a daemon restart.
+    - Not possible to verify a file hash of the index backup, since this info is stored in the database - created a stripped down downloadObject() method
 
 Fri 21/8/2020
 - Finished --restore-index implementation
-    - Use --restore-index show to list all available index backups on remote
-    - Use --restore-index HASH to download and decrypt the index backup to an index.restore file, and prompt to restart daemon
+    - Use "--restore-index show" to list all available index backups on remote
+    - Use "--restore-index HASH" to download and decrypt the index backup to an index.restore file, and prompt to restart daemon
     - If index.restore file exists, daemon will prompt to remove/backup current index.db if it exists
-        - If there is no index.db when daemon starts, daemon will rename index.restore to index.db and load the backup
+        - If there is no index.db when daemon starts, daemon will rename index.restore to index.db and load the backup file
+
+Sat 22/8/2020
+- Issue: in deriving the index backup filename, we expose which file is the encrypted index - it's easy to b64 all filenames and find which are in argon2id pwhash format
+- Solution: see index-encrypt-new.cpp - we derive a subkey, use that as a password with a random salt to derive another key - and store b64 of new key + random salt as filename
+    - if we have the master key, we can deterministically derive the subkey, and compute on all filenames to check if using the last 24 chars as a salt results in the first 64 chars of the filename
