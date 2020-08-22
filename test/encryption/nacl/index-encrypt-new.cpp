@@ -141,12 +141,10 @@ std::string new_base64_encode(unsigned char const* bytes_to_encode, unsigned int
 }
 
 void deriveKey(string key_b64){
-    string saltStr = base64_decode("y_CVhUynrI7wxGUe-PWLQZVa");
     unsigned char salt[crypto_pwhash_SALTBYTES+2];
     unsigned char newKey[48];
 
-    //randombytes_buf(salt, sizeof salt);
-    strcpy((char*) salt, saltStr.c_str());
+    randombytes_buf(salt, sizeof salt);
 
     if (crypto_pwhash
         (newKey, sizeof newKey, key_b64.c_str(), key_b64.length(), salt,
@@ -162,12 +160,49 @@ void deriveKey(string key_b64){
     cout << "salt_b64: " << salt_b64 << " length: " << salt_b64.length() << " salt size: " << sizeof salt << endl;
 }
 
+string deriveKeyFromSalt(string key_b64, string salt_b64){
+    unsigned char salt[crypto_pwhash_SALTBYTES+2]; // so resulting b64 encode is 24 chars
+    unsigned char newKey[48]; // b64 encode of this will be 64 chars
+    
+    string saltStr = base64_decode(salt_b64); // get the binary data from salt
+    strcpy((char*) salt, saltStr.c_str());
+    //randombytes_buf(salt, sizeof salt)
+
+    if (crypto_pwhash
+        (newKey, sizeof newKey, key_b64.c_str(), key_b64.length(), salt,
+        crypto_pwhash_OPSLIMIT_INTERACTIVE, crypto_pwhash_MEMLIMIT_INTERACTIVE,
+        crypto_pwhash_ALG_DEFAULT) != 0) {
+        /* out of memory */
+    }
+
+    auto newKey_b64 = new_base64_encode(newKey, sizeof newKey);
+    //auto salt_b64 = new_base64_encode(salt, sizeof salt);
+
+    cout << "newKey_b64: " << newKey_b64 << " length: " << newKey_b64.length() << " key size: " << sizeof newKey << endl;
+    cout << "salt_b64: " << salt_b64 << " length: " << salt_b64.length() << " salt size: " << sizeof salt << endl;
+    return newKey_b64;
+}
+
 
 int main(){
     initSodium();
     loadEncryptionKey();
 
     crypto_kdf_derive_from_key(subkey1, sizeof subkey1, 1, "INDEX___", key);
+
+    vector<string> vec;
+    vec.push_back("wbNINpYwtYbwaK2Dg51v7POjdTRwBdXyD5TCrjwdslMStlAvfIaNINTSn8j5c6u2Zs3U9sUfhUjsMpiR2rjf80FP");
+    vec.push_back("x11wyRKqhkaZx7WzcwaZfJXZ1gqrjxxqPm8gnUBWPJiCIuSSuiyPFJ8cwIEf62vZAH3fl9pe3uO1yx15m7BE5LG7");
+    vec.push_back("xKzqz7btFi5VXWAVb5G3srF7zonBR0Owkajnc9YgTdBHFhd983fO0Khv31oIxp7jNtgrBeioK6kXR4DX4Na7pIfZ");
+    vec.push_back("vGWCOVZtmaCFooLXph2s00W3FtTu4pkJrAqpXcaUVpNVHJyiEx7vXmgZK6ELk9QSmBwUYR89EhGQrG5AchEnabGN");
+    vec.push_back("uAAV8mzeAWEwx8LS5L66kKvoxFFIO4FItljgF8iAZUrGyXfvxcs3f43z0jzyiQGhMbIE2lV2zC6ZiaEc8xSudp8t");
+    vec.push_back("sZ42vINY8Iwz7hZD0o9685AINa5ATj7yTIO2jjv5nRFJFIVGKhCxa711MsmbqvfMWgzr2Tjd5d6ibXxcwAm8r0Tl");
+    vec.push_back("rSZZcL2ShGiUgdBI7ZDBJI6hyU4uFHnOTtrBNANy5gwE40YofiRFaV4vUje8I2S5hDBX2YkMvaezDmbuOM3KyTt0");
+    vec.push_back("qM7JBetmusTQSSEG56jeciFf9jy0DzbwCx34Z6CI4LKHSr19SInwIEpIiD9CfNpBLLiHJghCDYz4tHGFqOvJJG83");
+    vec.push_back("pXmSe11MSwbquZMIdjCZTztc2aWyad2cYHXSDNNNOmmk2S5QbxWqYJzMnh37yYzLr07xujOBnNAKZjh58E5uH8kC");
+    vec.push_back("oVwSmR8dUUh8d1SI2a10Vep6UJivcvg88sUFrPcK5uFPf6FRedPX6VNMsvIEmHGeDDEyjs2x1N1VYQhI0Mxsv1fO");
+    vec.push_back("n9amQ6bZ7IAzL2Bu6WFfvhtBRU9pSEc2DPfpXuXAVUd16iSX89R8ihx2gmUq39QxQl6BL0riU9if4fnq13ziuGfd");
+    vec.push_back("0AFqKN-EpumhZa1n4yH97TVC1x_9N8kheJAeFPyfCujTL1xmd4mgkz_jki3PcMfwy_CVhUynrI7wxGUe-PWLQZVa");
 
     // base64 key
     auto key_b64 = base64_encode(std::string(reinterpret_cast<const char*>(key)));
@@ -176,23 +211,30 @@ int main(){
     auto subkey_b64 = base64_encode(std::string(reinterpret_cast<const char*>(subkey1)));
     cout << "sub key in b64: " << subkey_b64 << endl;
 
-    deriveKey(subkey_b64);
+    //deriveKey(subkey_b64);
+
+    for(auto item: vec){
+        string key = item.substr(0, 64);
+        string salt = item.substr(64);
+        
+        if(deriveKeyFromSalt(subkey_b64, salt) == key){
+            cout << "verified - key: " << key << " salt: " << salt << endl;
+        }
+    }
+
+    
 
     /* 
-    derive subkey
-    base64 encode subkey
-    use half of base64 subkey as password in Argon2id algorithm to string
-    remove Argon2id params from front of string
-    base64_url encode Argon2id hash = filename of index
+    to derive index filename:
+        - derive subkey
+        - base64 encode subkey
+        - use b64 encoded subkey as a password to derive another key, with a random salt
+        - store resulting b64 of new key + b64 random salt = 88 char filename
 
     to restore index:
         - compute same subkey from master key
-        - base64 encode subkey split in half
-        - decode base 64 for all filenames on remote
-        - prefix Argon2id params to all decoded b64 strings ("$argon2id$v=19$m=1048576,t=4,p=1$")
-        - use verify function to check base 64 encoded half subkey against all values until it verifies
-        - on average will have to check half the files before finding a match. base64 decode is quick, test verification.
-
-        - 
+        - base64 encode subkey
+        - decode b64 for last 24 chars of all filenames on remote - these are potential salt values
+        - use subkey and decoded b64 possible salt, to derive the newkey. base64 new key and compare with first 64 chars of file name.
      */
 }
