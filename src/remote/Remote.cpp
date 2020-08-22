@@ -57,6 +57,7 @@ bool Remote::queueForDownload(std::string path, std::string objectName, std::tim
 
 bool Remote::queueForDelete(std::string objectName){
     std::scoped_lock<std::mutex> guard(mtx);
+    
     // call remotes
     return s3->enqueueDelete(objectName);
 }

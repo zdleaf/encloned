@@ -25,10 +25,10 @@ void Watch::execThread(){
             }
             execQueuedSQL();
             std::this_thread::sleep_for(std::chrono::seconds(2));
-            //indexBackup();
+            indexBackup();
         }
         std::this_thread::sleep_for(std::chrono::seconds(1));
-        indexBackup();
+        //indexBackup();
     }
 }
 
@@ -384,29 +384,7 @@ void Watch::uploadSuccess(std::string path, std::string objectName, int remoteID
 void Watch::deriveIdxBackupName(){
     std::scoped_lock<std::mutex> guard(mtx);
 
-    // base64 encode the subkey
-    auto subKey_b64 = Encryption::base64_encode(std::string(reinterpret_cast<const char*>(daemon->getSubKey())));
-    // derive an Argon2id password hash string
-    string hashedSubKey = Encryption::passwordKDF(subKey_b64.substr(0, subKey_b64.length()/2)); // split the key in half (32 bytes) - even if Argon2id password hash is defeated, this only results in half a subkey being exposed. even with a full derived subkey, it is not possible to determine the master key from this.
-
-    // remove argon2id parameters from the front of the hash - "$argon2id$v=19$m=1048576,t=4,p=1$"
-    size_t pos = 0;
-    int count = 0;
-
-    while(count != 3){
-        pos+=1;
-        pos = hashedSubKey.find("$", pos);
-        count++;
-    }
-
-    if (pos == std::string::npos){
-        throw std::runtime_error("error: Argon2id hashed string, unable to find delimiter\n");
-    } else {
-        hashedSubKey = hashedSubKey.substr(pos+1);
-    }
-
-    // b64 url encode the password hash - this is the filename used as index backup name on remote
-    indexBackupName = Encryption::base64_encode(hashedSubKey);
+    indexBackupName = Encryption::deriveKey(daemon->getSubKey_b64()); // derive a b64 encoding key + random salt, using the subkey as a password
     cout << "Used subkey to derive filename to use for index file backup: " << indexBackupName << " length: " << indexBackupName.length() << endl;
 
     // update db
@@ -446,60 +424,53 @@ void Watch::indexBackup(){
 
 string Watch::restoreIndex(string arg){
     /* 
-    list remote objects and save filenames to vector
-    base64 decode all of them
-
+        - list remote objects and save filenames to vector
         - compute same subkey as above from master key (use same CONTEXT string as parameter - "INDEX___")
-        - base64 encode subkey and split in half
-        - decode base 64 for all filenames on remote
-        - check if decoded b64 contains only a-z,A-Z,0-9,+/$ chars - this saves long verification of files that cannot be index backups
-        - prefix Argon2id params to all decoded b64 strings ("$argon2id$v=19$m=1048576,t=4,p=1$")
-        - use verify function to check base 64 encoded half subkey against all values until it verifies
+        - base64 encode subkey
+        - use Encryption::verifyKey(subkey, filename) on all files to check if file is a valid index backup
         - some slowness is acceptable since restoring index from remote will only be done very rarely, in the event of loss of local index file.
      */
     std::stringstream response;
 
-    auto subKey_b64 = Encryption::base64_encode(std::string(reinterpret_cast<const char*>(daemon->getSubKey()))); // base64 encode the subkey
-    string password = subKey_b64.substr(0, subKey_b64.length()/2); // password used for KDF is first half of the subKey in b64
-
     std::unordered_map<string, string> remoteObjectMap;
-    std::vector<string> verifiedIndexes;
-    try {
-        remoteObjectMap = remote->getObjectMap(); // get vector of objects from remote storage
-        for(auto item: remoteObjectMap){ 
-            auto decoded = Encryption::base64_decode(item.first);
-            if(std::regex_match(decoded, std::regex("^[A-Za-z0-9\\$\\+\\/]+$"))){ // decoded strings will always be b64 with a $ sign, do not need to verify hashes that do not match this form
-                if(Encryption::verifyPassword("$argon2id$v=19$m=1048576,t=4,p=1$" + decoded, password)){ // verify hash with derived password
-                    cout << "Watch: verified index backup " << item.first << endl;
-                    verifiedIndexes.push_back(item.first);
-                    if(arg == "show"){
-                        response << item.second << " : " << item.first << endl;
-                    }
-                } else {
-                    cout << "Watch: verification failed on " << decoded << endl;
-                }
-            }
-        }
+    string subKey_b64 = daemon->getSubKey_b64();
+
+    try { 
+        remoteObjectMap = remote->getObjectMap(); // get map of objects from remote storage <objectName, modtime string>
     } catch (const std::exception& e){
         response << "Watch: Error getting remote objects: " << e.what() << endl;
     }
 
-    if (arg.length() == 88){ // hash should be 88 chars long
-        if(std::find(verifiedIndexes.cbegin(), verifiedIndexes.cend(), arg) != verifiedIndexes.cend()){ // check if provided hash matches a verified index
-            response << "Restoring index backup with hash " << arg.substr(0,10) << "..." << endl;
-            // download backup to index.restore
-            remote->downloadNow(arg, "index.restore");
-            // need to close this thread - but not able to do so from this thread
-            // then need to run a --restart-daemon type command, and execute daemon checking for existence of index.restore file - rename this file if exists, and load it
-            response << "Downloaded index backup from remote. Remove and backup the current index.db if required, and restart daemon to load it" << endl;
+    if (arg == "show"){ // try and verify all files on remote, to determine if they are index backups
+        for(auto item: remoteObjectMap){ 
+            if(Encryption::verifyKey(subKey_b64, item.first)){ // verify if filename was computed from the subkey
+                cout << "Watch: verified index backup " << item.first << endl;
+                cout << "-----" << endl;
+                response << item.second << " : " << item.first << endl;
+            } else {
+                cout << "Watch: verification failed on " << item.first << endl;
+            }
         }
-    } else if (arg != "show"){
+    } 
+    
+    else if (arg.length() == 88){ // hash should be 88 chars long
+        if(remoteObjectMap.find(arg) != remoteObjectMap.end()){ // check if provided hash is in object map
+            if(Encryption::verifyKey(subKey_b64, arg)){ // verify if filename was computed from the subkey
+                response << "Restoring index backup with hash " << arg.substr(0,10) << "..." << endl;
+                remote->downloadNow(arg, "index.restore"); // download and decrypt index backup to index.restore
+                response << "Downloaded index backup from remote. Remove and backup the current index.db if required, and restart daemon to load it" << endl;
+            }
+        } else {
+            response << "Unable to find hash " << arg << " on remote storage";
+        }
+    } 
+    
+    else if (arg != "show"){
         response << "Unknown argument provided - either 'show' or an 88 character hash of an index backup" << endl;
     }
+
     return response.str();
 }
-
-
 
 void Watch::restoreDB(){
     cout << "Restoring file index from DB..." << endl; cout.flush();
@@ -624,7 +595,7 @@ void Watch::restoreIdxBackupName(){
             //cout << "DEBUG: restored db backup modtime: " << displayTime(indexLastMod) << endl;
         mtx.unlock();
 
-        cout << "Restored index backup name: " << idxName << endl;
+        cout << "Restored index backup name: " << idxName << endl; cout.flush();
         rc = sqlite3_step(stmt);
     }
 

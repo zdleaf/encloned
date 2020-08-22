@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <random>
 #include <fstream>
+#include <cstring>
 
 #include <sodium.h>
 
@@ -26,6 +27,7 @@ class Encryption{
         static int decryptFile(const char *target_file, const char *source_file, const unsigned char key[crypto_secretstream_xchacha20poly1305_KEYBYTES]);
 
         static std::string base64_encode(const std::string &in);
+        static std::string base64_encode(unsigned char const* bytes_to_encode, unsigned int in_len);
         static std::string base64_decode(const std::string &in);
 
         static constexpr char base64_url_alphabet[64] = {
@@ -38,6 +40,10 @@ class Encryption{
 
         static std::string passwordKDF(string password);
         static bool verifyPassword(string hash, string password);
+
+        static string deriveKey(string password); // derive a key from a password (subkey in b64 used as password), using a random salt
+        static string deriveKey(string password, string salt_b64); // derive a key from password, using a specified salt
+        static bool verifyKey(string password, string saltedKey_b64);
 
         static const int getRandomFilenameLength();
     

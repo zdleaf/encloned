@@ -44,6 +44,7 @@ class encloned{
         // file encryption key
         unsigned char key[crypto_secretstream_xchacha20poly1305_KEYBYTES]; // master key
         unsigned char subKey[64]; // derived subKey for index backup name encryption
+        string subKey_b64;
         int loadEncryptionKey();
         int deriveSubKey();
         
@@ -57,7 +58,7 @@ class encloned{
 
         int execLoop();
         unsigned char* const getKey();
-        unsigned char* const getSubKey();
+        string const getSubKey_b64();
 
         void addWatch(string path, bool recursive); // needs mutex support
         void displayWatches();

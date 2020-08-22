@@ -195,7 +195,7 @@ string S3::listObjects(std::shared_ptr<Aws::S3::S3Client> s3_client){
     auto list_objects_outcome = s3_client->ListObjects(objects_request);
 
     if (list_objects_outcome.IsSuccess()) {
-        remoteObjects.clear(); // erase old remoteObjects vector
+        remoteObjects.clear(); remoteObjectMap.clear(); // erase old remoteObjects vector/maps
         Aws::Vector<Aws::S3::Model::Object> object_list =
             list_objects_outcome.GetResult().GetContents();
         if(object_list.empty()){

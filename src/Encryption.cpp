@@ -82,7 +82,7 @@ ret:
 
 string Encryption::randomString(std::size_t length)
 {
-    const std::string CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    const std::string CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_";
     std::random_device random_device;
     std::mt19937 generator(random_device());
     std::uniform_int_distribution<> distribution(0, CHARACTERS.size()-1);
@@ -127,7 +127,7 @@ string Encryption::hashFile(const string path){ // hash a file in chunks of BUFF
     return hex;
 }
 
-std::string Encryption::base64_encode(const std::string & in){
+std::string Encryption::base64_encode(const std::string &in){
   std::string out;
   int val =0, valb=-6;
   size_t len = in.length();
@@ -147,7 +147,46 @@ std::string Encryption::base64_encode(const std::string & in){
   return out;
 }
 
-std::string Encryption::base64_decode(const std::string & in){
+std::string Encryption::base64_encode(unsigned char const* bytes_to_encode, unsigned int in_len){
+  std::string ret;
+  int i = 0;
+  int j = 0;
+  unsigned char char_array_3[3];
+  unsigned char char_array_4[4];
+
+  while(in_len--){
+    char_array_3[i++] = *(bytes_to_encode++);
+    if (i == 3) {
+      char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
+      char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
+      char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
+      char_array_4[3] = char_array_3[2] & 0x3f;
+
+      for(i = 0; (i <4) ; i++)
+        ret += base64_url_alphabet[char_array_4[i]];
+      i = 0;
+    }
+  }
+
+  if(i){
+    for(j = i; j < 3; j++)
+      char_array_3[j] = '\0';
+
+    char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
+    char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
+    char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
+    char_array_4[3] = char_array_3[2] & 0x3f;
+
+    for (j = 0; (j < i + 1); j++)
+      ret += base64_url_alphabet[char_array_4[j]];
+
+    while((i++ < 3))
+      ret += '=';
+  }
+  return ret;
+}
+
+std::string Encryption::base64_decode(const std::string &in){
   std::string out;
   std::vector<int> T(256, -1);
   unsigned int i;
@@ -188,21 +227,47 @@ bool Encryption::verifyPassword(string hash, string password){
     }
 }
 
-/* legacy hash code
+string Encryption::deriveKey(string password){ // with a random salt
+    unsigned char salt[crypto_pwhash_SALTBYTES+2];
+    randombytes_buf(salt, sizeof salt);
+    string salt_b64 = base64_encode(salt, sizeof salt);
+    cout << "DEBUG: deriveKey1 password:" << password << " salt_b64: " << salt_b64 << endl;
+    return deriveKey(password, salt_b64);
+}
 
-string Encryption::sha256(const string str)
-{
-    unsigned char hash[SHA256_DIGEST_LENGTH];
-    SHA256_CTX sha256;
-    SHA256_Init(&sha256);
-    SHA256_Update(&sha256, str.c_str(), str.size());
-    SHA256_Final(hash, &sha256);
-    std::stringstream ss;
-    for(int i = 0; i < SHA256_DIGEST_LENGTH; i++)
-    {
-        ss << std::hex << std::setw(2) << std::setfill('0') << (int)hash[i];
+string Encryption::deriveKey(string password, string salt_b64){ // derive a key from password, using a specified salt - return is b64_key + b64_salt = 88 chars
+    cout << "DEBUG: deriveKey2 password:" << password << " salt_b64: " << salt_b64 << endl;
+    unsigned char salt[crypto_pwhash_SALTBYTES+2]; // resulting b64 encode is 24 chars
+    unsigned char newKey[48]; // b64 encode of this will be 64 chars
+    
+    string saltStr = base64_decode(salt_b64); // get the binary data from salt
+    strcpy((char*) salt, saltStr.c_str());
+
+    if (crypto_pwhash
+        (newKey, sizeof newKey, password.c_str(), password.length(), salt,
+        crypto_pwhash_OPSLIMIT_MODERATE, crypto_pwhash_MEMLIMIT_MODERATE,
+        crypto_pwhash_ALG_DEFAULT) != 0) {
+        throw std::bad_alloc(); // out of memory
     }
-    return ss.str();
-} 
 
-*/
+    auto newKey_b64 = base64_encode(newKey, sizeof newKey);
+
+    //cout << "newKey_b64: " << newKey_b64 << " length: " << newKey_b64.length() << " key size: " << sizeof newKey << endl;
+    //cout << "salt_b64: " << salt_b64 << " length: " << salt_b64.length() << " salt size: " << sizeof salt << endl;
+    return newKey_b64 + salt_b64;
+}
+
+bool Encryption::verifyKey(string password, string saltedKey_b64){
+    string key = saltedKey_b64.substr(0, 64);
+    string salt = saltedKey_b64.substr(64);
+    
+    auto result = deriveKey(password, salt);
+    cout << "-----" << endl;
+    cout << "DEBUG: comparing:\"" << saltedKey_b64 << "\"" << endl;
+    cout << "DEBUG: comparing:\"" << result << "\"" << endl;
+    
+    if(result == saltedKey_b64){ // check if using key with salt results in the first 64 chars of the hash
+        return true;
+    }
+    return false;
+}
