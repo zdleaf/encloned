@@ -25,10 +25,10 @@ void Watch::execThread(){
             }
             execQueuedSQL();
             std::this_thread::sleep_for(std::chrono::seconds(2));
-            indexBackup();
+            //indexBackup();
         }
         std::this_thread::sleep_for(std::chrono::seconds(1));
-        //indexBackup();
+        indexBackup();
     }
 }
 
@@ -444,11 +444,8 @@ string Watch::restoreIndex(string arg){
     if (arg == "show"){ // try and verify all files on remote, to determine if they are index backups
         for(auto item: remoteObjectMap){ 
             if(Encryption::verifyKey(subKey_b64, item.first)){ // verify if filename was computed from the subkey
-                cout << "Watch: verified index backup " << item.first << endl;
-                cout << "-----" << endl;
+                cout << "Watch: verified index backup: " << item.first << endl;
                 response << item.second << " : " << item.first << endl;
-            } else {
-                cout << "Watch: verification failed on " << item.first << endl;
             }
         }
     } 

@@ -14,6 +14,9 @@ namespace fs = std::filesystem;
 unsigned char key[crypto_secretstream_xchacha20poly1305_KEYBYTES];
 uint8_t subkey1[64];
 
+string deriveKey(string key_b64);
+string deriveKey(string key_b64, string salt_b64);
+
 void initSodium(){
     if (sodium_init() != 0) {
         cout << "Encryption: Error initialising libsodium" << endl;
@@ -97,7 +100,7 @@ std::string base64_decode(const std::string & in) {
   return out;
 }
 
-std::string new_base64_encode(unsigned char const* bytes_to_encode, unsigned int in_len) {
+std::string base64_encode(unsigned char const* bytes_to_encode, unsigned int in_len) {
   std::string ret;
   int i = 0;
   int j = 0;
@@ -140,27 +143,14 @@ std::string new_base64_encode(unsigned char const* bytes_to_encode, unsigned int
 
 }
 
-void deriveKey(string key_b64){
+string deriveKey(string key_b64){ // with a random salt
     unsigned char salt[crypto_pwhash_SALTBYTES+2];
-    unsigned char newKey[48];
-
     randombytes_buf(salt, sizeof salt);
-
-    if (crypto_pwhash
-        (newKey, sizeof newKey, key_b64.c_str(), key_b64.length(), salt,
-        crypto_pwhash_OPSLIMIT_INTERACTIVE, crypto_pwhash_MEMLIMIT_INTERACTIVE,
-        crypto_pwhash_ALG_DEFAULT) != 0) {
-        /* out of memory */
-    }
-
-    auto newKey_b64 = new_base64_encode(newKey, sizeof newKey);
-    auto salt_b64 = new_base64_encode(salt, sizeof salt);
-
-    cout << "newKey_b64: " << newKey_b64 << " length: " << newKey_b64.length() << " key size: " << sizeof newKey << endl;
-    cout << "salt_b64: " << salt_b64 << " length: " << salt_b64.length() << " salt size: " << sizeof salt << endl;
+    string salt_b64 = base64_encode(salt, sizeof salt);
+    return deriveKey(key_b64, salt_b64);
 }
 
-string deriveKeyFromSalt(string key_b64, string salt_b64){
+string deriveKey(string key_b64, string salt_b64){
     unsigned char salt[crypto_pwhash_SALTBYTES+2]; // so resulting b64 encode is 24 chars
     unsigned char newKey[48]; // b64 encode of this will be 64 chars
     
@@ -175,12 +165,26 @@ string deriveKeyFromSalt(string key_b64, string salt_b64){
         /* out of memory */
     }
 
-    auto newKey_b64 = new_base64_encode(newKey, sizeof newKey);
+    auto newKey_b64 = base64_encode(newKey, sizeof newKey);
     //auto salt_b64 = new_base64_encode(salt, sizeof salt);
 
-    cout << "newKey_b64: " << newKey_b64 << " length: " << newKey_b64.length() << " key size: " << sizeof newKey << endl;
-    cout << "salt_b64: " << salt_b64 << " length: " << salt_b64.length() << " salt size: " << sizeof salt << endl;
-    return newKey_b64;
+    //cout << "newKey_b64: " << newKey_b64 << " length: " << newKey_b64.length() << " key size: " << sizeof newKey << endl;
+    //cout << "salt_b64: " << salt_b64 << " length: " << salt_b64.length() << " salt size: " << sizeof salt << endl;
+    return newKey_b64 + salt_b64;
+}
+
+bool verifyKey(string password, string saltedKey_b64){
+    string key = saltedKey_b64.substr(0, 64);
+    string salt = saltedKey_b64.substr(64);
+    
+    auto result = deriveKey(password, salt);
+    cout << "DEBUG: using pw :\"" << password << "\"" << endl;
+    cout << "DEBUG: comparing:\"" << saltedKey_b64 << "\"" << endl;
+    cout << "DEBUG: comparing:\"" << result << "\"" << endl;
+    if(deriveKey(password, salt) == saltedKey_b64){ // check if using key with salt results in the first 64 chars of the hash
+        return true;
+    }
+    return false;
 }
 
 
@@ -190,19 +194,20 @@ int main(){
 
     crypto_kdf_derive_from_key(subkey1, sizeof subkey1, 1, "INDEX___", key);
 
+
     vector<string> vec;
     vec.push_back("wbNINpYwtYbwaK2Dg51v7POjdTRwBdXyD5TCrjwdslMStlAvfIaNINTSn8j5c6u2Zs3U9sUfhUjsMpiR2rjf80FP");
     vec.push_back("x11wyRKqhkaZx7WzcwaZfJXZ1gqrjxxqPm8gnUBWPJiCIuSSuiyPFJ8cwIEf62vZAH3fl9pe3uO1yx15m7BE5LG7");
     vec.push_back("xKzqz7btFi5VXWAVb5G3srF7zonBR0Owkajnc9YgTdBHFhd983fO0Khv31oIxp7jNtgrBeioK6kXR4DX4Na7pIfZ");
     vec.push_back("vGWCOVZtmaCFooLXph2s00W3FtTu4pkJrAqpXcaUVpNVHJyiEx7vXmgZK6ELk9QSmBwUYR89EhGQrG5AchEnabGN");
     vec.push_back("uAAV8mzeAWEwx8LS5L66kKvoxFFIO4FItljgF8iAZUrGyXfvxcs3f43z0jzyiQGhMbIE2lV2zC6ZiaEc8xSudp8t");
-    vec.push_back("sZ42vINY8Iwz7hZD0o9685AINa5ATj7yTIO2jjv5nRFJFIVGKhCxa711MsmbqvfMWgzr2Tjd5d6ibXxcwAm8r0Tl");
-    vec.push_back("rSZZcL2ShGiUgdBI7ZDBJI6hyU4uFHnOTtrBNANy5gwE40YofiRFaV4vUje8I2S5hDBX2YkMvaezDmbuOM3KyTt0");
+    vec.push_back("xt5iJIuYUmZy6HD5Z_QyV9yZTEIOK-rTb2JrgoC-CASNhgpqA1pTxClViYC8LdGDbr9t4sqEWu8OX2LqEwYRCM31");
+    vec.push_back("FOXVGhcGz93UcqLTKesn0xHRjZR_-2tnkalkfYbUS3r0lJZM_sHVnzeNPMeEl57bZyRHH98i9-8yFU0VQyvU33lC");
     vec.push_back("qM7JBetmusTQSSEG56jeciFf9jy0DzbwCx34Z6CI4LKHSr19SInwIEpIiD9CfNpBLLiHJghCDYz4tHGFqOvJJG83");
     vec.push_back("pXmSe11MSwbquZMIdjCZTztc2aWyad2cYHXSDNNNOmmk2S5QbxWqYJzMnh37yYzLr07xujOBnNAKZjh58E5uH8kC");
     vec.push_back("oVwSmR8dUUh8d1SI2a10Vep6UJivcvg88sUFrPcK5uFPf6FRedPX6VNMsvIEmHGeDDEyjs2x1N1VYQhI0Mxsv1fO");
-    vec.push_back("n9amQ6bZ7IAzL2Bu6WFfvhtBRU9pSEc2DPfpXuXAVUd16iSX89R8ihx2gmUq39QxQl6BL0riU9if4fnq13ziuGfd");
-    vec.push_back("0AFqKN-EpumhZa1n4yH97TVC1x_9N8kheJAeFPyfCujTL1xmd4mgkz_jki3PcMfwy_CVhUynrI7wxGUe-PWLQZVa");
+    vec.push_back("KpFQ3oCaB67Gg89PJMunZGSMglP784yOBVOdSMuwwETnviFPpxEsNeHOT-rxUrwlGnA2Z9WsRV4uKuGSgXE81GdG");
+    vec.push_back("gTjz-J4iXijrUH9OCNpSnQm5-u9xK0g2HsUKOKomYaFON083gLg-rQ3Dj87Wbq53osJ5ogpsBGnLG4VrAJ0OnLNB");
 
     // base64 key
     auto key_b64 = base64_encode(std::string(reinterpret_cast<const char*>(key)));
@@ -211,18 +216,14 @@ int main(){
     auto subkey_b64 = base64_encode(std::string(reinterpret_cast<const char*>(subkey1)));
     cout << "sub key in b64: " << subkey_b64 << endl;
 
-    //deriveKey(subkey_b64);
+    cout << "new derived: " << deriveKey(subkey_b64) << endl;
 
-    for(auto item: vec){
-        string key = item.substr(0, 64);
-        string salt = item.substr(64);
-        
-        if(deriveKeyFromSalt(subkey_b64, salt) == key){
-            cout << "verified - key: " << key << " salt: " << salt << endl;
-        }
-    }
+    cout << "test derivation: " << deriveKey(subkey_b64, "yF3hsZCxgIcfRQLQL8IQJOiU") << endl;
 
-    
+/*     for(auto item: vec){
+        cout << "verified " << item << ":" << verifyKey(subkey_b64, item) << endl;
+    } */
+
 
     /* 
     to derive index filename:

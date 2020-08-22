@@ -231,12 +231,10 @@ string Encryption::deriveKey(string password){ // with a random salt
     unsigned char salt[crypto_pwhash_SALTBYTES+2];
     randombytes_buf(salt, sizeof salt);
     string salt_b64 = base64_encode(salt, sizeof salt);
-    cout << "DEBUG: deriveKey1 password:" << password << " salt_b64: " << salt_b64 << endl;
     return deriveKey(password, salt_b64);
 }
 
 string Encryption::deriveKey(string password, string salt_b64){ // derive a key from password, using a specified salt - return is b64_key + b64_salt = 88 chars
-    cout << "DEBUG: deriveKey2 password:" << password << " salt_b64: " << salt_b64 << endl;
     unsigned char salt[crypto_pwhash_SALTBYTES+2]; // resulting b64 encode is 24 chars
     unsigned char newKey[48]; // b64 encode of this will be 64 chars
     
@@ -261,13 +259,9 @@ bool Encryption::verifyKey(string password, string saltedKey_b64){
     string key = saltedKey_b64.substr(0, 64);
     string salt = saltedKey_b64.substr(64);
     
-    auto result = deriveKey(password, salt);
-    cout << "-----" << endl;
-    cout << "DEBUG: comparing:\"" << saltedKey_b64 << "\"" << endl;
-    cout << "DEBUG: comparing:\"" << result << "\"" << endl;
-    
-    if(result == saltedKey_b64){ // check if using key with salt results in the first 64 chars of the hash
+    if(deriveKey(password, salt) == saltedKey_b64){ // check if using key with salt results in the first 64 chars of the hash
         return true;
     }
+    
     return false;
 }

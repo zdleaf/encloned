@@ -68,10 +68,6 @@ int encloned::execLoop(){
         cout << "Derived sub-key from master encryption key" << endl;
     }
 
-    cout << "DEBUG: deriving filename: " << Encryption::deriveKey(subKey_b64, "yF3hsZCxgIcfRQLQL8IQJOiU") << endl;
-    cout << "DEBUG: deriving filename: " << Encryption::deriveKey(subKey_b64, "yF3hsZCxgIcfRQLQL8IQJOiU") << endl;
-    cout << "DEBUG: deriving filename: " << Encryption::deriveKey(subKey_b64, "yF3hsZCxgIcfRQLQL8IQJOiU") << endl;
-
     cout << "Starting Watch thread..." << endl; cout.flush();
     std::thread watchThread{&Watch::execThread, watch}; // start a thread scanning for filesystem changes
     watchThread.detach();                               // detach thread, we not want to wait for it to finish before continuing. execThread() loops until runThreads == false;
@@ -95,7 +91,7 @@ unsigned char* const encloned::getKey(){
 }
 
 string const encloned::getSubKey_b64(){
-    return subKey_b64;
+    return Encryption::base64_encode(subKey, sizeof subKey);
 }
 
 void encloned::addWatch(string path, bool recursive){
@@ -134,10 +130,5 @@ int encloned::loadEncryptionKey(){
 }
 
 int encloned::deriveSubKey(){ // derive subkey from master key
-    int result = crypto_kdf_derive_from_key(subKey, sizeof subKey, 1, "INDEX___", key);
-    if(result == 0){
-        subKey_b64 = Encryption::base64_encode(std::string(reinterpret_cast<const char*>(subKey)));
-        cout << "DEBUG: subKey_b64 = \"" << subKey_b64 << "\"" << endl;
-    }
-    return result;
+    return crypto_kdf_derive_from_key(subKey, sizeof subKey, 1, "INDEX___", key);
 }
