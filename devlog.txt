@@ -425,3 +425,17 @@ Sat 22/8/2020
 - Issue: in deriving the index backup filename, we expose which file is the encrypted index - it's easy to b64 all filenames and find which are in argon2id pwhash format
 - Solution: see index-encrypt-new.cpp - we derive a subkey, use that as a password with a random salt to derive another key - and store b64 of new key + random salt as filename
     - if we have the master key, we can deterministically derive the subkey, and compute on all filenames to check if using the last 24 chars as a salt results in the first 64 chars of the filename
+- New process:
+    - to derive index filename:
+        - derive subkey
+        - base64 encode subkey
+        - use b64 encoded subkey as a password to derive another key, with a random salt
+        - store resulting b64 of new key (64 chars) + b64 random salt (24 chars) = 88 char filename
+    - to restore index:
+        - derive same subkey from master key
+        - base64 encode subkey
+        - decode b64 for last 24 chars of all filenames on remote - these are potential salt values
+        - use subkey b64 as password and decoded b64 of last 24 chars as salt, to derive a new key. base64 new key and compare with first 64 chars of file name.
+
+Thurs 27/8/2020
+- Ensure that an empty index is not backed up to the cloud, to avoid providing a possible known-plaintext pair to the cloud provider

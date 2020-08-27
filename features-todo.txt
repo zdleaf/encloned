@@ -13,3 +13,4 @@ Feature list
     - encrypt and upload on separate threads
     - alternatively, separate threads to encrypt/upload multiple files at once
 - change internal communication to JSON, rather than '|' delimited strings
+- derive a key file from a password, so it's possible to restore backups with only a password (in event of lost keyfile)

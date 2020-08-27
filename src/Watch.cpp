@@ -396,6 +396,10 @@ void Watch::deriveIdxBackupName(){
 void Watch::indexBackup(){
     std::scoped_lock<std::mutex> guard(mtx);
 
+    if(dirIndex.empty() && fileIndex.empty()){ // do not backup an empty database to avoid providing a possible known-plaintext pair available on the cloud
+        return;
+    }
+
     auto recentModTime = fsLastMod(db->getDbLocation());
     //cout << "DEBUG: comparing db backup old time: " << displayTime(indexLastMod) << " with new: " << displayTime(recentModTime) << endl;
     if(recentModTime > indexLastMod || indexLastMod == (time_t)-1) // index.db has changed since last backup
