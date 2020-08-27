@@ -350,8 +350,7 @@ string Watch::downloadFiles(string targetPath, string pathOrHash){
     return remote->downloadRemotes();
 }
 
-bool Watch::verifyHash(string pathHash, string fileHash){
-    std::scoped_lock<std::mutex> guard(mtx);
+bool Watch::verifyHash(string pathHash, string fileHash) const{
     auto result = pathHashIndex.at(pathHash);
     auto versions = fileIndex.at(std::get<0>(result));
     for(auto elem: versions){

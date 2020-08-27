@@ -243,8 +243,14 @@ bool S3::uploadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferMa
     // encrypt file into temporary object
     string localEncryptedPath = encloned::TEMP_FILE_LOCATION + objectName;
     //cout << "localEncryptedPath: " << localEncryptedPath << endl;
-    int result = Encryption::encryptFile(localEncryptedPath.c_str(), path.c_str(), daemon->getKey());
 
+    // measure timing of file encryption
+    auto t1 = std::chrono::high_resolution_clock::now();
+    int result = Encryption::encryptFile(localEncryptedPath.c_str(), path.c_str(), daemon->getKey());
+    auto t2 = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+    std::cout << "S3: encrypted " << path << " in " << duration << " microseconds" << endl;
+    
     Aws::String awsPath(localEncryptedPath);
     Aws::String awsObjectName(objectName);
 
@@ -300,22 +306,25 @@ string S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transf
         if (downloadHandle->GetBytesTotalSize() == downloadHandle->GetBytesTransferred()) {
             ss << "S3: Download of " << objectName.substr(0, 10) << "... to " << awsWriteToFile << " successful" << endl;
 
-            // decrypt temporary file to download location
-            if(Encryption::decryptFile(downloadPath.c_str(), localEncryptedPath.c_str(), daemon->getKey()) == 0){
-                
+            // decrypt temporary file to download location and measure timing
+            auto t1 = std::chrono::high_resolution_clock::now();
+            int result = Encryption::decryptFile(downloadPath.c_str(), localEncryptedPath.c_str(), daemon->getKey());
+            auto t2 = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+
+            if(result == 0){
                 // verify hash
                 string downloadedFileHash = Encryption::hashFile(downloadPath);
-                
+                ss << "S3: Decryption of " << objectName.substr(0, 10) << "... to " << downloadPath;
                 if(remote->getWatch()->verifyHash(objectName, downloadedFileHash)){ // hash matches stored filehash
-                    ss << "S3: Decryption of " << objectName.substr(0, 10) << "... to " << downloadPath << " successful - file hash verified" << endl;
+                    ss << " successful (" << duration << " microseconds) - file hash verified" << endl;
                     fs::remove(localEncryptedPath); // remove temporary object on local fs
                 } else {
-                    ss << "S3: Decryption of " << objectName << " to " << downloadPath << " failed - unable to verify hash" << endl;
+                    ss << " failed - unable to verify hash" << endl;
                     fs::remove(localEncryptedPath); // remove temporary object on local fs
                     fs::remove(downloadPath); // remove decrypted object
                     cout << ss.str(); throw std::runtime_error(ss.str());
                 }
-
             } else {
                 ss << "S3: Decryption of " << objectName << " to " << downloadPath << " failed" << endl;
                 cout << ss.str(); throw std::runtime_error(ss.str());

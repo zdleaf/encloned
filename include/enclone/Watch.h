@@ -74,7 +74,7 @@ class Watch {
         string downloadFiles(string targetPath); // download all
         string downloadFiles(string targetPath, string pathOrHash); // specify path or hash to download
         string restoreIndex(string arg);
-        bool verifyHash(string pathHash, string fileHash);
+        bool verifyHash(string pathHash, string fileHash) const;
 
         void uploadSuccess(std::string path, std::string objectName, int remoteID);
 
