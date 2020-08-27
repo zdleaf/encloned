@@ -9,4 +9,5 @@ dl/*
 test/encryption/nacl/files/*
 key
 test/test.img
+test/100-files/*
 index.*

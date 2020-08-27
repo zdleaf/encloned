@@ -48,7 +48,11 @@ string S3::callAPI(string arg){
         auto transferManager = Aws::Transfer::TransferManager::Create(transferConfig);
 
         if(arg == "upload"){
+            auto t1 = std::chrono::high_resolution_clock::now();
             uploadFromQueue(transferManager);
+            auto t2 = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+            cout << "S3: uploadFromQueue completed in " << duration << " microseconds" << endl;
         } else if (arg.substr(0, 9) == "uploadNow"){
             // split the arguments (path|pathHash)
             auto delimPos = arg.find('|', 10); // find second delimiter
@@ -61,7 +65,11 @@ string S3::callAPI(string arg){
                 response == e.what();
             }
         } else if (arg == "download"){
+            auto t1 = std::chrono::high_resolution_clock::now();
             response = downloadFromQueue(transferManager);
+            auto t2 = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+            cout << "S3: downloadFromQueue completed in " << duration << " microseconds" << endl;
         } else if (arg.substr(0, 11) == "downloadNow"){
             // split the arguments (pathHash|target)
             auto delimPos = arg.find('|', 12); // find second delimiter

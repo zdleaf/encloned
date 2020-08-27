@@ -440,3 +440,4 @@ Sat 22/8/2020
 Thurs 27/8/2020
 - Ensure that an empty index is not backed up to the cloud, to avoid providing a possible known-plaintext pair to the cloud provider
 - Time and print execution of encryption and decryption functions for benchmarking/testing
+- Time and print how long it takes to complete uploadFromQueue and downloadFromQueue
