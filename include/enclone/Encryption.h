@@ -38,9 +38,6 @@ class Encryption{
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'
         };
 
-        static std::string passwordKDF(string password);
-        static bool verifyPassword(string hash, string password);
-
         static string deriveKey(string password); // derive a key from a password (subkey in b64 used as password), using a random salt
         static string deriveKey(string password, string salt_b64); // derive a key from password, using a specified salt
         static bool verifyKey(string password, string saltedKey_b64);

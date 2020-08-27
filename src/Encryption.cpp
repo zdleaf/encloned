@@ -206,27 +206,6 @@ std::string Encryption::base64_decode(const std::string &in){
   return out;
 }
 
-string Encryption::passwordKDF(string password){
-    char hashed_password[crypto_pwhash_STRBYTES];
-
-    if (crypto_pwhash_str
-    (hashed_password, password.c_str(), password.length(), crypto_pwhash_OPSLIMIT_SENSITIVE, crypto_pwhash_MEMLIMIT_SENSITIVE) != 0){
-        throw std::bad_alloc(); // out of memory
-    }
-
-    auto hashedPasswordStr = std::string(reinterpret_cast<const char*>(hashed_password));
-
-    return hashedPasswordStr;
-}
-
-bool Encryption::verifyPassword(string hash, string password){
-    if (crypto_pwhash_str_verify(hash.c_str(), password.c_str(), password.length()) != 0) {
-        return false;
-    } else {
-        return true;
-    }
-}
-
 string Encryption::deriveKey(string password){ // with a random salt
     unsigned char salt[crypto_pwhash_SALTBYTES+2];
     randombytes_buf(salt, sizeof salt);
