@@ -1,0 +1,1 @@
+for i in {001..015}; do head -c 1M </dev/urandom >randfile; done

@@ -21,7 +21,7 @@ void S3::execThread(){
     while(*runThreads){
         cout << "S3: Calling S3 API..." << endl; cout.flush();
         //callAPI("transfer");
-        std::this_thread::sleep_for(std::chrono::seconds(30));
+        std::this_thread::sleep_for(std::chrono::seconds(10));
     }
 }
 
