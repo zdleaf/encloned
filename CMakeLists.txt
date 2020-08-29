@@ -18,10 +18,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_LIST_DIR}/cmake")
 find_package(AWSSDK REQUIRED COMPONENTS s3 transfer)
 find_package(Boost COMPONENTS program_options REQUIRED)
 find_package(sodium REQUIRED) # uses cmake/Findsodium.cmake
-
-# find SQLite3
-FIND_PATH(SQLITE3_INCLUDE_DIR NAMES sqlite3.h)
-FIND_LIBRARY(SQLITE3_LIBRARY NAMES sqlite)
+find_package(SQLite3 REQUIRED) # uses cmake/FindSQLite3.cmake
 
 # flags
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lboost_system -lboost_thread -std=c++17 -lstdc++fs -lsqlite3 -pthread -lboost_program_options -lsodium")
