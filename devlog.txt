@@ -443,3 +443,9 @@ Thurs 27/8/2020
 - Time and print how long it takes to complete uploadFromQueue and downloadFromQueue
 - todo: "enclone --sync" function - check that all locally watched files exist on remote - if not upload them
 - todo: if token expired in upload/delete queue, do not process rest of queue, just wait until next attempt
+- todo: for upload function, split into subfunctions, including upload/encrypt etc?
+
+Sat 29/8/2020
+- Configured CMake to find SQlite and Libsodium libraries
+- Tested CMake and installation of libraries on clean system to provide instructions to build from source
+- README.md created including build instructions
