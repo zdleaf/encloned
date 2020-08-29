@@ -14,20 +14,19 @@ option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
 # find required components
 find_package(AWSSDK REQUIRED COMPONENTS s3 transfer)
-find_package(OpenSSL REQUIRED)
 find_package(Boost COMPONENTS program_options REQUIRED)
 
 # flags
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lboost_system -lboost_thread -std=c++17 -lstdc++fs -lsqlite3 -pthread -lboost_program_options -lsodium")
 
 # include files
-include_directories( include src ${Boost_INCLUDE_DIR})
+include_directories(include src ${Boost_INCLUDE_DIR})
 
 # targets
 add_executable(encloned ./src/encloned.cpp ./src/Watch.cpp ./src/DB.cpp ./src/Socket.cpp ./src/remote/S3.cpp ./src/remote/Queue.cpp ./src/remote/Remote.cpp ./src/Encryption.cpp)
 add_executable(enclone ./src/enclone.cpp)
 
-# link std filesystem library
+# link required libraries
 target_link_libraries(encloned stdc++fs sqlite3 ${AWSSDK_LINK_LIBRARIES})
 target_link_libraries(enclone stdc++fs ${Boost_LIBRARIES})
 
