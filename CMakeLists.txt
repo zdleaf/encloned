@@ -12,12 +12,20 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # use shared libraries (default ON)
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
+set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_LIST_DIR}/cmake")
+
 # find required components
 find_package(AWSSDK REQUIRED COMPONENTS s3 transfer)
 find_package(Boost COMPONENTS program_options REQUIRED)
+find_package(sodium REQUIRED) # uses cmake/Findsodium.cmake
+
+# find SQLite3
+FIND_PATH(SQLITE3_INCLUDE_DIR NAMES sqlite3.h)
+FIND_LIBRARY(SQLITE3_LIBRARY NAMES sqlite)
 
 # flags
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lboost_system -lboost_thread -std=c++17 -lstdc++fs -lsqlite3 -pthread -lboost_program_options -lsodium")
+set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -latomic") # required for ARM processors e.g. RaspberryPi
 
 # include files
 include_directories(include src ${Boost_INCLUDE_DIR})
