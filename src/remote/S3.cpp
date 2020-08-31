@@ -48,11 +48,13 @@ string S3::callAPI(string arg){
         auto transferManager = Aws::Transfer::TransferManager::Create(transferConfig);
 
         if(arg == "upload"){
+            encryptionQueueTime = 0;
             auto t1 = std::chrono::high_resolution_clock::now();
             uploadFromQueue(transferManager);
             auto t2 = std::chrono::high_resolution_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
-            cout << "S3: uploadFromQueue completed in " << duration << " microseconds" << endl;
+            cout << "S3: uploadQueue encrypted in : " << encryptionQueueTime/1000 << "ms" << endl;
+            cout << "S3: uploadFromQueue completed in " << duration/1000 << "ms" << endl;
         } else if (arg.substr(0, 9) == "uploadNow"){
             // split the arguments (path|pathHash)
             auto delimPos = arg.find('|', 10); // find second delimiter
@@ -65,11 +67,13 @@ string S3::callAPI(string arg){
                 response == e.what();
             }
         } else if (arg == "download"){
+            decryptionQueueTime = 0;
             auto t1 = std::chrono::high_resolution_clock::now();
             response = downloadFromQueue(transferManager);
             auto t2 = std::chrono::high_resolution_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
-            cout << "S3: downloadFromQueue completed in " << duration << " microseconds" << endl;
+            cout << "S3: downloadQueue decrypted in : " << decryptionQueueTime/1000 << "ms" << endl;
+            cout << "S3: downloadFromQueue completed in " << duration/100 << "ms" << endl;
         } else if (arg.substr(0, 11) == "downloadNow"){
             // split the arguments (pathHash|target)
             auto delimPos = arg.find('|', 12); // find second delimiter
@@ -258,6 +262,7 @@ bool S3::uploadObject(std::shared_ptr<Aws::Transfer::TransferManager> transferMa
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
     std::cout << "S3: encrypted " << path << " in " << duration << " microseconds" << endl;
+    encryptionQueueTime += duration;
     
     Aws::String awsPath(localEncryptedPath);
     Aws::String awsObjectName(objectName);
@@ -319,6 +324,7 @@ string S3::downloadObject(std::shared_ptr<Aws::Transfer::TransferManager> transf
             int result = Encryption::decryptFile(downloadPath.c_str(), localEncryptedPath.c_str(), daemon->getKey());
             auto t2 = std::chrono::high_resolution_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+            decryptionQueueTime += duration;
 
             if(result == 0){
                 // verify hash

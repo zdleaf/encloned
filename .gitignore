@@ -11,3 +11,4 @@ key
 test/test.img
 test/100-files/*
 index.*
+test/test-images/*
