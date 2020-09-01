@@ -23,9 +23,9 @@
 
 #include <aws/transfer/TransferManager.h>
 
-#include <enclone/remote/Queue.h>
-#include <enclone/remote/Remote.h>
-#include <enclone/Encryption.h>
+#include <encloned/remote/Queue.h>
+#include <encloned/remote/Remote.h>
+#include <encloned/Encryption.h>
 
 namespace fs = std::filesystem;
 using std::string;

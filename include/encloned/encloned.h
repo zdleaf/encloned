@@ -18,10 +18,10 @@
 #include <unistd.h>         // readlink
 #include <linux/limits.h>   // PATH_MAX
 
-#include <enclone/DB.h>
-#include <enclone/Watch.h>
-#include <enclone/Socket.h>
-#include <enclone/remote/Remote.h>
+#include <encloned/DB.h>
+#include <encloned/Watch.h>
+#include <encloned/Socket.h>
+#include <encloned/remote/Remote.h>
 
 namespace io = boost::asio;
 namespace fs = std::filesystem;

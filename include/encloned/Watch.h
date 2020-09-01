@@ -19,9 +19,9 @@
 #include <mutex>
 #include <atomic>
 
-#include <enclone/DB.h>
-#include <enclone/Encryption.h>
-#include <enclone/remote/Remote.h>
+#include <encloned/DB.h>
+#include <encloned/Encryption.h>
+#include <encloned/remote/Remote.h>
 
 using std::string;
 using std::cout;

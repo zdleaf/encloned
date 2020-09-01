@@ -267,17 +267,6 @@ function(FIND_PACKAGE_HANDLE_STANDARD_ARGS _NAME _FIRST_ARG)
     set(FPHSA_NAME_MISMATCHED "${FPHSA_NAME_MISMATCHED_override}")
   endif ()
 
-  if (DEFINED CMAKE_FIND_PACKAGE_NAME
-      AND NOT FPHSA_NAME_MISMATCHED
-      AND NOT _NAME STREQUAL CMAKE_FIND_PACKAGE_NAME)
-    message(AUTHOR_WARNING
-      "The package name passed to `find_package_handle_standard_args` "
-      "(${_NAME}) does not match the name of the calling package "
-      "(${CMAKE_FIND_PACKAGE_NAME}). This can lead to problems in calling "
-      "code that expects `find_package` result variables (e.g., `_FOUND`) "
-      "to follow a certain pattern.")
-  endif ()
-
 # now that we collected all arguments, process them
 
   if("x${FPHSA_FAIL_MESSAGE}" STREQUAL "xDEFAULT_MSG")

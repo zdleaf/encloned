@@ -1,4 +1,4 @@
-#include <enclone/enclone.h>
+#include <encloned/enclone.h>
 
 int main(int argc, char* argv[]){
     enclone enc(argc, argv);

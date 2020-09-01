@@ -6,7 +6,7 @@
 #include <boost/asio.hpp> // unix domain local sockets
 #include <boost/bind.hpp>
 
-#include <enclone/Watch.h>
+#include <encloned/Watch.h>
 
 #if defined(BOOST_ASIO_HAS_LOCAL_SOCKETS)
 

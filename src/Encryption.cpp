@@ -1,4 +1,4 @@
-#include <enclone/Encryption.h>
+#include <encloned/Encryption.h>
 
 void Encryption::initSodium(){
     if (sodium_init() != 0) {

@@ -1,4 +1,4 @@
-#include <enclone/Watch.h>
+#include <encloned/Watch.h>
 
 Watch::Watch(std::shared_ptr<DB> db, std::atomic_bool *runThreads, encloned* daemon){ // constructor
     this->db = db; // set DB handle

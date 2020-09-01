@@ -6,9 +6,9 @@
 #include <memory>
 #include <chrono>
 
-#include <enclone/remote/S3.h>
-#include <enclone/Watch.h>
-#include <enclone/encloned.h>
+#include <encloned/remote/S3.h>
+#include <encloned/Watch.h>
+#include <encloned/encloned.h>
 
 class S3;
 class Watch;

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.0)
-project(enclone VERSION 0.1.0)
+project(encloned VERSION 0.1.0)
 
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 
@@ -16,7 +16,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 # find required components
 find_package(AWSSDK REQUIRED COMPONENTS s3 transfer)
-find_package(Boost COMPONENTS program_options REQUIRED)
+find_package(Boost REQUIRED COMPONENTS program_options)
 find_package(sodium REQUIRED) # uses cmake/Findsodium.cmake
 find_package(SQLite3 REQUIRED) # uses cmake/FindSQLite3.cmake
 

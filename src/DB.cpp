@@ -1,4 +1,4 @@
-#include <enclone/DB.h>
+#include <encloned/DB.h>
 
 DB::DB(){ // constructor
     openDB();

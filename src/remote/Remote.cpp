@@ -1,4 +1,4 @@
-#include <enclone/remote/Remote.h>
+#include <encloned/remote/Remote.h>
 
 Remote::Remote(std::atomic_bool *runThreads, encloned* daemon)
 {
