@@ -1,5 +1,5 @@
-## enclone
-enclone is a solution for securely storing and syncing static data between Linux, and cloud storage platforms such as AWS S3. The focus is on ensuring the confidentiality, authenticity and integrity of data at all times.
+## encloned
+encloned is a solution for securely storing and syncing static data between Linux, and cloud storage platforms such as AWS S3. The focus is on ensuring the confidentiality, authenticity and integrity of data at all times.
 
 The project was developed as part of an MSc Computer Science dissertation, the full PDF paper and implementation details can be found in this directory.
 
@@ -138,9 +138,9 @@ Install libsodium, SQLite3 and Boost libraries:
 sudo apt install libsodium-dev libsqlite3-dev libboost-all-dev
 ```
 
-Clone the enclone source code:
+Clone the encloned source code:
 ```
-git clone https://github.com/zdleaf/enclone.git
+git clone https://github.com/zdleaf/encloned.git
 ```
 
 Enter the directory, create a build directory, configure build files and compile
@@ -150,19 +150,6 @@ mkdir build; cd build
 cmake ..
 make
 ```
-The binaries ```enclone``` and ```encloned``` are then available. 
-
-To start, enter a directory where you want to store the index.db and master encryption keys.
-e.g.
-```
-mkdir ~/.enclone
-cd ~/.enclone
-```
-and run the following:
-```
-/path/to/enclone --generate-key
-```
-
-followed by `/path/to/encloned` to start the daemon.
+The binaries ```enclone``` and ```encloned``` are then available in the build directory.
 
 
