@@ -10,5 +10,7 @@ test/encryption/nacl/files/*
 key
 test/test.img
 test/100-files/*
+test/random100mb
 index.*
 test/test-images/*
+.vscode/
