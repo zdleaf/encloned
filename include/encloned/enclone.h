@@ -38,8 +38,9 @@ class enclone{
         int showOptions(const int& argc, char** const argv);
         void conflictingOptions(const po::variables_map& vm, const char* opt1, const char* opt2);
 
-        bool sendRequest(string request);
+        bool sendRequest(string request); // pass command onto daemon
 
+        // command handling
         bool addWatch(string path, bool recursive);
         bool delWatch(string path, bool recursive);
         bool listLocal();
@@ -51,14 +52,11 @@ class enclone{
 
         void generateKey(); // generate encryption key to file
 
-        std::vector<string> toAdd{}; // paths to watch
-        std::vector<string> toRecAdd{};   // recursive directories to watch
-        std::vector<string> toDel{}; // paths to delete watches to
-
+        // handle multiple arguments provided in one command
+        std::vector<string> toAdd{};    // paths to watch
+        std::vector<string> toRecAdd{}; // recursive directories to watch
+        std::vector<string> toDel{};    // paths to delete watches to
         std::vector<string> toRestore{}; // paths to restore
-        
-
-
 };
 
 #else // defined(BOOST_ASIO_HAS_LOCAL_SOCKETS)

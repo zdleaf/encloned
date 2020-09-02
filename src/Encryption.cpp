@@ -58,17 +58,17 @@ int Encryption::decryptFile(const char *target_file,
     fp_t = fopen(target_file, "wb");
     fread(header, 1, sizeof header, fp_s);
     if (crypto_secretstream_xchacha20poly1305_init_pull(&st, header, key) != 0) {
-        goto ret; /* incomplete header */
+        goto ret; // incomplete header
     }
     do {
         rlen = fread(buf_in, 1, sizeof buf_in, fp_s);
         eof = feof(fp_s);
         if (crypto_secretstream_xchacha20poly1305_pull(&st, buf_out, &out_len, &tag,
                                                        buf_in, rlen, NULL, 0) != 0) {
-            goto ret; /* corrupted chunk */
+            goto ret; // corrupted chunk
         }
         if (tag == crypto_secretstream_xchacha20poly1305_TAG_FINAL && ! eof) {
-            goto ret; /* premature end (end of file reached before the end of the stream) */
+            goto ret; // premature end (end of file reached before the end of the stream)
         }
         fwrite(buf_out, 1, (size_t) out_len, fp_t);
     } while (! eof);
@@ -82,7 +82,7 @@ ret:
 
 string Encryption::randomString(std::size_t length)
 {
-    const std::string CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_";
+    const std::string CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_"; // same as base64 URL
     std::random_device random_device;
     std::mt19937 generator(random_device());
     std::uniform_int_distribution<> distribution(0, CHARACTERS.size()-1);

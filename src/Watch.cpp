@@ -25,7 +25,6 @@ void Watch::execThread(){
             }
             execQueuedSQL();
             std::this_thread::sleep_for(std::chrono::seconds(2));
-            //indexBackup();
         }
         std::this_thread::sleep_for(std::chrono::seconds(1));
         indexBackup();
@@ -142,7 +141,6 @@ string Watch::delDirWatch(string path, bool recursive){
         }
     }
 
-    //auto elem = dirIndex.find(path);
     dirIndex.erase(path);
     sqlQueue << "DELETE FROM dirIndex WHERE PATH=\'" << path << "\';"; // queue SQL delete
 
@@ -153,7 +151,7 @@ string Watch::delFileWatch(string path){
     std::stringstream response;
     auto fileVersions = fileIndex[path];
     for(auto elem: fileVersions){
-        remote->queueForDelete(elem.pathHash);
+        remote->queueForDelete(elem.pathHash); // queue for remote deletion
         pathHashIndex.erase(elem.pathHash);
     }
     fileIndex.erase(path);
@@ -178,16 +176,6 @@ void Watch::scanFileChange(){
             fileIndex[path].back().localExists = false;
             sqlQueue << "UPDATE fileIndex SET LOCALEXISTS = FALSE WHERE PATH ='" << path << "';"; // queue SQL update  
             
-            // delete from fileIndex if ALL versions do not exist remotely - if file doesn't exist locally or remotely in any form, it is lost
-/*             if(ALL VERSIONS !remoteExist){
-                fileIndex.erase(path);
-                sqlQueue << "DELETE from fileIndex where PATH='" << path << "';"; // queue deletion from DB
-            } */
-
-            // FIX ME - when to delete from remote - if sync mode is set, otherwise no
-            //remote->queueForDelete(pathHashIndex[path]);
-            
-
             break;
         }
 
@@ -601,36 +589,3 @@ void Watch::restoreIdxBackupName(){
 
     sqlite3_finalize(stmt);
 }
-
-/* LEGACY CODE
-void Watch::fileAttributes(const fs::path& path){
-    fs::file_status s = fs::status(path);
-    // alternative: switch(s.type()) { case fs::file_type::regular: ...}
-    if(fs::is_regular_file(s)) std::cout << " is a regular file\n";
-    if(fs::is_directory(s)) std::cout << " is a directory\n";
-    if(fs::is_block_file(s)) std::cout << " is a block device\n";
-    if(fs::is_character_file(s)) std::cout << " is a character device\n";
-    if(fs::is_fifo(s)) std::cout << " is a named IPC pipe\n";
-    if(fs::is_socket(s)) std::cout << " is a named IPC socket\n";
-    if(fs::is_symlink(s)) std::cout << " is a symlink\n";
-    if(!fs::exists(s)) std::cout << " does not exist\n";
-    if(fs::is_empty(path)){ std::cout << "empty\n"; } else { std::cout << "not empty\n"; };
-
-    // size
-    try {
-        std::cout << "size: " << fs::file_size(path) << endl; // attempt to get size of a file
-    } catch(fs::filesystem_error& e) { // e.g. is a directory, no size
-        std::cout << e.what() << '\n';
-    }
-
-    // last modification time
-    //std::cout << "File write time is " << displayTime(fs::last_write_time(path)) << endl;
-} 
-
-void Watch::listDir(string path){
-    for (const auto & entry : fs::directory_iterator(path)){
-        cout << entry.path();
-        fileAttributes(entry);
-    }
-}
-*/

@@ -52,7 +52,7 @@ encloned::encloned(){ // constructor
 }
 
 encloned::~encloned(){ // destructor
-    // delete objects
+    
 }
 
 int encloned::execLoop(){
@@ -73,12 +73,12 @@ int encloned::execLoop(){
     watchThread.detach();                               // detach thread, we not want to wait for it to finish before continuing. execThread() loops until runThreads == false;
 
     cout << "Starting Remote thread..." << endl; cout.flush();
-    std::thread remoteThread{&Remote::execThread, remote}; // start a thread scanning for filesystem changes
-    remoteThread.detach();                               // detach thread, we not want to wait for it to finish before continuing. execThread() loops until runThreads == false;
+    std::thread remoteThread{&Remote::execThread, remote};  // start a thread for the remote handler
+    remoteThread.detach();                                  // detach thread, we not want to wait for it to finish before continuing. execThread() loops until runThreads == false;
 
     cout << "Starting Socket thread..." << endl; cout.flush();
-    std::thread socketThread{&Socket::execThread, socket}; // start a thread scanning for filesystem changes
-    socketThread.detach();                               // detach thread, we not want to wait for it to finish before continuing. execThread() loops until runThreads == false;
+    std::thread socketThread{&Socket::execThread, socket}; // start a thread listening on a local socket
+    socketThread.detach();                                  // detach thread, we not want to wait for it to finish before continuing. execThread() loops until runThreads == false;
 
     while(1){
         // do nothing

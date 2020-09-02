@@ -20,12 +20,13 @@ class Encryption{
         virtual ~Encryption() = 0; // pure virtual - class is abstract
         static void initSodium();
 
-        static string hashPath(const string path);
-        static string hashFile(const string path);
+        static string hashPath(const string path);  // creates a random remote filename
+        static string hashFile(const string path);  // hash entire file contents for integrity checks
 
         static int encryptFile(const char *target_file, const char *source_file, const unsigned char key[crypto_secretstream_xchacha20poly1305_KEYBYTES]);
         static int decryptFile(const char *target_file, const char *source_file, const unsigned char key[crypto_secretstream_xchacha20poly1305_KEYBYTES]);
 
+        // base64 URL variants
         static std::string base64_encode(const std::string &in);
         static std::string base64_encode(unsigned char const* bytes_to_encode, unsigned int in_len);
         static std::string base64_decode(const std::string &in);
@@ -40,7 +41,7 @@ class Encryption{
 
         static string deriveKey(string password); // derive a key from a password (subkey in b64 used as password), using a random salt
         static string deriveKey(string password, string salt_b64); // derive a key from password, using a specified salt
-        static bool verifyKey(string password, string saltedKey_b64);
+        static bool verifyKey(string password, string saltedKey_b64); // verify if a provided saltedKey was created with provided password
 
         static const int getRandomFilenameLength();
     

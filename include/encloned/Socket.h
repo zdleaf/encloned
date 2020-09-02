@@ -21,11 +21,10 @@ class Watch;
 class Socket {
     private:
         const char* SOCKET_FILE = "/tmp/encloned";
-        //io::io_context io_context;
         asio::io_service io_service;
 
-        std::shared_ptr<Watch> watch; // pointer to Watch handler
-        std::shared_ptr<Remote> remote; // pointer to Remote handler
+        std::shared_ptr<Watch> watch;   // ptr to Watch handler
+        std::shared_ptr<Remote> remote; // ptr to Remote handler
 
         // concurrency/multi-threading
         std::mutex mtx;
@@ -51,9 +50,9 @@ class Socket {
 class Session: public std::enable_shared_from_this<Session>{
     private:
         stream_protocol::socket socket_;    // socket used to communicate with the client
-        std::array<char, 2048> data_;     // buffer used to store data received from the client
+        std::array<char, 2048> data_;       // buffer used to store data received from the client
 
-        std::shared_ptr<Watch> watch; // pointer to Watch handler
+        std::shared_ptr<Watch> watch;   // pointer to Watch handler
         std::shared_ptr<Remote> remote; // pointer to Remote handler
         
     public:
@@ -73,7 +72,7 @@ class Server{
         asio::io_service& io_service_;
         stream_protocol::acceptor acceptor_;
 
-        std::shared_ptr<Watch> watch; // pointer to Ratch handler
+        std::shared_ptr<Watch> watch;   // pointer to Watch handler
         std::shared_ptr<Remote> remote; // pointer to Remote handler
 
     public:

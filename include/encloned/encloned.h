@@ -33,9 +33,9 @@ class Remote;
 
 class encloned{
     private:
-        std::shared_ptr<DB> db; // database handle
-        std::shared_ptr<Watch> watch; // watch file/directory class
-        std::shared_ptr<Socket> socket; // local unix domain socket for enclone-config
+        std::shared_ptr<DB> db;         // database handle
+        std::shared_ptr<Watch> watch;   // watch file/directory class
+        std::shared_ptr<Socket> socket; // local unix domain socket for enclone
         std::shared_ptr<Remote> remote; // remote backend handler
 
         std::atomic<bool> runThreads; // flag to indicate whether detached threads should continue to run
@@ -52,7 +52,7 @@ class encloned{
         encloned();
         ~encloned();
         string daemonPath;
-        static constexpr char TEMP_FILE_LOCATION[] = "/tmp/enclone/";
+        static constexpr char TEMP_FILE_LOCATION[] = "/tmp/enclone/"; // path to store temporary encrypted files before upload, and downloaded files before decryption
         
         std::mutex* daemonMtxPtr;
 

@@ -23,7 +23,6 @@ int enclone::showOptions(const int& argc, char** const argv){
             "   remote: \tshow all available remote files\n")
         ("add-watch,a", po::value<std::vector<string>>(&toAdd)->composing(), "add a watch to a given path (file or directory)")
         ("add-recursive,A", po::value<std::vector<string>>(&toRecAdd)->composing(), "recursively add a watch to a directory")
-        //("recursive,r", "specify watched directory should be watched or deleted recursively")
         ("del-watch,d", po::value<std::vector<string>>(&toDel)->composing(), "delete a watch from a given path (file or directory)")
         ("del-recursive,D", po::value<std::vector<string>>(&toDel)->composing(), "recursively delete all watches in a directory\n")
         ("restore,r", po::value<std::vector<string>>(&toRestore)->composing(), "restore files from remote\n\n"
@@ -52,7 +51,7 @@ int enclone::showOptions(const int& argc, char** const argv){
 
         po::notify(vm);
 
-        conflictingOptions(vm, "add-watch", "help"); // <--- change this, example of how to disallow certain options in conjuction
+        conflictingOptions(vm, "add-watch", "help"); // todo: add more sets of conflicting options
 
         if (vm.count("help") || (argc == 1)){
             cout << desc << endl;

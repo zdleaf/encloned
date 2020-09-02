@@ -36,8 +36,8 @@ struct FileVersion {
     std::time_t modtime;
     std::string pathHash;
     std::string fileHash;
-    bool localExists = true; // false if file has been deleted from local filesystem
-    bool remoteExists = false; // set flag once successfully uploaded to remote
+    bool localExists = true;    // false if file has been deleted from local filesystem
+    bool remoteExists = false;  // set flag once successfully uploaded to remote
     std::string remoteLocation; // remote locations the file exists
 };
 
@@ -54,38 +54,39 @@ class Watch {
 
         void execThread();
 
-        std::unordered_map<string, std::vector<FileVersion>>* getFileIndex();
-
-        string addWatch(string path, bool recursive);
-        string delWatch(string path, bool recursive);
         void scanFileChange();
         void execQueuedSQL();
         
+        string addWatch(string path, bool recursive);
+        string delWatch(string path, bool recursive);
         void displayWatchDirs();
         void displayWatchFiles();
-
-        string displayTime(std::time_t modtime) const;
-        time_t fsLastMod(string path); // get last mod time from file system
-
+        
         string listLocal();
         string listWatchDirs();
         string listWatchFiles();
-        std::pair<string, std::time_t> resolvePathHash(string pathHash);
+
         string downloadFiles(string targetPath); // download all
         string downloadFiles(string targetPath, string pathOrHash); // specify path or hash to download
-        string restoreIndex(string arg);
-        bool verifyHash(string pathHash, string fileHash) const;
 
-        void uploadSuccess(std::string path, std::string objectName, int remoteID);
+        std::unordered_map<string, std::vector<FileVersion>>* getFileIndex();
+        std::pair<string, std::time_t> resolvePathHash(string pathHash);
+        bool verifyHash(string pathHash, string fileHash) const; // check a hash matches the stored filehash in fileIndex
+        void uploadSuccess(std::string path, std::string objectName, int remoteID); // update the index if a file was successfully uploaded
+        string restoreIndex(string arg);
+
+        // helper functions
+        string displayTime(std::time_t modtime) const;
+        time_t fsLastMod(string path); // get last mod time from file system
 
     private:
-        std::unordered_map<string, bool> dirIndex;                  // index of watched directories with bool recursive flag
-        std::unordered_map<string, std::vector<FileVersion>> fileIndex;   // index of watched files, key = path, with a vector of different available file versions
+        std::unordered_map<string, bool> dirIndex;                          // index of watched directories with bool recursive flag
+        std::unordered_map<string, std::vector<FileVersion>> fileIndex;     // index of watched files, key = path, with a vector of different available file versions
         std::unordered_map<string, std::pair<string, std::time_t>> pathHashIndex; // easily resolve pathHash to path and modtime
 
         std::shared_ptr<Remote> remote; // pointer to Remote handler
         std::shared_ptr<DB> db;         // database handle
-        encloned* daemon; // ptr to main daemon class that spawned this
+        encloned* daemon;               // ptr to main daemon class that spawned this
 
         std::stringstream sqlQueue;     // sql queue/bucket of queries to execute in batches
 

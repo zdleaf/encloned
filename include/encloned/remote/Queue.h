@@ -15,10 +15,9 @@ using std::endl;
 
 class Queue{
     protected:
-        std::deque<std::tuple<string, string, std::time_t>> uploadQueue; // pair<string path, string objectName>
-        std::deque<std::tuple<string, string, std::time_t, string>> downloadQueue; // tuple<path, objectName, modtime, targetPath>
+        std::deque<std::tuple<string, string, std::time_t>> uploadQueue;            // tuple<string path, objectName, modtime>
+        std::deque<std::tuple<string, string, std::time_t, string>> downloadQueue;  // tuple<path, objectName, modtime, targetPath>
         std::deque<string> deleteQueue; // objectName
-        // download queue
 
     public:
         Queue();
@@ -31,7 +30,6 @@ class Queue{
 
         bool enqueueDelete(std::string objectName);
         bool dequeueDelete();
-
 };
 
 #endif

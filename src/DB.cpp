@@ -79,26 +79,6 @@ void DB::initialiseTables(){
     execSQL(indexBackup);
 }
 
-/*
-** Perform an online backup of database pDb to the database file named
-** by zFilename. This function copies 5 database pages from pDb to
-** zFilename, then unlocks pDb and sleeps for 250 ms, then repeats the
-** process until the entire database is backed up.
-** 
-** The third argument passed to this function must be a pointer to a progress
-** function. After each set of 5 pages is backed up, the progress function
-** is invoked with two integer parameters: the number of pages left to
-** copy, and the total number of pages in the source file. This information
-** may be used, for example, to update a GUI progress bar.
-**
-** While this function is running, another thread may use the database pDb, or
-** another process may access the underlying database file via a separate 
-** connection.
-**
-** If the backup process is successfully completed, SQLITE_OK is returned.
-** Otherwise, if an error occurs, an SQLite error code is returned.
-*/
-
 void DB::backupProgress(int leftToCopy, int totalToCopy){
     cout << "DB: " << totalToCopy-leftToCopy << "/" << totalToCopy << " items backed up" << endl; 
     cout.flush();
@@ -117,13 +97,13 @@ int DB::backupDB(const char *backupFilename){
     pBackup = sqlite3_backup_init(pFile, "main", db, "main");
     if( pBackup ){
 
-      /* Each iteration of this loop copies 5 database pages from database
+      /* Each iteration of this loop copies 10 database pages from database
       ** pDb to the backup database. If the return value of backup_step()
       ** indicates that there are still further pages to copy, sleep for
       ** 250 ms before repeating. */
       do {
         rc = sqlite3_backup_step(pBackup, 10);
-        backupProgress(
+        backupProgress( // update progress function
             sqlite3_backup_remaining(pBackup),
             sqlite3_backup_pagecount(pBackup)
         );

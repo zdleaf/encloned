@@ -81,12 +81,10 @@ string S3::callAPI(string arg){
             string target = arg.substr(delimPos+1);
             //cout << "DEBUG: pathHash: " << pathHash << " target: " << target << endl;
             try {
-                response = downloadObject(transferManager, BUCKET_NAME, target, pathHash);
+                response = downloadObject(transferManager, BUCKET_NAME, target, pathHash); // calling version of downloadObject that does not check file hash as this is used for index backup (no file hash stored)
             } catch(const std::exception& e){ // may fail due invalid credentials etc
                 response = e.what();
             }
-            //downloadObject(transferManager, BUCKET_NAME, target, pathHash, modtime, "./"); // we do not store modtime or a hash for the index database - so cannot verify this
-            // need a separate downloadObject method that does not verify hash
         } else if (arg == "listObjects"){
             try {
                 response = listObjects(s3_client);
