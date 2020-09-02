@@ -1,17 +1,17 @@
-Feature list
-- run as unix daemon
-    - setup separate user with correct permissions
+- run as unix daemon under systemd
+    - output logs to named files, each thread has own log file - can watch live in console with "tail -f file.log"
 - config file
     - point to database and master key file location
-- output logs to named files, each thread has own log file - can watch live in console with "tail -f file.log"
-- add proper exclusions, e.g. ".swp" temporary files
-- unstructured db such as mongodb would be better at storing fileIndex as a tree like structure - easy to pull entire contents of a directory for example
-- store data as "blobs" or small chunks - this mean when updating a file version, we just update the blobs that have changed instead of re-uploading entire file
-    - see Rabin Fingerprints for implementing Content Defined Chunking (CDC)
 - stream encrypted data directly to online services - avoiding saving as temporary file and then uploading that
 - encrypt/upload multi-threaded pipeline
     - encrypt and upload on separate threads
     - alternatively, separate threads to encrypt/upload multiple files at once
+- add inotify support for more efficient file system watching when daemon is running
+- add proper exclusions, e.g. ".swp" temporary files
 - change internal communication to JSON, rather than '|' delimited strings
 - derive a key file from a password, so it's possible to restore backups with only a password (in event of lost keyfile)
 - show upload/download progress in enclone client
+- stream progress of other operations through socket, rather than returning all at once
+- unstructured db such as mongodb may be better at storing fileIndex as a tree like structure - easy to pull entire contents of a directory for example
+- store data as "blobs" or small chunks - this mean when updating a file version, we just update the blobs that have changed instead of re-uploading entire file
+    - see Rabin Fingerprints for implementing Content Defined Chunking (CDC)
