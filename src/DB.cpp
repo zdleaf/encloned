@@ -50,8 +50,8 @@ int DB::execSQL(const char sql[]){
             return 1;
         }
     } else {
-      //fprintf(stderr, "Successfully executed SQL statement: %.36s...\n", sql);
-      fprintf(stderr, "Successfully executed SQL statement: %s...\n", sql);
+      fprintf(stderr, "Successfully executed SQL statement: %.36s...\n", sql);
+      //fprintf(stderr, "Successfully executed SQL statement: %s...\n", sql);
     }
     return 0;
 }
