@@ -4,6 +4,15 @@ encloned is a solution for securely storing and syncing static data between Linu
 The project was developed as part of an MSc Computer Science dissertation, the full PDF paper and implementation details can be found in this directory.
 
 The software consists of a daemon `encloned` and a control client used to interact with the daemon `enclone`.
+
+## Improved data security
+`encloned` uses the XChaCha20-Poly1305 Authenticated-Encryption streaming implementation from the libsodium library (secretstream). 
+
+In order to avoid information leak about files and directory structure, files are stored on the cloud in a completely flat directory structure, with randomly generated filenames. This removes the possibility of any analysis or cryptanalysis of the filenames or directory structure.
+
+Further, a hash of the full file contents is stored to avoid rollback/replay attacks. Authenticated-Encryption alone is not sufficient for this purpose as an attacker with access to the cloud, would be able to rollback a file to a previous, authenticated, but out of date version. Authenticated-Encryption algorithms are unable to detect this kind of file tampering.
+
+The mapping between a filepath and the associated random string filename, other metadata and file content hashes are stored in an index/database. This is also encrypted and backed up to cloud storage, with a novel technique to generate a filename by deriving a subkey from the master encryption key, and using it in a Password-Based Key Derivation Function (Argon2). This ensures the index backup is indistinguishable from other encrypted files stored on the cloud.
   
 ## Generating encryption keys, and starting encloned
 To start, enter a directory where you want to store the index.db and master encryption keys.
@@ -112,7 +121,7 @@ The AWS C++ SDK is also required. Full installation instructions can be found at
 
 Install dependencies required for AWS SDK:
 ```
-sudo apt-get install libcurl4-openssl-dev libssl-dev uuid-dev zlib1g-dev libpulse-dev
+sudo apt install libcurl4-openssl-dev libssl-dev uuid-dev zlib1g-dev libpulse-dev
 ```
 
 Git clone the source for the SDK:
