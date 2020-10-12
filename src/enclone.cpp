@@ -166,6 +166,7 @@ bool enclone::sendRequest(string request){
         strcpy(req, request.c_str());
         asio::write(localSocket, asio::buffer(req, request.length()));
 
+        // STREAMING RESPONSE: loop to keep reading delimiters ';' until final response, with another final delimiter '??'
         // read response
         boost::asio::streambuf response; // read_until requires a dynamic buffer to read into
         asio::read_until(localSocket, response, ";"); // all responses are suffixed with ";" - read until this delimiter

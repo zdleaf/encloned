@@ -65,6 +65,7 @@ class Session: public std::enable_shared_from_this<Session>{
 
         void handle_read(const boost::system::error_code& error, size_t bytes_transferred);
         void handle_write(const boost::system::error_code& error);
+        void writeToSocket(string message);
 };
 
 class Server{

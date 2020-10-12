@@ -46,7 +46,7 @@ class S3: public Queue {
         std::unordered_map<string, string> remoteObjectMap; // also stores last mod time in readable string format
 
         Aws::SDKOptions options;
-        const Aws::String BUCKET_NAME = "enclone";
+        const Aws::String BUCKET_NAME = "encloned";
 
         // concurrency/multi-threading
         std::mutex mtx;

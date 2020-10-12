@@ -103,7 +103,7 @@ string S3::callAPI(string arg){
 
 void S3::uploadFromQueue(std::shared_ptr<Aws::Transfer::TransferManager> transferManager){
     std::scoped_lock<std::mutex> guard(mtx);
-    if(uploadQueue.empty()){ return; } 
+    if(uploadQueue.empty()){ return; } // if queue is empty, return immediately
     for(auto item: uploadQueue){ 
         auto [path, pathHash, modtime] = item; // get values out of the tuple
         

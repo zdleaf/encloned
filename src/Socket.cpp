@@ -112,14 +112,20 @@ void Session::handle_read(const boost::system::error_code& error, size_t bytes_t
 
         cout << "Socket: Sending response to socket: \"" << response.substr(0, 20) << "...\"" << endl;
 
-        asio::async_write(
-            socket_,
-            asio::buffer(response.c_str(), response.length()),
-            boost::bind(&Session::handle_write,
-            shared_from_this(),
-            asio::placeholders::error)
-        );
+        writeToSocket(response);
+
+        // STREAMING RESPONSE: for streaming, make this a separate function - and call repeatedly above (?)
     }
+}
+
+void Session::writeToSocket(string message){
+    asio::async_write(
+        socket_,
+        asio::buffer(message.c_str(), message.length()),
+        boost::bind(&Session::handle_write,
+        shared_from_this(),
+        asio::placeholders::error)
+    );
 }
 
 void Session::handle_write(const boost::system::error_code& error){
