@@ -335,7 +335,8 @@ string Watch::displayTime(std::time_t modtime) const {
 time_t Watch::fsLastMod(string path) {
   try {
     auto fstime = fs::last_write_time(path);  // get modtime from index file
-    time_t modtime = decltype(fstime)::clock::to_time_t(fstime);
+    auto systime = std::chrono::file_clock::to_sys(fstime);
+    time_t modtime = std::chrono::system_clock::to_time_t(systime);
     return modtime;
   } catch (const std::exception &e) {
     cout << "Watch: exception thrown in fsLastMod: " << e.what() << endl;

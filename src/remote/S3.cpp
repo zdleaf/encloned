@@ -136,7 +136,8 @@ void S3::uploadFromQueue(
     // added to uploadQueue, or no longer exist
     try {
       auto fstime = fs::last_write_time(path);  // get modtime from file
-      std::time_t currentModtime = decltype(fstime)::clock::to_time_t(fstime);
+      auto systime = std::chrono::file_clock::to_sys(fstime);
+      time_t currentModtime = std::chrono::system_clock::to_time_t(systime);
       if (modtime != currentModtime) {
         std::stringstream error;
         error << "S3: Error: File " << path
@@ -413,8 +414,9 @@ string S3::downloadObject(
 
       // set the modtime back to the original value
       fs::path fsPath = downloadPath.c_str();
+      auto systime = std::chrono::system_clock::from_time_t(originalModTime);
       std::filesystem::file_time_type fsModtime =
-          std::chrono::system_clock::from_time_t(originalModTime);
+          std::chrono::file_clock::from_sys(systime);
       fs::last_write_time(fsPath, fsModtime);
 
       cout << ss.str();
