@@ -32,8 +32,8 @@ add_executable(encloned ./src/encloned.cpp ./src/Watch.cpp ./src/DB.cpp ./src/So
 add_executable(enclone ./src/enclone.cpp)
 
 # link required libraries
-target_link_libraries(encloned stdc++fs sqlite3 ${AWSSDK_LINK_LIBRARIES})
-target_link_libraries(enclone stdc++fs ${Boost_LIBRARIES})
+target_link_libraries(encloned stdc++fs sqlite3 ${AWSSDK_LINK_LIBRARIES} sodium)
+target_link_libraries(enclone stdc++fs ${Boost_LIBRARIES} sodium)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
