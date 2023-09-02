@@ -17,9 +17,9 @@
 #include <aws/s3/model/Object.h>
 #include <aws/s3/model/PutObjectRequest.h>
 #include <aws/transfer/TransferManager.h>
-#include <encloned/Encryption.h>
-#include <encloned/remote/Queue.h>
-#include <encloned/remote/Remote.h>
+#include <encloned/Encryption.hpp>
+#include <encloned/remote/Queue.hpp>
+#include <encloned/remote/Remote.hpp>
 
 #include <atomic>
 #include <mutex>

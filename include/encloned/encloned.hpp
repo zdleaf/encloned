@@ -15,10 +15,10 @@
 #include <thread>
 
 // get path of this executable
-#include <encloned/DB.h>
-#include <encloned/Socket.h>
-#include <encloned/Watch.h>
-#include <encloned/remote/Remote.h>
+#include <encloned/DB.hpp>
+#include <encloned/Socket.hpp>
+#include <encloned/Watch.hpp>
+#include <encloned/remote/Remote.hpp>
 #include <libgen.h>        // dirname
 #include <linux/limits.h>  // PATH_MAX
 #include <unistd.h>        // readlink

@@ -15,9 +15,9 @@
 #include <vector>
 
 // concurrency/multi-threading
-#include <encloned/DB.h>
-#include <encloned/Encryption.h>
-#include <encloned/remote/Remote.h>
+#include <encloned/DB.hpp>
+#include <encloned/Encryption.hpp>
+#include <encloned/remote/Remote.hpp>
 
 #include <atomic>
 #include <mutex>

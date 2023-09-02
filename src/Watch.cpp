@@ -1,4 +1,4 @@
-#include <encloned/Watch.h>
+#include <encloned/Watch.hpp>
 
 Watch::Watch(std::shared_ptr<DB> db, std::atomic_bool *runThreads,
              encloned *daemon) {

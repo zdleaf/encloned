@@ -1,4 +1,4 @@
-#include <encloned/DB.h>
+#include <encloned/DB.hpp>
 
 DB::DB() {
   openDB();

@@ -1,9 +1,9 @@
 #ifndef REMOTE_H
 #define REMOTE_H
 
-#include <encloned/Watch.h>
-#include <encloned/encloned.h>
-#include <encloned/remote/S3.h>
+#include <encloned/Watch.hpp>
+#include <encloned/encloned.hpp>
+#include <encloned/remote/S3.hpp>
 
 #include <chrono>
 #include <iostream>

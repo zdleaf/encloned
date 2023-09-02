@@ -1,4 +1,4 @@
-#include <encloned/encloned.h>
+#include <encloned/encloned.hpp>
 
 int main() {
   if (!fs::exists("key")) {

@@ -1,4 +1,4 @@
-#include <encloned/Socket.h>
+#include <encloned/Socket.hpp>
 
 Socket::Socket(std::atomic_bool* runThreads) {
   this->runThreads = runThreads;

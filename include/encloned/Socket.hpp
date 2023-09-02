@@ -1,7 +1,7 @@
 #ifndef SOCKET_H
 #define SOCKET_H
 
-#include <encloned/Watch.h>
+#include <encloned/Watch.hpp>
 
 #include <boost/asio.hpp>  // unix domain local sockets
 #include <boost/bind.hpp>

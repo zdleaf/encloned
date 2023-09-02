@@ -1,4 +1,4 @@
-#include <encloned/remote/Queue.h>
+#include <encloned/remote/Queue.hpp>
 
 Queue::Queue() {}
 
