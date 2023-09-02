@@ -126,7 +126,7 @@ sudo apt install libcurl4-openssl-dev libssl-dev uuid-dev zlib1g-dev libpulse-de
 
 Git clone the source for the SDK:
 ```
-git clone https://github.com/aws/aws-sdk-cpp.git
+git clone --recurse-submodules https://github.com/aws/aws-sdk-cpp.git
 ```
 
 Enter the aws-sdk-cpp directory and use CMake to configure build files for only the required libraries (s3, transfer):
