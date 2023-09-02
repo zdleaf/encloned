@@ -6,7 +6,7 @@ set(CMAKE_VERBOSE_MAKEFILE OFF)
 include(CTest)
 enable_testing()
 
-set(CMAKE_CXX_STANDARD, 17)
+set(CMAKE_CXX_STANDARD, 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # use shared libraries (default ON)
@@ -21,7 +21,7 @@ find_package(sodium REQUIRED) # uses cmake/Findsodium.cmake
 find_package(SQLite3 REQUIRED) # uses cmake/FindSQLite3.cmake
 
 # flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lboost_system -lboost_thread -std=c++17 -lstdc++fs -lsqlite3 -pthread -lboost_program_options -lsodium")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lboost_system -lboost_thread -std=c++20 -lstdc++fs -lsqlite3 -pthread -lboost_program_options -lsodium")
 set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -latomic") # required for ARM processors e.g. RaspberryPi
 
 # include files
