@@ -1,6 +1,7 @@
 #ifndef ENCLONED_H
 #define ENCLONED_H
 
+#include <boost/asio.hpp>
 #include <chrono>
 #include <filesystem>
 #include <fstream>

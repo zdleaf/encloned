@@ -17,6 +17,7 @@ using boost::asio::local::stream_protocol;
 class Session;
 class Server;
 class Watch;
+class Remote;
 
 class Socket {
  private:
